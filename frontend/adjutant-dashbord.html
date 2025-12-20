@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adjutant Dashboard</title>
+  <style>
+    :root{
+      --bg: #2f3b2f;
+      --panel: #556634;
+      --panel2: #4e5f2e;
+      --card: #2f3f34;
+      --stroke: rgba(255,255,255,.14);
+      --text: #e9efd6;
+      --muted: rgba(233,239,214,.72);
+
+      --btnLight: #cbbd7c;
+      --btnLightText: #223017;
+
+      
+      --btnDark: #2e3b32;
+
+      --green: #23b35a;
+      --red: #d94a3a;
+      --amber: #d6a64f;
+      --blue: #2d6ef7;
+      --danger: #d94a3a;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background-attachment: fixed;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                  radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 22px auto 40px;
+      padding: 0 18px;
+    }
+
+    /* header */
+    .topbar{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 18px 18px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .topbar-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .title h1{
+      margin:0;
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .top-actions{
+      display:flex;
+      gap:12px;
+      margin-top: 6px;
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-weight: 900;
+      cursor:pointer;
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+      transition: transform .22s ease, box-shadow .22s ease, background-color .18s ease;
+    }
+    .btn.light{
+      background: var(--btnLight);
+      color: var(--btnLightText);
+      border-color: rgba(0,0,0,.25);
+    }
+    .btn:hover, .btn:focus{ transform: translateY(-3px); box-shadow:0 18px 30px rgba(0,0,0,.28); }
+
+    /* stat cards */
+    .stats{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: repeat(5, minmax(170px, 1fr));
+      gap: 18px;
+    }
+    .stat{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 16px 16px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      min-height: 92px;
+      position:relative;
+    }
+    .stat{ transition: transform .22s ease, box-shadow .22s ease, background-color .22s ease, border-color .18s ease; }
+    .stat:hover{ transform: translateY(-6px); box-shadow: 0 22px 38px rgba(0,0,0,.34); border-color: rgba(255,255,255,.18); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.06)); }
+    .stat .ico{
+      width: 38px; height: 38px;
+      display:grid; place-items:center;
+      border-radius: 10px;
+      background: rgba(0,0,0,.12);
+      border: 1px solid rgba(255,255,255,.08);
+      flex: 0 0 auto;
+    }
+    .stat .num{
+      margin: 0;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .stat .lbl{
+      margin-top: 8px;
+      font-weight: 900;
+      color: rgba(238,243,220,.70);
+      letter-spacing:.2px;
+    }
+    .stat .right{
+      margin-left:auto;
+      text-align:right;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 4px;
+    }
+
+    /* charts row */
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+      min-height: 320px;
+    }
+    .panel{ transition: transform .22s ease, box-shadow .22s ease, border-color .18s ease; }
+    .panel:hover{ transform: translateY(-6px); box-shadow: 0 26px 50px rgba(0,0,0,.36); }
+    .panel-head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .panel-head .mini-ico{
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.12);
+      display:grid; place-items:center;
+    }
+    .panel-head h2{
+      margin:0;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+
+    /* "fake chart" canvas boxes (pure HTML/CSS) */
+    .chart-box{
+      height: 240px;
+      margin: 8px 6px 0;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px) 0 0/100% 20%,
+        linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px) 0 0/20% 100%,
+        rgba(0,0,0,.10);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* bar chart */
+    .bars{
+      position:absolute;
+      inset: 18px 18px 32px 46px;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items:end;
+      gap: 18px;
+    }
+    .barGroup{
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap: 10px;
+      height: 100%;
+    }
+    .bar{
+      width: 34px;
+      border-radius: 6px 6px 0 0;
+      box-shadow: inset 0 -10px 0 rgba(0,0,0,.12);
+    }
+    .bar.present{ background: var(--green); }
+    .bar.absent{ background: var(--red); }
+
+    .xlabels{
+      position:absolute;
+      left: 46px;
+      right: 18px;
+      bottom: 8px;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      font-weight: 800;
+      color: rgba(238,243,220,.65);
+      font-size: 12px;
+      text-align:center;
+    }
+    .ylabels{
+      position:absolute;
+      top: 12px;
+      bottom: 32px;
+      left: 10px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      font-weight: 800;
+      color: rgba(238,243,220,.55);
+      font-size: 12px;
+    }
+    .legend{
+      display:flex;
+      gap: 18px;
+      align-items:center;
+      justify-content:center;
+      margin: 10px 0 0;
+      color: rgba(238,243,220,.75);
+      font-weight: 900;
+    }
+    .key{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .swatch{
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,.25);
+    }
+    .swatch.present{ background: var(--green); }
+    .swatch.absent{ background: var(--red); }
+
+    /* pie chart */
+    .pieWrap{
+      height: 240px;
+      display:grid;
+      place-items:center;
+      position:relative;
+    }
+    .pie{
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #174a78 0 88%,
+        #101820 88% 96%,
+        #a89052 96% 99%,
+        #e01919 99% 100%
+      );
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .pieLabels{
+      position:absolute;
+      inset: 0;
+      pointer-events:none;
+      font-weight: 900;
+    }
+    .pieLabels .lab{
+      position:absolute;
+      font-size: 14px;
+    }
+    .lab.present{ left: 14%; top: 44%; color: #174a78; }
+    .lab.leave{ right: 18%; bottom: 22%; color: #101820; }
+    .lab.duty{ right: 16%; top: 44%; color: #a89052; }
+    .lab.awol{ right: 14%; top: 30%; color: #e01919; }
+
+    /* bottom buttons */
+    .bottom-actions{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 22px;
+    }
+    .big{
+      height: 92px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: var(--panel2);
+      color: var(--text);
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing:.2px;
+      cursor:pointer;
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+      transition: transform .22s ease, box-shadow .22s ease, background-color .18s ease;
+    }
+    .big span{
+      display:inline-block;
+      line-height: 1.1;
+    }
+    .big:hover{ transform: translateY(-6px); box-shadow: 0 28px 54px rgba(0,0,0,.38); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.06)); }
+
+    /* full-screen toggle for panels (double-click to expand) */
+    .panel.is-full{
+      position:fixed;
+      inset:12px;
+      z-index:1100;
+      border-radius:10px;
+      width:auto !important;
+      height:calc(100% - 24px);
+      overflow:auto;
+      box-shadow: 0 48px 120px rgba(0,0,0,.6);
+      background: linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.12));
+    }
+
+    .footer{
+      display:flex;
+      justify-content:flex-end;
+      margin-top: 12px;
+    }
+    .back{
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(203,189,124,.55);
+      background: rgba(203,189,124,.25);
+      color: rgba(238,243,220,.85);
+      font-weight: 900;
+      cursor:pointer;
+    }
+
+    /* color the icons */
+    .ico.green svg{ stroke: var(--green); }
+    .ico.amber svg{ stroke: var(--amber); }
+    .ico.blue  svg{ stroke: var(--blue); }
+    .ico.red   svg{ stroke: var(--danger); }
+    .ico.gray  svg{ stroke: rgba(238,243,220,.65); }
+
+    /* responsive */
+    @media (max-width: 1100px){
+      .stats{ grid-template-columns: repeat(3, minmax(170px, 1fr)); }
+      .grid{ grid-template-columns: 1fr; }
+      .bottom-actions{ grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>
+    // double-click a panel to toggle fullscreen-like cover
+    document.addEventListener('DOMContentLoaded', function(){
+      document.querySelectorAll('.panel').forEach(function(p){
+        p.addEventListener('dblclick', function(){ p.classList.toggle('is-full'); });
+      });
+      // allow Esc to close any full panels
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ document.querySelectorAll('.panel.is-full').forEach(p=>p.classList.remove('is-full')); } });
+    });
+  </script>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title">
+          <h1>Adjutant Dashboard</h1>
+          <p>Real-Time Manpower Readiness Overview</p>
+        </div>
+
+        <div class="top-actions">
+          <button class="btn light">Report</button>
+          <button class="btn">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="stats">
+      <div class="stat">
+        <div class="ico gray" aria-hidden="true">
+          <!-- users -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21a7 7 0 0 0-14 0"></path>
+            <path d="M10 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z"></path>
+            <path d="M23 21a6 6 0 0 0-7-5.65"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="right">
+          <div class="num">450</div>
+          <div class="lbl">Total Strength</div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="ico green" aria-hidden="true">
+          <!-- user check -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21a7 7 0 0 0-14 0"></path>
+            <path d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z"></path>
+            <path d="M16 11l2 2 4-4"></path>
+          </svg>
+        </div>
+        <div class="right">
+          <div class="num">400</div>
+          <div class="lbl">Present</div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="ico amber" aria-hidden="true">
+          <!-- plane-ish -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.5 21l3-3"></path>
+            <path d="M6 19l3-3"></path>
+            <path d="M2 14l6 1 12-12-3-3L5 12l1 6Z"></path>
+          </svg>
+        </div>
+        <div class="right">
+          <div class="num">32</div>
+          <div class="lbl">On Leave</div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="ico blue" aria-hidden="true">
+          <!-- shield -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+          </svg>
+        </div>
+        <div class="right">
+          <div class="num">10</div>
+          <div class="lbl">On Duty</div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="ico red" aria-hidden="true">
+          <!-- alert -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v5"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+        </div>
+        <div class="right">
+          <div class="num">03</div>
+          <div class="lbl">AWOL</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="grid">
+      <!-- Left: Bar chart -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="mini-ico" aria-hidden="true">
+            <!-- chart icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(238,243,220,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19V5"></path>
+              <path d="M4 19h16"></path>
+              <path d="M8 17V9"></path>
+              <path d="M12 17V7"></path>
+              <path d="M16 17v-5"></path>
+            </svg>
+          </div>
+          <h2>Daily Attendance Distribution</h2>
+        </div>
+
+        <div class="chart-box">
+          <div class="ylabels">
+            <div>450</div><div>300</div><div>150</div>
+          </div>
+
+          <div class="bars">
+            <!-- Sun -->
+            <div class="barGroup">
+              <div class="bar present" style="height:72%"></div>
+              <div class="bar absent"  style="height:22%"></div>
+            </div>
+            <!-- Mon -->
+            <div class="barGroup">
+              <div class="bar present" style="height:60%"></div>
+              <div class="bar absent"  style="height:26%"></div>
+            </div>
+            <!-- Tue -->
+            <div class="barGroup">
+              <div class="bar present" style="height:74%"></div>
+              <div class="bar absent"  style="height:22%"></div>
+            </div>
+            <!-- Wed -->
+            <div class="barGroup">
+              <div class="bar present" style="height:64%"></div>
+              <div class="bar absent"  style="height:20%"></div>
+            </div>
+            <!-- Thu -->
+            <div class="barGroup">
+              <div class="bar present" style="height:72%"></div>
+              <div class="bar absent"  style="height:24%"></div>
+            </div>
+          </div>
+
+          <div class="xlabels">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="key"><span class="swatch present"></span> Present</div>
+          <div class="key"><span class="swatch absent"></span> Absent</div>
+        </div>
+      </div>
+
+      <!-- Right: Pie chart -->
+      <div class="panel">
+        <div class="panel-head" style="justify-content:center">
+          <h2>Current Status Distribution</h2>
+        </div>
+
+        <div class="pieWrap">
+          <div class="pie" aria-label="pie chart"></div>
+          <div class="pieLabels" aria-hidden="true">
+            <div class="lab present">Present: 88%</div>
+            <div class="lab awol">AWOL: 1%</div>
+            <div class="lab duty">On Duty: 3%</div>
+            <div class="lab leave">On Leave: 8%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom buttons -->
+    <section class="bottom-actions">
+      <button class="big"><span>Generate Parade<br/>State</span></button>
+      <button class="big"><span>View Company State</span></button>
+      <button class="big"><span>Leave Management</span></button>
+    </section>
+
+    <div class="footer">
+      <button class="back">Back</button>
+    </div>
+
+  </div>
+</body>
+</html>
