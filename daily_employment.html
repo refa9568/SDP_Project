@@ -1,0 +1,70 @@
+<!-- ================= DAILY EMPLOYMENT PAGE ================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Daily Employment</title>
+<style>
+:root{--dark:#2E3D32;--olive:#556B2F;--sand:#C2B280;--text:#f5f5f5}
+*{box-sizing:border-box;font-family:Segoe UI}
+body{margin:0;background:var(--dark);color:var(--text)}
+
+/* Headings match dashboard */
+h2,h3{font-weight:800;color:#ffffff;letter-spacing:0.5px}
+
+.header{background:var(--olive);padding:20px;margin:20px;border-radius:12px}
+.header h2{margin:0}
+
+.panel{background:var(--olive);border:2px solid var(--sand);margin:0;padding:15px;border-radius:12px}
+/* table panel should match dashboard personal roster */
+.panel.table-panel{background:var(--olive);border:3px solid var(--sand);padding:14px;border-radius:12px}
+
+table{width:100%;border-collapse:collapse;max-width:640px}
+th,td{border:1px solid var(--sand);padding:10px;text-align:center}
+th{background:#3b4f40}
+
+/* layout for employment page */
+.employment{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin:20px}
+.table-panel{max-width:680px;overflow:auto}
+.rank-panel{background:var(--olive);border:2px solid var(--sand);padding:14px;border-radius:12px;text-align:left}
+.rank-panel h3{margin:0 0 10px 0;font-size:16px;font-weight:800;letter-spacing:0.5px}
+.rank-list{list-style:none;padding:0;margin:8px 0 0 0;font-size:14px;font-weight:800}
+.rank-list li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="header"><h2>Daily Employment – Radio Coy</h2></div>
+<div class="employment">
+  <div class="panel table-panel">
+    <table>
+    <tr><th>Date</th><th>Major Events</th><th>Coy Employment</th></tr>
+    <tr><td>01.01.2026</td><td>GOC Guard (01.01.26–31.01.26)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
+    <tr><td>02.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
+    <tr><td>03.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
+    <tr><td>04.01.2026</td><td>Quarter Guard Duty</td><td>2×Sgt, 6×OR</td></tr>
+    <tr><td>05.01.2026</td><td>Trg Ground Development</td><td>1×JCO, 1×Sgt</td></tr>
+    <tr><td>06.01.2026</td><td>Firing Competition Practice</td><td>1×Sgt, 2×SNK</td></tr>
+    <tr><td>07.01.2026</td><td>RP Duty</td><td>6×OR</td></tr>
+    <tr><td>08.01.2026</td><td>Admin Day</td><td>8×OR</td></tr>
+    <tr><td>09.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
+    <tr><td>10.01.2026</td><td>Trg Ground Development</td><td>1×JCO, 1×Sgt</td></tr>
+    <tr><td>11.01.2026</td><td>Firing Competition Practice</td><td>1×Sgt, 2×SNK</td></tr>
+    <tr><td>12.01.2026</td><td>RP Duty</td><td>6×OR</td></tr>
+    <tr><td>13.01.2026</td><td>Quarter Guard Duty</td><td>2×Sgt, 6×OR</td></tr>
+    <tr><td>14.01.2026</td><td>Trg Conference</td><td>1×JCO, 2×Sgt</td></tr>
+    <tr><td>15.01.2026</td><td>Admin Day</td><td>8×OR</td></tr>
+    </table>
+  </div>
+
+  <div class="panel rank-panel">
+    <h3>Rank Wise State (without Lve)</h3>
+    <ul class="rank-list">
+      <li>4×Sgt</li>
+      <li>5×Cpl</li>
+      <li>3×L/Cpl</li>
+      <li>35×Snk</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
