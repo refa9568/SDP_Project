@@ -143,27 +143,57 @@
             color: #556B2F;
         }
     </style>
+    <script>
+      const credentials = {
+        co: { password: '1234', dashboard: '#' },
+        coycomd: { password: '1234', dashboard: '#' },
+        adjt: { password: '1234', dashboard: 'adjutant-dashbord.html' },
+        bsm: { password: '1234', dashboard: 'bsm-dashboard.html' },
+        sldr: { password: '1234', dashboard: '#' }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const role = document.getElementById('role').value;
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+
+          if (!role) { alert('Please select a role'); return; }
+          if (!credentials[username]) { alert('Invalid username'); return; }
+          if (credentials[username].password !== password) { alert('Invalid password'); return; }
+
+          const dashboard = credentials[username].dashboard;
+          if (dashboard && dashboard !== '#') {
+            window.location.href = dashboard;
+          } else {
+            alert('Dashboard not available for this role');
+          }
+        });
+      });
+    </script>
 </head>
 <body>
 
     <div class="header">
         <div class="logo">🛡️</div>
         <h1>ParadeOps</h1>
-        <p>Real-Time Manpower Readiness Dashboard</p>
     </div>
 
     <div class="login-container">
         <h2>Secure Login</h2>
 
-        <form>
+        <form id="loginForm">
             <div class="input-group">
                 <label for="role">Role</label>
                 <select id="role" required>
                     <option value="">Select a role</option>
-                    <option value="commanding_officer">Commanding Officer</option>
-                    <option value="officer">Officer</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
+                    <option value="co">Commanding Officer</option>
+                    <option value="coycomd">Company Commander</option>
+                    <option value="adjt">Adjutant</option>
+                    <option value="bsm">Battalion Sergeant Major</option>
+                    <option value="sldr">Soldier</option>
                 </select>
             </div>
 
