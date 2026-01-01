@@ -185,6 +185,18 @@
         font-size: 14px;
     }
 
+    /* ensure the calendar icon sits inside the input field */
+    .date-field input[type="date"] {
+        padding-right: 54px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .date-field .calendar-icon {
+        right: 12px;
+        z-index: 2;
+    }
+
     textarea {
         min-height: 120px;
         resize: vertical;
