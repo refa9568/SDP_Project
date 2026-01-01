@@ -206,17 +206,19 @@
     }
 
     /* show single custom SVG inside the field */
-    .date-field .calendar-icon {
-        right: 12px;
-        z-index: 2;
-        width: 22px;
-        height: 22px;
-        background: transparent;
-        border-radius: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        .date-field .calendar-icon {
+            right: 12px;
+            z-index: 2;
+            width: 22px;
+            height: 22px;
+            background: transparent;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            cursor: pointer;
+        }
 
     textarea {
         min-height: 120px;
@@ -408,6 +410,22 @@
 
     // populate from query params on load
     prefillFromQuery();
+
+    // make calendar icon open/focus the native picker where supported
+    document.querySelectorAll('.date-field').forEach(df=>{
+        const input = df.querySelector('input[type="date"]');
+        const icon = df.querySelector('.calendar-icon');
+        if(!input || !icon) return;
+        // if browser supports showPicker(), use it; otherwise focus
+        icon.addEventListener('click', ()=>{
+            if(typeof input.showPicker === 'function'){
+                input.showPicker();
+            } else {
+                input.focus();
+                try{ input.click(); }catch(e){}
+            }
+        });
+    });
 
     const form = document.getElementById('leaveForm');
     if(form){
