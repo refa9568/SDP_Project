@@ -286,7 +286,7 @@
 
     <div class="header-right">
         <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
-        <button class="btn dark" onclick="location.href='login.html'">Logout</button>
+        <button class="btn dark" onclick="location.href='../login.html'">Logout</button>
     </div>
 </div>
 
@@ -297,7 +297,7 @@
         <!-- TABS -->
         <div class="tabs">
             <a class="tab active" href="lve_mgt.html">Apply for Leave</a>
-            <a class="tab" href="adjt_approve_request.html">Approve Request</a>
+            <a class="tab" href="adjt_lve_approval.html">Approve Request</a>
             <a class="tab" href="adjt_lve_hist.html">Leave History</a>
         </div>
 
@@ -435,8 +435,34 @@
                 alert('Please select valid start and end dates.');
                 return;
             }
-            // TODO: replace with real submit logic
-            alert('Leave application submitted (demo).');
+            
+            // Get form values
+            const leaveType = document.getElementById('leaveType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const reason = document.getElementById('reason').value;
+            
+            // Get existing requests or initialize
+            const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+            
+            // Create new request - always use LCPL Akib
+            const newRequest = {
+                id: String(Date.now()),
+                soldier: 'Akib',
+                rank: 'LCPL',
+                company: 'RR',
+                type: leaveType,
+                date: startDate + '-' + endDate,
+                submitted: new Date().toLocaleDateString('en-GB'),
+                status: 'Pending',
+                reason: reason
+            };
+            
+            // Add to requests
+            requests.push(newRequest);
+            localStorage.setItem('leaveRequests', JSON.stringify(requests));
+            
+            alert('Leave application submitted successfully! Your request is now pending approval.');
             form.reset();
             num.value = '';
         });

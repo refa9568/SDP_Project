@@ -182,7 +182,7 @@ tbody tr:not(:last-child){
         <!-- TABS -->
         <div class="tabs">
             <a class="tab" href="lve_mgt.html">Apply for Leave</a>
-            <a class="tab" href="adjt_approve_request.html">Approve Request</a>
+            <a class="tab" href="adjt_lve_approval.html">Approve Request</a>
             <a class="tab active" href="adjt_lve_hist.html">Leave History</a>
         </div>
 
@@ -199,48 +199,53 @@ tbody tr:not(:last-child){
                 </tr>
             </thead>
 
-            <tbody>
-                <tr>
-                    <td>Akib</td>
-                    <td>LCPL</td>
-                    <td>RR</td>
-                    <td>Annual Leave</td>
-                    <td>01/01/2025-01/02/2025</td>
-                    <td><span class="status pending">Pending</span></td>
-                </tr>
-
-                <tr>
-                    <td>Arman</td>
-                    <td>WO</td>
-                    <td>HQ</td>
-                    <td>Medical Leave</td>
-                    <td>05/02/2025-15/02/2025</td>
-                    <td><span class="status approved">Approved</span></td>
-                </tr>
-
-                <tr>
-                    <td>Rahul</td>
-                    <td>SWO</td>
-                    <td>Radio</td>
-                    <td>Emergency Leave</td>
-                    <td>10/03/2025-12/03/2025</td>
-                    <td><span class="status rejected">Rejected</span></td>
-                </tr>
-
-                <tr>
-                    <td>Minhaz</td>
-                    <td>Sgt</td>
-                    <td>RR</td>
-                    <td>Annual Leave</td>
-                    <td>25/10/2025-25/11/2025</td>
-                    <td><span class="status pending">Pending</span></td>
-                </tr>
+            <tbody id="historyTable">
             </tbody>
         </table>
 
     </div>
 
 </div>
+
+<script>
+// Clear old data and load leave history from localStorage
+function loadHistory() {
+    // Clear localStorage if this is the first time or to reset data
+    const resetFlag = localStorage.getItem('historyReset');
+    if (!resetFlag) {
+        localStorage.clear();
+        localStorage.setItem('historyReset', 'true');
+    }
+    
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const tbody = document.getElementById('historyTable');
+    tbody.innerHTML = '';
+    
+    if (requests.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="6" style="text-align:center;padding:30px;color:#dde2b5;">No leave requests found</td>';
+        tbody.appendChild(row);
+        return;
+    }
+    
+    requests.forEach(req => {
+        const row = document.createElement('tr');
+        const statusClass = req.status.toLowerCase();
+        row.innerHTML = `
+            <td>${req.soldier}</td>
+            <td>${req.rank}</td>
+            <td>${req.company}</td>
+            <td>${req.type}</td>
+            <td>${req.date}</td>
+            <td><span class="status ${statusClass}">${req.status}</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Load history on page load
+loadHistory();
+</script>
 
 </body>
 </html>
