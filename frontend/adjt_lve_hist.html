@@ -63,6 +63,11 @@ body{
     border-radius:6px;
 }
 
+/* project button styles (shared) */
+.btn{ border:1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor:pointer; background: transparent; color: #ffffff; }
+.btn.light{ background: #c9c295; color: #2f2f1f; border-color: rgba(0,0,0,.12); }
+.btn.dark{ background: #3a4638; color: #ffffff; border-color: rgba(255,255,255,.08); }
+
 /* ===== MAIN AREA ===== */
 .main{
     padding:26px;
@@ -164,8 +169,8 @@ tbody tr:not(:last-child){
         <p>Submit and Track Leave Requests</p>
     </div>
     <div class="header-right">
-        <div class="home">🏠</div>
-        <button class="logout">Logout</button>
+        <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
+        <button class="btn dark" onclick="location.href='login.html'">Logout</button>
     </div>
 </div>
 
