@@ -8,317 +8,98 @@
 <style>
 :root{
     --page-bg:#2f3a32;
-    --header-bg:#66753d;
-    --panel-bg:#6f7f46;
-    --card-bg:#344137;
-
-    --tab-active:#c9c295;
-    --tab-inactive:#2f3b32;
-
-    --text-white:#ffffff;
-    --text-muted:#d8ddb4;
-
-    --border:#8f9960;
-
-    --approve:#5ea542;
-    --reject:#c2342a;
-    --pending:#5f72ff;
-}
-
-*{
-    box-sizing:border-box;
-    font-family:Segoe UI, Arial, sans-serif;
-}
-
-body{
-    margin:0;
-    background:var(--page-bg);
-    color:var(--text-white);
-}
-
-/* HEADER */
-.header{
-    background:var(--header-bg);
-    padding:22px 30px;
-    border-bottom:2px solid var(--border);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.header h1{
-    margin:0;
-    font-size:26px;
-}
-
-.header p{
-    margin:4px 0 0;
-    font-size:14px;
-    color:var(--text-muted);
-}
-
-.header-right{
-    display:flex;
-    gap:16px;
-    align-items:center;
-}
-
-.home{
-    width:36px;
-    height:36px;
-    background:#3a4638;
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.logout{
-    padding:8px 18px;
-    background:transparent;
-    border:1px solid var(--border);
-    color:white;
-    border-radius:6px;
-}
-
-/* MAIN */
-.wrapper{
-    padding:28px;
-}
-
-.panel{
-    max-width:1100px;
-    margin:auto;
-    background:var(--panel-bg);
-    border-radius:10px;
-    padding:24px;
-}
-
-/* TABS */
-.tabs{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:22px;
-    margin-bottom:26px;
-}
-
-.tab{
-    text-align:center;
-    padding:14px 0;
-    border-radius:10px;
-    font-weight:600;
-    background:var(--tab-inactive);
-    color:var(--text-muted);
-}
-
-.tab.active{
-    background:var(--tab-active);
-    color:#2f2f1f;
-}
-
-/* CARD */
-.card{
-    background:var(--card-bg);
-    border-radius:10px;
-    padding:26px;
-    margin-bottom:26px;
-}
-
-.card-grid{
-    display:grid;
-    grid-template-columns:1.2fr 1fr 1fr;
-    gap:40px;
-}
-
-.label{
-    font-size:14px;
-    color:var(--text-muted);
-    margin-bottom:4px;
-}
-
-.value{
-    font-size:18px;
-    font-weight:600;
-    margin-bottom:14px;
-}
-
-.reason{
-    font-size:18px;
-    font-weight:600;
-}
-
-/* STATUS */
-.status{
-    display:inline-block;
-    padding:6px 14px;
-    background:var(--pending);
-    border-radius:14px;
-    font-weight:600;
-}
-
-/* ACTION BUTTONS */
-.actions{
-    margin-top:22px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:26px;
-}
-
-.btn{
-    padding:14px 0;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    font-weight:700;
-    color:white;
-}
-
-.approve{
-    background:var(--approve);
-}
-
-.reject{
-    background:var(--reject);
-}
-
-    /* small project button styles (reused) */
-    .header-right .btn{ padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,.12); font-weight:700; cursor:pointer; }
-    .header-right .btn.light{ background:var(--tab-active); color:#2f2f1f; border-color: rgba(0,0,0,.25); }
-    .header-right .btn.dark{ background:var(--card-bg); color:var(--text-white); }
-
-/* FOOTER */
-.footer{
-    margin-top:18px;
-    display:flex;
-    justify-content:flex-end;
-}
-
-.back{
-    padding:10px 22px;
-    background:var(--tab-active);
-    color:#2f2f1f;
-    border-radius:6px;
-    font-weight:600;
-}
-
-/* RESPONSIVE */
-@media(max-width:900px){
-    .card-grid{
-        grid-template-columns:1fr;
-    }
-    .tabs{
-        grid-template-columns:1fr;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<!-- HEADER -->
-<div class="header">
-    <div>
-        <h1>Leave Management System</h1>
-        <p>Submit and Track Leave Requests</p>
-    </div>
-    <div class="header-right">
-            <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
-            <button class="btn dark" onclick="location.href='login.html'">Logout</button>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Requests</title>
+    <style>
+    html,body{margin:0;padding:0;height:100%;font-family:Segoe UI, Arial, sans-serif;background:#2f3a32;color:#fff}
+    .header{background:#6b7740;padding:18px 28px;border-bottom:2px solid #8f9960;display:flex;justify-content:space-between;align-items:center}
+    .header h1{margin:0;font-size:22px}
+    .header p{margin:4px 0 0;color:#dde2b5}
+    .header-right{display:flex;gap:12px}
+    .btn{border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;background:transparent;color:#fff}
+    .btn.light{background:#c9c295;color:#2f2f1f}
+    .btn.dark{background:#3a4638}
+    .main{padding:20px}
+    .panel{max-width:1150px;margin:0 auto;background:#6f7f46;border-radius:10px;padding:18px;border:1px solid #8f9960}
+    .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+    .tab{padding:12px 0;text-align:center;border-radius:8px;background:#c9c295;color:#2f2f1f;font-weight:700}
+    .tab.inactive{background:#2f3b32;color:#dde2b5}
+    table{width:100%;border-collapse:collapse;background:transparent}
+    thead th{padding:10px 12px;text-align:left;color:#dde2b5;border-bottom:1px solid rgba(255,255,255,.08);font-weight:800}
+    tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:700}
+    .actions{display:flex;gap:8px}
+    .approve{background:#5ea542;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+    .reject{background:#c2342a;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+    @media(max-width:900px){.tabs{grid-template-columns:1fr}.panel{padding:12px}}
+    </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <h1>Leave Management System</h1>
+          <p>Approve Requests</p>
         </div>
-</div>
-
-<!-- MAIN -->
-<div class="wrapper">
-<div class="panel">
-
-    <!-- TABS -->
-    <div class="tabs">
-        <div class="tab">Apply for Leave</div>
-        <div class="tab active">Approve Request</div>
-        <div class="tab">Leave History</div>
-    </div>
-
-    <!-- CARD 1 -->
-    <div class="card">
-        <div class="card-grid">
-            <div>
-                <div class="label">soldier</div>
-                <div class="value">LCPL Akib</div>
-
-                <div class="label">Date</div>
-                <div class="value">01/01/2025 to 01/02/2025</div>
-
-                <div class="label">Reason</div>
-                <div class="reason">Visiting Family</div>
-            </div>
-
-            <div>
-                <div class="label">Leave Type</div>
-                <div class="value">Annual Leave</div>
-
-                <div class="label">Submitted</div>
-                <div class="value">20/12/2024</div>
-            </div>
-
-            <div>
-                <div class="label">Company</div>
-                <div class="value">RR</div>
-
-                <div class="label">Status</div>
-                <div class="status">Pending</div>
-            </div>
+        <div class="header-right">
+          <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
+          <button class="btn dark" onclick="location.href='login.html'">Logout</button>
         </div>
+      </div>
 
-        <div class="actions">
-            <button class="btn approve">Approve</button>
-            <button class="btn reject">Reject</button>
+      <div class="main">
+        <div class="panel">
+          <div class="tabs">
+            <a class="tab inactive" href="lve_mgt.html">Apply for Leave</a>
+            <div class="tab">Approve Request</div>
+            <a class="tab inactive" href="adjt_lve_hist.html">Leave History</a>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Soldier</th>
+                <th>Company</th>
+                <th>Leave Type</th>
+                <th>Date</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>LCPL Akib</td>
+                <td>RR</td>
+                <td>Annual Leave</td>
+                <td>01/01/2025 - 01/02/2025</td>
+                <td>20/12/2024</td>
+                <td>Pending</td>
+                <td class="actions"><button class="approve">Approve</button><button class="reject">Reject</button></td>
+              </tr>
+              <tr>
+                <td>WO Arman</td>
+                <td>Radio</td>
+                <td>Medical Leave</td>
+                <td>10/02/2025 - 20/02/2025</td>
+                <td>01/02/2025</td>
+                <td>Pending</td>
+                <td class="actions"><button class="approve">Approve</button><button class="reject">Reject</button></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-    </div>
+      </div>
 
-    <!-- CARD 2 -->
-    <div class="card">
-        <div class="card-grid">
-            <div>
-                <div class="label">Soldier</div>
-                <div class="value">WO Arman</div>
+      <script>
+        // simple handlers to mirror previous behavior (no page scroll needed)
+        document.querySelectorAll('.approve').forEach(btn=>btn.addEventListener('click', ()=>alert('Approved')));
+        document.querySelectorAll('.reject').forEach(btn=>btn.addEventListener('click', ()=>alert('Rejected')));
+      </script>
+    </body>
+    </html>
+}
 
-                <div class="label">Date</div>
-                <div class="value">10/02/2025 to 20/02/2025</div>
-
-                <div class="label">Reason</div>
-                <div class="reason">Sickness</div>
-            </div>
-
-            <div>
-                <div class="label">Leave Type</div>
-                <div class="value">Medical Leave</div>
-
-                <div class="label">Submitted</div>
-                <div class="value">01/02/2025</div>
-            </div>
-
-            <div>
-                <div class="label">Company</div>
-                <div class="value">Radio</div>
-
-                <div class="label">Status</div>
-                <div class="status">Pending</div>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button class="btn approve">Approve</button>
-            <button class="btn reject">Reject</button>
-        </div>
-    </div>
-
-</div>
-
-<div class="footer">
-    <div class="back">Back</div>
-</div>
-</div>
-
-</body>
-</html>
 
