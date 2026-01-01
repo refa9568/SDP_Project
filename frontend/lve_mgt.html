@@ -359,6 +359,9 @@
     const start = document.getElementById('startDate');
     const end = document.getElementById('endDate');
     const num = document.getElementById('numDays');
+    const leaveType = document.getElementById('leaveType');
+    const reasonEl = document.getElementById('reason');
+
     function calc(){
         if(!start || !end || !num) return;
         if(!start.value || !end.value) { num.value=''; return; }
@@ -370,6 +373,45 @@
     }
     start && start.addEventListener('change', calc);
     end && end.addEventListener('change', calc);
+
+    function prefillFromQuery(){
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type') || params.get('leaveType') || params.get('leave_type');
+        const sVal = params.get('start') || params.get('startDate');
+        const eVal = params.get('end') || params.get('endDate');
+        const reason = params.get('reason') || '';
+
+        if(type && leaveType){
+            let found = false;
+            for(const opt of leaveType.options){
+                if(opt.text === type){ opt.selected = true; found = true; break; }
+            }
+            if(!found){
+                const o = document.createElement('option');
+                o.text = type;
+                o.selected = true;
+                leaveType.add(o);
+            }
+        }
+
+        if(sVal && start) start.value = sVal;
+        if(eVal && end) end.value = eVal;
+        if(reason && reasonEl) reasonEl.value = reason;
+
+        if(start && end && start.value && end.value){
+            calc();
+        }
+
+        const action = params.get('action');
+        if(action === 'approve' || action === 'reject'){
+            const f = document.getElementById('leaveForm');
+            if(f) f.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+    }
+
+    // populate from query params on load
+    prefillFromQuery();
+
     const form = document.getElementById('leaveForm');
     if(form){
         form.addEventListener('submit', function(ev){
