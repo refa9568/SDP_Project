@@ -287,7 +287,21 @@
       preview.innerHTML = html;
     }
 
-    btnPreview.addEventListener('click', buildPreview);
+    // allow manual preview generation
+    let previewShown = false;
+    btnPreview.addEventListener('click', ()=>{ previewShown = true; buildPreview(); });
+
+    // debounce helper
+    function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
+
+    const debouncedBuild = debounce(()=>{ if(previewShown) buildPreview(); }, 250);
+
+    // dynamic update: when filters change, update preview automatically (after initial Generate)
+    ['startDate','endDate','colName','colRank','colCompany','colStatus','colRemark'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('change', debouncedBuild);
+    });
 
     btnPrint.addEventListener('click', () => {
       window.print();
