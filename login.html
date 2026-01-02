@@ -108,6 +108,16 @@
             color: #C2B280;
         }
 
+        /* Fix autofill styling */
+        .input-group input:-webkit-autofill,
+        .input-group input:-webkit-autofill:hover,
+        .input-group input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #C2B280;
+            -webkit-box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .login-btn {
             width: 100%;
             padding: 12px;
@@ -170,12 +180,12 @@
 
             <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username" required>
+                <input type="text" id="username" placeholder="Enter username" required autocomplete="off">
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+                <input type="password" id="password" placeholder="Enter password" required autocomplete="off">
             </div>
 
             <button type="submit" class="login-btn">Login</button>
