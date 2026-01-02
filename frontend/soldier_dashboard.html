@@ -55,6 +55,11 @@ body{
     grid-template-columns:1fr 1fr;
     gap:26px;
 }
+@media(max-width:900px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
 
 /* ===== PANEL ===== */
 .panel{
@@ -154,6 +159,60 @@ body{
     padding:4px 16px;
     border-radius:4px;
 }
+
+/* ===== LEAVE HISTORY ===== */
+.leave-history-item{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:12px 14px;
+    margin-bottom:10px;
+}
+.leave-history-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+}
+.leave-history-type{
+    font-weight:700;
+    font-size:14px;
+}
+.status-badge{
+    padding:4px 12px;
+    border-radius:4px;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+.status-badge.pending{
+    background:#d6a64f;
+    color:#1a1300;
+}
+.status-badge.approved{
+    background:#6fcf50;
+    color:#ffffff;
+}
+.status-badge.rejected{
+    background:#d13b2f;
+    color:#ffffff;
+}
+.leave-history-dates{
+    font-size:13px;
+    color:#b7bfa0;
+    margin-bottom:4px;
+}
+.leave-history-reason{
+    font-size:12px;
+    color:#b7bfa0;
+    font-style:italic;
+}
+.no-history{
+    text-align:center;
+    padding:30px;
+    color:#b7bfa0;
+    font-size:14px;
+}
 </style>
 </head>
 
@@ -179,6 +238,14 @@ body{
     </div>
 
     <!-- LEAVE BALANCE -->
+    <!-- LEAVE HISTORY -->
+    <div class="panel" style="grid-column:1 / -1;">
+        <div class="panel-title">My Leave Requests</div>
+        <div id="leaveHistoryContainer">
+            <div class="no-history">No leave requests found</div>
+        </div>
+    </div>
+
     <div class="panel">
         <div class="panel-title">Leave Balance</div>
         <div class="balance">
@@ -229,17 +296,52 @@ body{
 
         <div class="attendance-row">
             <span>Roll Call</span>
-            <span class="present">Present</span>
+   Load and display leave history
+function loadLeaveHistory() {
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const container = document.getElementById('leaveHistoryContainer');
+    
+    // Filter requests for current soldier (Arman)
+    const myRequests = requests.filter(req => req.soldier === 'Arman');
+    
+    if (myRequests.length === 0) {
+        container.innerHTML = '<div class="no-history">No leave requests found</div>';
+        return;
+    }
+    
+    // Sort by newest first
+    myRequests.sort((a, b) => {
+        const dateA = new Date(a.submitted.split('/').reverse().join('-'));
+        const dateB = new Date(b.submitted.split('/').reverse().join('-'));
+        return dateB - dateA;
+    });
+    
+    container.innerHTML = myRequests.map(req => `
+        <div class="leave-history-item">
+            <div class="leave-history-header">
+                <div class="leave-history-type">${req.type}</div>
+                <div class="status-badge ${req.status.toLowerCase()}">${req.status}</div>
+            </div>
+            <div class="leave-history-dates">📅 ${req.date} ${req.days ? '(' + req.days + ' days)' : ''}</div>
+            <div class="leave-history-reason">${req.reason || 'No reason provided'}</div>
         </div>
-    </div>
+    `).join('');
+}
 
-</div>
-</div>
-
-<script>
 // Redirect to leave application page with pre-filled data
 function applyLeave(leaveType) {
     window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '../login.html';
+    }
+}
+
+// Load leave history on page load
+window.addEventListener('DOMContentLoaded', loadLeaveHistory);   window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
 }
 
 // Logout function
