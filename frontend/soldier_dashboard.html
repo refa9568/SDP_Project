@@ -162,7 +162,7 @@ body{
 <!-- HEADER -->
 <div class="header">
     <h1>Soldier Self-Service Portal</h1>
-    <button class="logout">Logout</button>
+    <button class="logout" onclick="logout()">Logout</button>
 </div>
 
 <!-- MAIN -->
@@ -240,6 +240,13 @@ body{
 // Redirect to leave application page with pre-filled data
 function applyLeave(leaveType) {
     window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '../login.html';
+    }
 }
 </script>
 
