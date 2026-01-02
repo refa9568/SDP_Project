@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Soldier Self-Service Portal</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+}
+body{
+    background:#2f3a32;
+    font-family:Segoe UI, Arial, sans-serif;
+    color:#e6e6c6;
+}
+
+/* ===== HEADER ===== */
+.header{
+    background:#6b7740;
+    padding:20px 28px;
+    border-bottom:2px solid #8f9960;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.header h1{
+    margin:0;
+    font-size:26px;
+    color:#ffffff;
+}
+.logout{
+    padding:8px 22px;
+    background:#3a4638;
+    border:1px solid #9ea96a;
+    color:#e6e6c6;
+    border-radius:6px;
+}
+
+/* ===== MAIN ===== */
+.main{
+    padding:26px;
+}
+
+/* ===== GRID ===== */
+.grid{
+    max-width:1200px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:26px;
+}
+
+/* ===== PANEL ===== */
+.panel{
+    background:#6f7f46;
+    border-radius:10px;
+    padding:20px;
+    border:1px solid #8f9960;
+}
+.panel-title{
+    background:#2f3b32;
+    color:#d9d4a6;
+    text-align:center;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:16px;
+    font-weight:600;
+}
+
+/* ===== PERSONAL INFO ===== */
+.info-box{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:12px 14px;
+    margin-bottom:12px;
+}
+
+/* ===== LEAVE BALANCE ===== */
+.balance{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+}
+.balance-card{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:16px;
+    text-align:center;
+}
+.balance-card h3{
+    margin:0;
+    font-size:16px;
+    color:#e6e6c6;
+}
+.balance-card .count{
+    margin-top:28px;
+    font-size:34px;
+    font-weight:bold;
+    color:#e33b2f;
+}
+
+/* ===== APPLY LEAVE ===== */
+.leave-options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+.leave-btn{
+    padding:30px 10px;
+    border-radius:8px;
+    text-align:center;
+    font-weight:600;
+    font-size:18px;
+    color:#ffffff;
+}
+.annual{background:#24446c;}
+.casual{background:#1b1d18;}
+.recreation{background:#2f5a1f;}
+.medical{background:#5b1a15;}
+
+/* ===== ATTENDANCE ===== */
+.attendance-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#2f3b32;
+    padding:14px 16px;
+    border-radius:6px;
+    margin-bottom:12px;
+}
+.present{
+    background:#6fcf50;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.absent{
+    background:#d13b2f;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>Soldier Self-Service Portal</h1>
+    <button class="logout">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<div class="grid">
+
+    <!-- PERSONAL INFO -->
+    <div class="panel">
+        <div class="panel-title">Personal Info</div>
+        <div class="info-box">Name &nbsp;&nbsp;&nbsp;: Arman</div>
+        <div class="info-box">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 001</div>
+        <div class="info-box">Rank &nbsp;&nbsp;&nbsp;: WO</div>
+        <div class="info-box">Company : Radio</div>
+    </div>
+
+    <!-- LEAVE BALANCE -->
+    <div class="panel">
+        <div class="panel-title">Leave Balance</div>
+        <div class="balance">
+            <div class="balance-card">
+                <h3>Annual Leave</h3>
+                <div class="count">45</div>
+            </div>
+            <div class="balance-card">
+                <h3>Recreational Leave</h3>
+                <div class="count">30</div>
+            </div>
+            <div class="balance-card">
+                <h3>Casual Leave</h3>
+                <div class="count">10</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLY LEAVE -->
+    <div class="panel">
+        <div class="panel-title">Apply for Leave</div>
+        <div class="leave-options">
+            <div class="leave-btn annual">Annual Leave</div>
+            <div class="leave-btn casual">Casual Leave</div>
+            <div class="leave-btn recreation">Recreation Leave</div>
+            <div class="leave-btn medical">Medical Leave</div>
+        </div>
+    </div>
+
+    <!-- DAILY ATTENDANCE -->
+    <div class="panel">
+        <div class="panel-title">Daily Attendance</div>
+
+        <div class="attendance-row">
+            <span>Morning PT</span>
+            <span class="present">Present</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Office</span>
+            <span class="present">Present</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Afternoon Games</span>
+            <span class="absent">Absent</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Roll Call</span>
+            <span class="present">Present</span>
+        </div>
+    </div>
+
+</div>
+</div>
+
+</body>
+</html>
