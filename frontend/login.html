@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ParadeOps - Secure Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #2E3D32, #3d4d37);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #C2B280;
+        }
+
+        .logo {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: #2E3D32;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #C2B280;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #556B2F;
+        }
+
+        .login-container {
+            background: linear-gradient(135deg, #556B2F, #6b7a3a);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #2E3D32;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+            font-size: 22px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #C2B280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group select,
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #2E3D32;
+            border-radius: 5px;
+            font-size: 14px;
+            background: #3d4d37;
+            color: #C2B280;
+            transition: all 0.3s ease;
+        }
+
+        .input-group select::placeholder,
+        .input-group input::placeholder {
+            color: #556B2F;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            background: #2E3D32;
+            border-color: #556B2F;
+            box-shadow: 0 0 8px rgba(198, 179, 128, 0.5);
+        }
+
+        .input-group select {
+            cursor: pointer;
+        }
+
+        .input-group select option {
+            background: #2E3D32;
+            color: #C2B280;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #C2B280;
+            color: #2E3D32;
+            border: 2px solid #556B2F;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #d4c89f;
+            border-color: #C2B280;
+            transform: translateY(-2px);
+        }
+
+        .footer-message {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #C2B280;
+            letter-spacing: 1px;
+        }
+
+        .version-info {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 12px;
+            color: #556B2F;
+        }
+    </style>
+    <script>
+      const credentials = {
+        co: { password: '1234', dashboard: '#' },
+        coycomd: { password: '1234', dashboard: '#' },
+        adjt: { password: '1234', dashboard: 'adjutant-dashbord.html' },
+        bsm: { password: '1234', dashboard: 'bsm-dashboard.html' },
+        sldr: { password: '1234', dashboard: '#' }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const role = document.getElementById('role').value;
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+
+          if (!role) { alert('Please select a role'); return; }
+          if (!credentials[username]) { alert('Invalid username'); return; }
+          if (credentials[username].password !== password) { alert('Invalid password'); return; }
+
+          const dashboard = credentials[username].dashboard;
+          if (dashboard && dashboard !== '#') {
+            window.location.href = dashboard;
+          } else {
+            alert('Dashboard not available for this role');
+          }
+        });
+      });
+    </script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">🛡️</div>
+        <h1>ParadeOps</h1>
+    </div>
+
+    <div class="login-container">
+        <h2>Secure Login</h2>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="role">Role</label>
+                <select id="role" required>
+                    <option value="">Select a role</option>
+                    <option value="co">Commanding Officer</option>
+                    <option value="coycomd">Company Commander</option>
+                    <option value="adjt">Adjutant</option>
+                    <option value="bsm">Battalion Sergeant Major</option>
+                    <option value="sldr">Soldier</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <div class="footer-message">
+            Authorized Access Only
+        </div>
+    </div>
+
+    <div class="version-info">
+        Version 1.0.0 | Secure Military System
+    </div>
+
+</body>
+</html>
