@@ -199,6 +199,8 @@
 
         if (role === 'adjutant' && username === 'adjt' && password === '1234') {
             window.location.href = 'frontend/adjt_dashboard.html';
+        } else if (role === 'soldier' && username === 'soldier' && password === '1234') {
+            window.location.href = 'frontend/soldier_dashboard.html';
         } else {
             alert('Invalid credentials. Please try again.');
         }

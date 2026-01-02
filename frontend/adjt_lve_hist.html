@@ -191,6 +191,10 @@ tbody tr:not(:last-child){
             <a class="tab active" href="adjt_lve_hist.html">Leave History</a>
         </div>
 
+        <div style="margin-bottom:14px;text-align:right;">
+            <button onclick="clearHistory()" style="padding:8px 16px;background:#d13b2f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Clear All History</button>
+        </div>
+
         <!-- TABLE -->
         <table>
             <thead>
@@ -242,6 +246,15 @@ function loadHistory() {
         `;
         tbody.appendChild(row);
     });
+}
+
+// Clear all history
+function clearHistory() {
+    if (confirm('Are you sure you want to clear all leave history? This cannot be undone.')) {
+        localStorage.removeItem('leaveRequests');
+        loadHistory();
+        alert('All leave history has been cleared.');
+    }
 }
 
 // Load history on page load
