@@ -157,6 +157,29 @@ body{
     padding:4px 16px;
     border-radius:4px;
 }
+
+/* ===== NOTIFICATION BOX ===== */
+.notification-box{
+    margin-top:16px;
+    padding:14px 18px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:15px;
+    text-align:center;
+    display:none;
+}
+.notification-box.approved{
+    background:#6fcf50;
+    color:#ffffff;
+    border:2px solid #4ea33a;
+    display:block;
+}
+.notification-box.rejected{
+    background:#d13b2f;
+    color:#ffffff;
+    border:2px solid #a42820;
+    display:block;
+}
 </style>
 </head>
 
@@ -209,6 +232,7 @@ body{
             <div class="leave-btn recreation" onclick="applyLeave('Recreation Leave')">Recreation Leave</div>
             <div class="leave-btn medical" onclick="applyLeave('Medical Leave')">Medical Leave</div>
         </div>
+        <div id="leaveNotification" class="notification-box"></div>
     </div>
 
     <!-- DAILY ATTENDANCE -->
@@ -240,6 +264,34 @@ body{
 </div>
 
 <script>
+// Check leave status and display notification
+function checkLeaveStatus() {
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const notification = document.getElementById('leaveNotification');
+    
+    // Filter requests for current soldier (Arman)
+    const myRequests = requests.filter(req => req.soldier === 'Arman');
+    
+    if (myRequests.length === 0) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    // Find the most recent approved or rejected leave
+    const approvedLeave = myRequests.find(req => req.status === 'Approved');
+    const rejectedLeave = myRequests.find(req => req.status === 'Rejected');
+    
+    if (approvedLeave) {
+        notification.className = 'notification-box approved';
+        notification.textContent = '✓ Your leave is approved';
+    } else if (rejectedLeave) {
+        notification.className = 'notification-box rejected';
+        notification.textContent = '✗ Your leave is rejected';
+    } else {
+        notification.style.display = 'none';
+    }
+}
+
 // Redirect to leave application page with pre-filled data
 function applyLeave(leaveType) {
     window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
@@ -251,6 +303,9 @@ function logout() {
         window.location.href = '../login.html';
     }
 }
+
+// Check leave status on page load
+window.addEventListener('DOMContentLoaded', checkLeaveStatus);
 </script>
 
 </body>
