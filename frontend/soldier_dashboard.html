@@ -39,6 +39,7 @@ body{
     border:1px solid #9ea96a;
     color:#e6e6c6;
     border-radius:6px;
+    cursor:pointer;
 }
 
 /* ===== MAIN ===== */
@@ -119,6 +120,12 @@ body{
     font-weight:600;
     font-size:18px;
     color:#ffffff;
+    cursor:pointer;
+    transition:transform 0.2s, opacity 0.2s;
+}
+.leave-btn:hover{
+    transform:scale(1.05);
+    opacity:0.9;
 }
 .annual{background:#24446c;}
 .casual{background:#1b1d18;}
@@ -194,10 +201,10 @@ body{
     <div class="panel">
         <div class="panel-title">Apply for Leave</div>
         <div class="leave-options">
-            <div class="leave-btn annual">Annual Leave</div>
-            <div class="leave-btn casual">Casual Leave</div>
-            <div class="leave-btn recreation">Recreation Leave</div>
-            <div class="leave-btn medical">Medical Leave</div>
+            <div class="leave-btn annual" onclick="applyLeave('Annual Leave')">Annual Leave</div>
+            <div class="leave-btn casual" onclick="applyLeave('Casual Leave')">Casual Leave</div>
+            <div class="leave-btn recreation" onclick="applyLeave('Recreation Leave')">Recreation Leave</div>
+            <div class="leave-btn medical" onclick="applyLeave('Medical Leave')">Medical Leave</div>
         </div>
     </div>
 
@@ -228,6 +235,13 @@ body{
 
 </div>
 </div>
+
+<script>
+// Redirect to leave application page with pre-filled data
+function applyLeave(leaveType) {
+    window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
+}
+</script>
 
 </body>
 </html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Submit Leave Request</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+}
+body{
+    background:#2f3a32;
+    font-family:Segoe UI, Arial, sans-serif;
+    color:#e6e6c6;
+}
+
+/* ===== HEADER ===== */
+.header{
+    background:#6b7740;
+    padding:22px 32px;
+    border-bottom:2px solid #8f9960;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.header h1{
+    margin:0;
+    font-size:24px;
+    color:#ffffff;
+}
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+.btn{
+    padding:8px 20px;
+    background:#c9c295;
+    border:1px solid #9ea96a;
+    color:#2f2f1f;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+}
+.btn.light{
+    background:#c9c295;
+    color:#2f2f1f;
+}
+.btn.dark{
+    background:#3a4638;
+    color:#e6e6c6;
+}
+.btn:hover{
+    opacity:0.9;
+}
+
+/* ===== MAIN ===== */
+.main{
+    padding:30px;
+}
+
+/* ===== FORM PANEL ===== */
+.panel{
+    max-width:1100px;
+    margin:0 auto;
+    background:#6f7f46;
+    border-radius:10px;
+    padding:40px 50px;
+    border:1px solid #8f9960;
+}
+
+/* ===== FORM GRID ===== */
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:30px 60px;
+}
+
+/* ===== FORM GROUP ===== */
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+.form-group label{
+    margin-bottom:8px;
+    color:#d9d4a6;
+    font-size:15px;
+}
+input, select, textarea{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:14px;
+    font-size:15px;
+    color:#e6e6c6;
+    font-family:Segoe UI, Arial, sans-serif;
+}
+input::placeholder,
+textarea::placeholder{
+    color:#b7bfa0;
+}
+input:focus,
+select:focus,
+textarea:focus{
+    outline:none;
+    border-color:#c9c295;
+}
+select{
+    cursor:pointer;
+}
+select option{
+    background:#2f3b32;
+    color:#e6e6c6;
+}
+
+/* ===== TEXTAREA ===== */
+.textarea-group{
+    grid-column:1 / span 2;
+}
+textarea{
+    min-height:130px;
+    resize:vertical;
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.submit-btn{
+    margin-top:36px;
+    width:100%;
+    padding:18px;
+    background:#c9c295;
+    color:#2f2f1f;
+    font-size:16px;
+    font-weight:600;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+.submit-btn:hover{
+    background:#d7d0a4;
+}
+
+@media (max-width: 768px) {
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+    .textarea-group{
+        grid-column:1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>Submit and Track Leave Requests</h1>
+    <div class="header-right">
+        <button class="btn light" onclick="goHome()">Home</button>
+        <button class="btn dark" onclick="doLogout()">Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<div class="panel">
+
+    <form id="leaveForm">
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Leave Type</label>
+                <select id="leaveType" required>
+                    <option value="">Select Leave Type</option>
+                    <option value="Annual Leave">Annual Leave</option>
+                    <option value="Casual Leave">Casual Leave</option>
+                    <option value="Recreation Leave">Recreation Leave</option>
+                    <option value="Medical Leave">Medical Leave</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="startDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" id="endDate" required>
+            </div>
+
+            <div class="form-group">
+                <label>Number of Days</label>
+                <input type="number" id="numDays" readonly>
+            </div>
+
+            <div class="form-group textarea-group">
+                <label>Reason for Leave</label>
+                <textarea id="reason" placeholder="Provide detail reason for leave..." required></textarea>
+            </div>
+
+        </div>
+
+        <button type="submit" class="submit-btn">Submit leave application</button>
+    </form>
+
+</div>
+
+</div>
+
+<script>
+// Get form elements
+const startDateInput = document.getElementById('startDate');
+const endDateInput = document.getElementById('endDate');
+const numDaysInput = document.getElementById('numDays');
+const leaveTypeInput = document.getElementById('leaveType');
+const reasonInput = document.getElementById('reason');
+const form = document.getElementById('leaveForm');
+
+// Set minimum date to today
+const today = new Date().toISOString().split('T')[0];
+startDateInput.min = today;
+endDateInput.min = today;
+
+// Calculate number of days
+function calculateDays() {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end >= start) {
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            numDaysInput.value = diffDays;
+        } else {
+            numDaysInput.value = '';
+            alert('End date must be after start date!');
+        }
+    } else {
+        numDaysInput.value = '';
+    }
+}
+
+// Event listeners for date inputs
+startDateInput.addEventListener('change', function() {
+    endDateInput.min = this.value;
+    calculateDays();
+});
+
+endDateInput.addEventListener('change', calculateDays);
+
+// Check for pre-filled data from URL parameters
+window.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type') || params.get('leaveType');
+    const start = params.get('start') || params.get('startDate');
+    const end = params.get('end') || params.get('endDate');
+    const reasonParam = params.get('reason');
+    
+    if (type) {
+        leaveTypeInput.value = type;
+        // Disable the dropdown if leave type is pre-selected
+        leaveTypeInput.disabled = true;
+        leaveTypeInput.style.cursor = 'not-allowed';
+        leaveTypeInput.style.opacity = '0.7';
+    }
+    if (start) {
+        startDateInput.value = start;
+    }
+    if (end) {
+        endDateInput.value = end;
+    }
+    if (reasonParam) {
+        reasonInput.value = reasonParam;
+    }
+    
+    // Calculate days if both dates are present
+    if (start && end) {
+        calculateDays();
+    }
+});
+
+// Form submission
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const leaveType = leaveTypeInput.value;
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const numDays = numDaysInput.value;
+    const reason = reasonInput.value;
+    
+    if (!leaveType || !startDate || !endDate || !reason) {
+        alert('Please fill all required fields!');
+        return;
+    }
+    
+    if (!numDays || numDays < 1) {
+        alert('Please select valid dates!');
+        return;
+    }
+    
+    // Get existing requests or initialize
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    
+    // Create new request - use Arman as the soldier
+    const newRequest = {
+        id: String(Date.now()),
+        soldier: 'Arman',
+        rank: 'WO',
+        company: 'Radio',
+        type: leaveType,
+        date: startDate + ' - ' + endDate,
+        submitted: new Date().toLocaleDateString('en-GB'),
+        status: 'Pending',
+        reason: reason,
+        days: numDays
+    };
+    
+    // Add to requests
+    requests.push(newRequest);
+    localStorage.setItem('leaveRequests', JSON.stringify(requests));
+    
+    // Show success message
+    alert('Leave application submitted successfully!\n\n' +
+          'Type: ' + leaveType + '\n' +
+          'From: ' + startDate + '\n' +
+          'To: ' + endDate + '\n' +
+          'Days: ' + numDays + '\n' +
+          'Status: Pending Approval');
+    
+    // Reset form
+    form.reset();
+    numDaysInput.value = '';
+});
+
+// Navigation functions
+function goHome() {
+    window.location.href = 'soldier_dashboard.html';
+}
+
+function doLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '../login.html';
+    }
+}
+</script>
+
+</body>
+</html>
