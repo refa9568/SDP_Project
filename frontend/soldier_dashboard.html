@@ -267,6 +267,7 @@ body{
 // Check leave status and display notification
 function checkLeaveStatus() {
     const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
     const notification = document.getElementById('leaveNotification');
     
     // Filter requests for current soldier (Arman)
@@ -286,6 +287,13 @@ function checkLeaveStatus() {
         return;
     }
     
+    // Check if this notification has already been seen
+    if (seenNotifications.includes(latestProcessedLeave.id)) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    // Show notification and mark as seen
     if (latestProcessedLeave.status === 'Approved') {
         notification.className = 'notification-box approved';
         notification.textContent = '✓ Your leave is approved';
@@ -293,6 +301,10 @@ function checkLeaveStatus() {
         notification.className = 'notification-box rejected';
         notification.textContent = '✗ Your leave is rejected';
     }
+    
+    // Mark this notification as seen
+    seenNotifications.push(latestProcessedLeave.id);
+    localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
 }
 
 // Redirect to leave application page with pre-filled data
