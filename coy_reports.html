@@ -27,6 +27,11 @@ input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid r
 .button{margin-top:15px;padding:10px 16px;font-weight:800;border-radius:12px;border:none;cursor:pointer}
 .generate{background:var(--green);color:#fff}
 .print{background:var(--sand);color:var(--dark)}
+.button.small-box{padding:8px 12px}
+
+/* Back button (small, subtle) */
+.back-button{appearance:none;background:transparent;border:2px solid rgba(255,255,255,0.12);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:800;margin-left:12px}
+.header .back-button{float:right}
 
 /* Small boxed labels */
 .small-box{display:inline-block;background:var(--dark);border:3px solid var(--sand);padding:6px 10px;color:var(--text);border-radius:12px;font-weight:800;font-size:14px}
@@ -38,7 +43,10 @@ input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid r
 </style>
 </head>
 <body>
-<div class="header"><h2>Report Generation</h2></div>
+<div class="header">
+<button class="back-button" onclick="history.back()" aria-label="Go back">← Back</button>
+<h2>Report Generation</h2>
+</div>
 <div class="layout">
 <div class="panel">
 <h3><span class="small-box">Report Configuration</span></h3>
@@ -47,7 +55,7 @@ input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid r
 <label><input type="checkbox" checked> Name</label>
 <label><input type="checkbox" checked> Rank</label>
 <label><input type="checkbox" checked> Company</label>
-<button class="button generate">Generate Preview</button>
+<button id="generateBtn" class="button print small-box" type="button">Generate Preview</button>
 <button class="button print small-box">Print Report</button>
 </div>
 <div class="panel"><h3><span class="small-box">Report Review</span></h3><p>Preview will appear here</p></div>
