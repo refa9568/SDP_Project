@@ -191,16 +191,29 @@
     </div>
 
     <script>
+    const credentials = {
+        commanding_officer: { username: 'co', password: '1234', dashboard: "frontend/Co's dashboard.html" },
+        coy_comd: { username: 'coycomd', password: '1234', dashboard: 'dashboard.html' },
+        adjutant: { username: 'adjt', password: '1234', dashboard: 'frontend/adjt_dashboard.html' },
+        bsm: { username: 'bsm', password: '1234', dashboard: 'frontend/bsm-dashboard.html' },
+        soldier: { username: 'soldier', password: '1234', dashboard: 'frontend/soldier_dashboard.html' }
+    };
+
     document.getElementById('loginForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const role = document.getElementById('role').value;
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        if (role === 'adjutant' && username === 'adjt' && password === '1234') {
-            window.location.href = 'frontend/adjt_dashboard.html';
-        } else if (role === 'soldier' && username === 'soldier' && password === '1234') {
-            window.location.href = 'frontend/soldier_dashboard.html';
+        if (!role) {
+            alert('Please select a role');
+            return;
+        }
+
+        const userCredentials = credentials[role];
+        
+        if (userCredentials && username === userCredentials.username && password === userCredentials.password) {
+            window.location.href = userCredentials.dashboard;
         } else {
             alert('Invalid credentials. Please try again.');
         }
