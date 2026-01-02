@@ -277,18 +277,21 @@ function checkLeaveStatus() {
         return;
     }
     
-    // Find the most recent approved or rejected leave
-    const approvedLeave = myRequests.find(req => req.status === 'Approved');
-    const rejectedLeave = myRequests.find(req => req.status === 'Rejected');
+    // Sort by ID (most recent first) and find the latest non-pending leave
+    myRequests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    const latestProcessedLeave = myRequests.find(req => req.status === 'Approved' || req.status === 'Rejected');
     
-    if (approvedLeave) {
+    if (!latestProcessedLeave) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    if (latestProcessedLeave.status === 'Approved') {
         notification.className = 'notification-box approved';
         notification.textContent = '✓ Your leave is approved';
-    } else if (rejectedLeave) {
+    } else if (latestProcessedLeave.status === 'Rejected') {
         notification.className = 'notification-box rejected';
         notification.textContent = '✗ Your leave is rejected';
-    } else {
-        notification.style.display = 'none';
     }
 }
 
