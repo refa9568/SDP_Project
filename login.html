@@ -108,6 +108,16 @@
             color: #C2B280;
         }
 
+        /* Fix autofill styling */
+        .input-group input:-webkit-autofill,
+        .input-group input:-webkit-autofill:hover,
+        .input-group input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #C2B280;
+            -webkit-box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .login-btn {
             width: 100%;
             padding: 12px;
@@ -143,42 +153,13 @@
             color: #556B2F;
         }
     </style>
-    <script>
-      const credentials = {
-        co: { password: '1234', dashboard: '#' },
-        coycomd: { password: '1234', dashboard: '#' },
-        adjt: { password: '1234', dashboard: 'adjutant-dashbord.html' },
-        bsm: { password: '1234', dashboard: 'bsm-dashboard.html' },
-        sldr: { password: '1234', dashboard: '#' }
-      };
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const role = document.getElementById('role').value;
-          const username = document.getElementById('username').value;
-          const password = document.getElementById('password').value;
-
-          if (!role) { alert('Please select a role'); return; }
-          if (!credentials[username]) { alert('Invalid username'); return; }
-          if (credentials[username].password !== password) { alert('Invalid password'); return; }
-
-          const dashboard = credentials[username].dashboard;
-          if (dashboard && dashboard !== '#') {
-            window.location.href = dashboard;
-          } else {
-            alert('Dashboard not available for this role');
-          }
-        });
-      });
-    </script>
 </head>
 <body>
 
     <div class="header">
         <div class="logo">🛡️</div>
         <h1>ParadeOps</h1>
+        <p>Real-Time Manpower Readiness Dashboard</p>
     </div>
 
     <div class="login-container">
@@ -189,22 +170,22 @@
                 <label for="role">Role</label>
                 <select id="role" required>
                     <option value="">Select a role</option>
-                    <option value="co">Commanding Officer</option>
-                    <option value="coycomd">Company Commander</option>
-                    <option value="adjt">Adjutant</option>
-                    <option value="bsm">Battalion Sergeant Major</option>
-                    <option value="sldr">Soldier</option>
+                    <option value="commanding_officer">Commanding Officer</option>
+                    <option value="coy_comd">Coy Comd</option>
+                    <option value="adjutant">Adjutant</option>
+                    <option value="bsm">BSM</option>
+                    <option value="soldier">Soldier</option>
                 </select>
             </div>
 
             <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username" required>
+                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="off">
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+                <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="new-password">
             </div>
 
             <button type="submit" class="login-btn">Login</button>
@@ -218,6 +199,36 @@
     <div class="version-info">
         Version 1.0.0 | Secure Military System
     </div>
+
+    <script>
+    const credentials = {
+        commanding_officer: { username: 'co', password: '1234', dashboard: "frontend/CO/CO_dashboard.html" },
+        coy_comd: { username: 'coycomd', password: '1234', dashboard: 'frontend/coy_commander/dashboard.html' },
+        adjutant: { username: 'adjt', password: '1234', dashboard: 'frontend/adjutant/adjt_dashboard.html' },
+        bsm: { username: 'bsm', password: '1234', dashboard: 'frontend/bsm/bsm-dashboard.html' },
+        soldier: { username: 'soldier', password: '1234', dashboard: 'frontend/soldier/soldier_dashboard.html' }
+    };
+
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const role = document.getElementById('role').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!role) {
+            alert('Please select a role');
+            return;
+        }
+
+        const userCredentials = credentials[role];
+        
+        if (userCredentials && username === userCredentials.username && password === userCredentials.password) {
+            window.location.href = userCredentials.dashboard;
+        } else {
+            alert('Invalid credentials. Please try again.');
+        }
+    });
+    </script>
 
 </body>
 </html>
