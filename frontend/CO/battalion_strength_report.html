@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Battalion Strength Report</title>
+  <style>
+    :root{
+      --bg: #2f3b2f;
+      --panel: #556634;
+      --card: #2f3f34;
+      --stroke: rgba(255,255,255,.14);
+      --text: #e9efd6;
+      --muted: rgba(233,239,214,.72);
+      --btn: #cbbd7c;
+      --btnText: #223017;
+      --btnDark: #2e3b32;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                  radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap{ max-width: 1180px; margin: 22px auto 40px; padding: 0 18px; }
+
+    .topbar{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .topbar-row{ display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; }
+    .title h1{ margin:0; font-size: 28px; font-weight: 900; letter-spacing:.2px; }
+    .title p{ margin:6px 0 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+    .top-actions{ display:flex; align-items:center; gap: 12px; margin-top: 4px; }
+    .btn{ border:1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 10px 16px; font-weight: 900; cursor:pointer; background: rgba(0,0,0,.20); color: var(--text); box-shadow: 0 8px 18px rgba(0,0,0,.22); }
+    .btn.light{ background: var(--btn); color: var(--btnText); border-color: rgba(0,0,0,.25); }
+    .btn.dark{ background: var(--btnDark); color: rgba(233,239,214,.88); }
+
+    .panel{
+      margin-top: 18px;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+    }
+    .panel-title{ font-weight: 900; letter-spacing:.15px; margin-bottom: 14px; font-size: 18px; }
+    
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset: 0 0 auto 0;
+      height: 14px;
+      background: rgba(0,0,0,.12);
+    }
+    .stat .num{
+      font-size: 22px;
+      font-weight: 900;
+      margin: 2px 0 6px;
+      color: var(--text);
+    }
+    .stat .txt{
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing:.15px;
+    }
+    .stat.total{ border-color: rgba(255,255,255,.18); }
+    .stat.present{ outline: 2px solid rgba(35,179,90,.55); }
+    .stat.leave{ outline: 2px solid rgba(214,166,79,.55); }
+    .stat.duty{ outline: 2px solid rgba(45,110,247,.55); }
+    .stat.awol{ outline: 2px solid rgba(217,74,58,.55); }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 10px;
+      background: rgba(0,0,0,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    thead th{
+      text-align:left;
+      font-size: 13px;
+      color: rgba(233,239,214,.75);
+      font-weight: 900;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      letter-spacing:.2px;
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: middle;
+      font-weight: 700;
+      color: rgba(233,239,214,.88);
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.05); }
+    .company-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 70px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 900;
+    }
+    tfoot td{
+      padding: 12px 12px;
+      font-weight: 900;
+      border-top: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+    }
+    
+    .footer{ margin-top: 16px; display:flex; justify-content:space-between; }
+    .back-btn{ border:1px solid rgba(255,255,255,.16); border-radius:8px; padding:10px 16px; background: rgba(0,0,0,.20); color: var(--text); font-weight:900; cursor:pointer; }
+    
+    .no-data{
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(233,239,214,.60);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1050px){ .stats{ grid-template-columns: repeat(3, minmax(140px, 1fr)); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title">
+          <h1>Battalion Strength Report</h1>
+          <p>Forwarded by BSM</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn light" onclick="location.href='CO_dashboard.html'">Home</button>
+          <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-title">Battalion Strength Summary</div>
+      <div class="stats">
+        <div class="stat total">
+          <div class="num" id="summary-total">0</div>
+          <div class="txt">Total Strength</div>
+        </div>
+        <div class="stat present">
+          <div class="num" id="summary-present">0</div>
+          <div class="txt">Present</div>
+        </div>
+        <div class="stat leave">
+          <div class="num" id="summary-leave">0</div>
+          <div class="txt">Leave</div>
+        </div>
+        <div class="stat duty">
+          <div class="num" id="summary-duty">0</div>
+          <div class="txt">On Duty</div>
+        </div>
+        <div class="stat awol">
+          <div class="num" id="summary-awol">0</div>
+          <div class="txt">AWOL</div>
+        </div>
+      </div>
+
+      <div class="panel-title">Company Parade State Details</div>
+      <div id="report-content">
+        <div class="no-data">No report forwarded yet. Waiting for BSM to forward Battalion Strength Report.</div>
+      </div>
+
+      <div class="footer">
+        <button class="back-btn" onclick="location.href='CO_dashboard.html'">Back to Dashboard</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function loadBattalionReport() {
+      const reportData = JSON.parse(localStorage.getItem('battalion_strength_report') || 'null');
+      
+      if (!reportData || !reportData.companies || reportData.companies.length === 0) {
+        document.getElementById('report-content').innerHTML = '<div class="no-data">No report forwarded yet. Waiting for BSM to forward Battalion Strength Report.</div>';
+        return;
+      }
+
+      // Update summary
+      document.getElementById('summary-total').textContent = reportData.summary.total;
+      document.getElementById('summary-present').textContent = reportData.summary.present;
+      document.getElementById('summary-leave').textContent = reportData.summary.leave;
+      document.getElementById('summary-duty').textContent = reportData.summary.duty;
+      document.getElementById('summary-awol').textContent = reportData.summary.awol;
+
+      // Build table
+      let tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 120px;">Company</th>
+              <th>Total</th>
+              <th>Present</th>
+              <th>Leave</th>
+              <th>On Duty</th>
+              <th>AWOL</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      
+      reportData.companies.forEach(company => {
+        tableHTML += `
+          <tr>
+            <td><span class="company-badge">${company.name}</span></td>
+            <td>${company.total}</td>
+            <td>${company.present}</td>
+            <td>${company.leave}</td>
+            <td>${company.duty}</td>
+            <td>${company.awol}</td>
+          </tr>`;
+      });
+
+      tableHTML += `
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td>${reportData.summary.total}</td>
+              <td>${reportData.summary.present}</td>
+              <td>${reportData.summary.leave}</td>
+              <td>${reportData.summary.duty}</td>
+              <td>${reportData.summary.awol}</td>
+            </tr>
+          </tfoot>
+        </table>`;
+
+      document.getElementById('report-content').innerHTML = tableHTML;
+    }
+
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadBattalionReport);
+  </script>
+</body>
+</html>

@@ -467,7 +467,7 @@
       </table>
 
       <div class="bottom-actions">
-        <button class="big-btn light">Forward to CO</button>
+        <button class="big-btn light" onclick="forwardToCO()">Forward to CO</button>
         <button class="big-btn dark" onclick="window.location.href='report.html'">Generate Battalion Report</button>
       </div>
     </section>
@@ -599,6 +599,37 @@
       
       // Run on page load
       updateBattalionSummary();
+      
+      // Forward report to CO
+      function forwardToCO() {
+        const companies = [];
+        document.querySelectorAll('tbody tr').forEach(row => {
+          const company = {
+            name: row.querySelector('.company-badge')?.textContent || '',
+            total: parseInt(row.querySelector('.total-val')?.textContent || 0),
+            present: parseInt(row.querySelector('.present-val')?.textContent || 0),
+            leave: parseInt(row.querySelector('.leave-val')?.textContent || 0),
+            duty: parseInt(row.querySelector('.duty-val')?.textContent || 0),
+            awol: parseInt(row.querySelector('.awol-val')?.textContent || 0)
+          };
+          companies.push(company);
+        });
+        
+        const reportData = {
+          summary: {
+            total: document.getElementById('summary-total').textContent,
+            present: document.getElementById('summary-present').textContent,
+            leave: document.getElementById('summary-leave').textContent,
+            duty: document.getElementById('summary-duty').textContent,
+            awol: document.getElementById('summary-awol').textContent
+          },
+          companies: companies,
+          timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem('battalion_strength_report', JSON.stringify(reportData));
+        alert('✅ Battalion Strength Report forwarded to CO successfully!');
+      }
     </script>
 
   </div>
