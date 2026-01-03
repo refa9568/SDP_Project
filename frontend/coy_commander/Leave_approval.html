@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leave Approval</title>
     <style>
-                :root{
-                    --dark:#2E3D32; /* specified dark green (match dashboard) */
+        :root{
+          --dark:#2E3D32; /* dashboard dark green */
           --olive:#556B2F;
           --sand:#C2B280;
           --green:#2ecc71;
@@ -55,19 +55,19 @@
             cursor:pointer;
             border-radius:12px;
             font-weight:800;
+            transition: opacity 0.2s;
         }
 
-        .logout-btn:hover {opacity:0.95}
+        .logout-btn:hover {opacity:0.85}
 
-        .leave-approval {margin-top:18px}
+        .leave-approval {margin-top:18px;display:flex;gap:10px}
 
-        .approve-btn, .history-btn {
+        .approve-btn, .history-btn, .all-btn {
             background:var(--green);
             color:#fff;
             border:none;
             padding:10px 20px;
             font-size:15px;
-            margin-right:10px;
             cursor:pointer;
             border-radius:12px;
             font-weight:800;
@@ -75,20 +75,30 @@
             will-change: transform, box-shadow;
         }
 
-        .approve-btn:hover, .history-btn:hover {
+        .history-btn {
+            background:var(--amber);
+            color:#000;
+        }
+
+        .all-btn {
+            background:var(--olive);
+            border:2px solid var(--sand);
+        }
+
+        .approve-btn:hover, .history-btn:hover, .all-btn:hover {
             opacity:1;
             transform: translateY(-4px) scale(1.02);
             box-shadow: 0 10px 28px rgba(0,0,0,0.35);
         }
 
         /* Touch and active feedback */
-        .approve-btn:active, .history-btn:active {
+        .approve-btn:active, .history-btn:active, .all-btn:active {
             transform: translateY(-2px) scale(1.01);
             box-shadow: 0 6px 16px rgba(0,0,0,0.30);
         }
 
         @media (hover: none) {
-          .approve-btn, .history-btn { /* reduce bold hover behaviour on touch devices */
+          .approve-btn, .history-btn, .all-btn { 
             transition: transform .12s ease, box-shadow .12s ease;
           }
         }
@@ -98,7 +108,7 @@
             width:100%;
             border-collapse:collapse;
             margin-top:20px;
-            background:#17221b; /* dark panel color */
+            background:#17221b;
             border:3px solid var(--sand);
             border-radius:12px;
             overflow:hidden;
@@ -110,17 +120,13 @@
             border-bottom:1px solid rgba(255,255,255,0.03);
         }
 
-        /* Center Date column (6 = Date) */
         .leave-table th:nth-child(6) {
             text-align:center;
             vertical-align:middle;
         }
         .leave-table td:nth-child(6) {
-            display:flex;
-            align-items:center;
-            justify-content:center;
+            text-align:center;
             vertical-align:middle;
-            gap:8px;
         }
 
         .leave-table th{background:#3b4f40;color:var(--text);font-weight:800}
@@ -131,24 +137,40 @@
         .status-label{display:inline-block;padding:6px 12px;border-radius:12px;font-weight:800}
         .status-label.approved{background:var(--green);color:#fff}
         .status-label.rejected{background:var(--red);color:#fff}
-        .status-label.pending{background:#000;color:#fff}
+        .status-label.pending{background:var(--amber);color:#000}
 
-        .status-btn{padding:6px 16px;font-size:14px;border:none;cursor:pointer;border-radius:12px;font-weight:800;display:inline-block;line-height:1}
-        .status-btn.pending{background:var(--amber);color:#000}
-        .status-btn.approved{background:var(--green);color:#fff}
-        .status-btn.rejected{background:var(--red);color:#fff}
-
-        /* Center Status column (6) */
-        .leave-table th:nth-child(6) {
+        /* Empty state message */
+        .empty-state {
             text-align:center;
-            vertical-align:middle;
+            padding:40px 20px;
+            color:rgba(255,255,255,0.6);
+            font-weight:800;
         }
-        .leave-table td:nth-child(6) {
+
+        /* Action buttons in table */
+        .action-btns {
             display:flex;
-            align-items:center;
-            justify-content:center;
-            vertical-align:middle;
             gap:8px;
+            justify-content:center;
+        }
+
+        .action-btns button {
+            padding:6px 12px;
+            border:none;
+            border-radius:8px;
+            font-weight:800;
+            cursor:pointer;
+            font-size:13px;
+        }
+
+        .action-btns .approve {
+            background:var(--green);
+            color:#fff;
+        }
+
+        .action-btns .reject {
+            background:var(--red);
+            color:#fff;
         }
 
     </style>
@@ -158,13 +180,14 @@
         <header>
             <h1>Leave Approval</h1>
             <div class="logout">
-                <button class="logout-btn">Logout</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </header>
 
         <div class="leave-approval">
-            <button class="approve-btn">Approve Request</button>
-            <button class="history-btn">Leave History</button>
+            <button class="approve-btn" onclick="showPendingOnly()">Pending Requests</button>
+            <button class="history-btn" onclick="showHistory()">Leave History</button>
+            <button class="all-btn" onclick="showAll()">Show All</button>
         </div>
 
         <table class="leave-table">
@@ -176,43 +199,217 @@
                     <th>Company</th>
                     <th>Leave Type</th>
                     <th>Status</th>
+                    <th id="actionHeader" style="display:none">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
+            <tbody id="leaveTableBody">
+                <tr data-status="approved">
                     <td>Army No-1234</td>
                     <td>Akib</td>
                     <td>LCPL</td>
                     <td>Radio</td>
                     <td>Annual Leave</td>
                     <td><span class="status-label approved">Approved</span></td>
+                    <td class="action-cell" style="display:none"></td>
                 </tr>
-                <tr>
+                <tr data-status="rejected">
                     <td>Army No-1235</td>
                     <td>Arman</td>
                     <td>WO</td>
                     <td>Radio</td>
                     <td>Medical Leave</td>
                     <td><span class="status-label rejected">Rejected</span></td>
+                    <td class="action-cell" style="display:none"></td>
                 </tr>
-                <tr>
+                <tr data-status="pending">
                     <td>Army No-1236</td>
                     <td>Rahul</td>
                     <td>SWO</td>
                     <td>Radio</td>
                     <td>Part of P/Leave</td>
                     <td><span class="status-label pending">Pending</span></td>
+                    <td class="action-cell" style="display:none">
+                        <div class="action-btns">
+                            <button class="approve" onclick="approveLeave(this)">Approve</button>
+                            <button class="reject" onclick="rejectLeave(this)">Reject</button>
+                        </div>
+                    </td>
                 </tr>
-                <tr>
+                <tr data-status="approved">
                     <td>Army No-1237</td>
                     <td>Minhaz</td>
                     <td>Sgt</td>
                     <td>Radio</td>
                     <td>Weekend Leave</td>
                     <td><span class="status-label approved">Approved</span></td>
+                    <td class="action-cell" style="display:none"></td>
+                </tr>
+                <tr data-status="pending">
+                    <td>Army No-1238</td>
+                    <td>Shawon</td>
+                    <td>CPL</td>
+                    <td>Radio</td>
+                    <td>Medical Leave</td>
+                    <td><span class="status-label pending">Pending</span></td>
+                    <td class="action-cell" style="display:none">
+                        <div class="action-btns">
+                            <button class="approve" onclick="approveLeave(this)">Approve</button>
+                            <button class="reject" onclick="rejectLeave(this)">Reject</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr data-status="pending">
+                    <td>Army No-1239</td>
+                    <td>Rifat</td>
+                    <td>LCPL</td>
+                    <td>Radio</td>
+                    <td>Annual Leave</td>
+                    <td><span class="status-label pending">Pending</span></td>
+                    <td class="action-cell" style="display:none">
+                        <div class="action-btns">
+                            <button class="approve" onclick="approveLeave(this)">Approve</button>
+                            <button class="reject" onclick="rejectLeave(this)">Reject</button>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
+        <div id="emptyState" class="empty-state" style="display:none">
+            No leave requests found matching the current filter.
+        </div>
     </div>
+
+    <script>
+        function logout() {
+            sessionStorage.clear();
+            localStorage.clear();
+            
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function showPendingOnly() {
+            const rows = document.querySelectorAll('#leaveTableBody tr');
+            const actionHeader = document.getElementById('actionHeader');
+            const actionCells = document.querySelectorAll('.action-cell');
+            const emptyState = document.getElementById('emptyState');
+            let visibleCount = 0;
+
+            // Show action column
+            actionHeader.style.display = 'table-cell';
+            actionCells.forEach(cell => cell.style.display = 'table-cell');
+
+            rows.forEach(row => {
+                if (row.dataset.status === 'pending') {
+                    row.style.display = 'table-row';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide empty state
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+                document.querySelector('.leave-table').style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                document.querySelector('.leave-table').style.display = 'table';
+            }
+        }
+
+        function showHistory() {
+            const rows = document.querySelectorAll('#leaveTableBody tr');
+            const actionHeader = document.getElementById('actionHeader');
+            const actionCells = document.querySelectorAll('.action-cell');
+            const emptyState = document.getElementById('emptyState');
+            let visibleCount = 0;
+
+            // Hide action column
+            actionHeader.style.display = 'none';
+            actionCells.forEach(cell => cell.style.display = 'none');
+
+            rows.forEach(row => {
+                if (row.dataset.status === 'approved' || row.dataset.status === 'rejected') {
+                    row.style.display = 'table-row';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+                document.querySelector('.leave-table').style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                document.querySelector('.leave-table').style.display = 'table';
+            }
+        }
+
+        function showAll() {
+            const rows = document.querySelectorAll('#leaveTableBody tr');
+            const actionHeader = document.getElementById('actionHeader');
+            const actionCells = document.querySelectorAll('.action-cell');
+            const emptyState = document.getElementById('emptyState');
+
+            // Hide action column
+            actionHeader.style.display = 'none';
+            actionCells.forEach(cell => cell.style.display = 'none');
+
+            rows.forEach(row => {
+                row.style.display = 'table-row';
+            });
+
+            emptyState.style.display = 'none';
+            document.querySelector('.leave-table').style.display = 'table';
+        }
+
+        function approveLeave(button) {
+            const row = button.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6)');
+            
+            // Update status
+            row.dataset.status = 'approved';
+            statusCell.innerHTML = '<span class="status-label approved">Approved</span>';
+            
+            // Remove from pending view
+            row.style.display = 'none';
+            
+            // Check if there are any pending requests left
+            checkEmptyState();
+        }
+
+        function rejectLeave(button) {
+            const row = button.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6)');
+            
+            // Update status
+            row.dataset.status = 'rejected';
+            statusCell.innerHTML = '<span class="status-label rejected">Rejected</span>';
+            
+            // Remove from pending view
+            row.style.display = 'none';
+            
+            // Check if there are any pending requests left
+            checkEmptyState();
+        }
+
+        function checkEmptyState() {
+            const visibleRows = Array.from(document.querySelectorAll('#leaveTableBody tr'))
+                .filter(row => row.style.display !== 'none');
+            
+            const emptyState = document.getElementById('emptyState');
+            
+            if (visibleRows.length === 0) {
+                emptyState.style.display = 'block';
+                document.querySelector('.leave-table').style.display = 'none';
+            }
+        }
+
+        // Show all by default on page load
+        showAll();
+    </script>
 </body>
 </html>
