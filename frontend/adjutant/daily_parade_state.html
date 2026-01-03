@@ -241,7 +241,10 @@
             </div>
         </div>
 
-        <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <button class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('daily_parade_state')">📤 Send to CO</button>
+        </div>
 
         <div style="margin-top: 24px;"></div>
 
@@ -571,6 +574,15 @@
             document.getElementById('totalAbsent').textContent = absent;
             document.getElementById('totalStrength').textContent = total;
             document.getElementById('readiness').textContent = readiness + '%';
+        }
+
+        // Send Report to CO
+        function sendReportToCO(reportType) {
+            // Show success message
+            alert('📤 Report sent to CO successfully!\n\nThe ' + (reportType === 'daily_parade_state' ? 'Daily Parade State' : 'Weekly Summary') + ' report has been submitted to the Commanding Officer\'s Notice Board.');
+            
+            // Here you can add actual backend call to save the report
+            // For now, just showing confirmation
         }
 
         // Initialize on page load

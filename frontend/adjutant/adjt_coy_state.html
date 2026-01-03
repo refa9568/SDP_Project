@@ -224,7 +224,7 @@ tbody td{
     </div>
     <div class="header-right">
         <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
-        <button class="btn dark" onclick="location.href='../login.html'">Logout</button>
+        <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
     </div>
 </div>
 
@@ -258,7 +258,6 @@ tbody td{
                 <th>Status</th>
                 <th>Submitted By</th>
                 <th>Time</th>
-                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -272,7 +271,6 @@ tbody td{
                 <td class="status-submitted">Submitted</td>
                 <td>Cpl Akib</td>
                 <td>08:45</td>
-                <td><span class="action approved">Approved</span></td>
             </tr>
             <tr>
                 <td><span class="company">Radio</span></td>
@@ -284,7 +282,6 @@ tbody td{
                 <td class="status-submitted">Submitted</td>
                 <td>WO Arman</td>
                 <td>08:45</td>
-                <td><span class="action approved">Approved</span></td>
             </tr>
             <tr>
                 <td><span class="company">RR</span></td>
@@ -296,7 +293,6 @@ tbody td{
                 <td class="status-pending">Pending</td>
                 <td>-</td>
                 <td>-</td>
-                <td><span class="action approve">Approve</span></td>
             </tr>
             <tr>
                 <td><span class="company">BSC</span></td>
@@ -308,7 +304,6 @@ tbody td{
                 <td class="status-pending">Pending</td>
                 <td>-</td>
                 <td>-</td>
-                <td><span class="action approve">Approve</span></td>
             </tr>
 
             <tr class="total-row">
@@ -318,18 +313,43 @@ tbody td{
                 <td class="orange">35</td>
                 <td class="blue">16</td>
                 <td class="red">03</td>
-                <td colspan="4"></td>
+                <td colspan="3"></td>
             </tr>
         </tbody>
     </table>
     </div>
 
     <div class="footer-buttons">
-        <div class="btn forward" onclick="alert('Battalion Parade State has been forwarded to Commanding Officer successfully!')">Forward to CO</div>
+        <div class="btn forward" onclick="sendCoyStateToCO()">Forward to CO</div>
         <div class="btn report" onclick="location.href='adjt_report_gen.html'">Generate Battalion Report</div>
     </div>
 
 </div>
+
+<script>
+function sendCoyStateToCO() {
+    // Create company state summary data
+    const coyStateData = {
+        content: "Battalion Consolidated Parade State:\n\nTotal Strength: 450\nPresent: 415\nOn Leave: 35\nOn Duty: 16\nAWOL: 3\n\nCompany Breakdown:\n- HQ Company: 120 (Approved)\n- Radio Company: 115 (Approved)\n- RR Company: 110 (Pending)\n- BSC Company: 105 (Pending)",
+        sender: 'Adjutant',
+        date: new Date().toISOString(),
+        type: 'Company State Report'
+    };
+    
+    // Get existing CO notices or create new array
+    let coNotices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+    coNotices.unshift(coyStateData); // Add to beginning
+    
+    // Keep only last 10 notices
+    if (coNotices.length > 10) {
+        coNotices = coNotices.slice(0, 10);
+    }
+    
+    localStorage.setItem('CO_notices', JSON.stringify(coNotices));
+    
+    alert('Battalion Parade State has been forwarded to Commanding Officer successfully!\n\nThe report will appear on the CO\'s Notice Board.');
+}
+</script>
 
 </body>
 </html>
