@@ -413,9 +413,39 @@
         <button class="list-btn" onclick="window.location.href='../coy_commander/daily_employment.html'">Personnel Deployment Overview</button>
       </div>
       <div class="panel">
-        <h3 class="panel-title">Unit Notice Board</h3>
-        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h3 class="panel-title" style="margin:0">Unit Notice Board</h3>
+          <div>
+            <button id="sendNoticeBtn" class="btn light" style="padding:8px 12px; font-size:13px;">Send Notice</button>
+          </div>
+        </div>
+
+        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px; margin-top:12px;">
           <!-- Notices will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Send Notice Modal -->
+      <div id="sendNoticeModal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; z-index:400;">
+        <div style="background:var(--panel); border:1px solid var(--stroke); padding:16px; border-radius:10px; width:520px; box-shadow:0 20px 50px rgba(0,0,0,.5); margin:auto;">
+          <h3 style="margin:0 0 8px; font-weight:900">Send Notice</h3>
+          <form id="sendNoticeForm">
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <select id="noticeSender" style="flex:1; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;">
+                <option value="BSM">BSM</option>
+                <option value="Adjutant">Adjutant</option>
+                <option value="Company Commander">Company Commander</option>
+              </select>
+              <input id="noticeType" placeholder="Type (Notice/Order)" style="width:180px; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;" />
+            </div>
+            <div style="margin-bottom:8px;">
+              <textarea id="noticeText" placeholder="Notice content" rows="6" style="width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;"></textarea>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" id="cancelSendNotice" class="btn dark" style="padding:8px 12px;">Cancel</button>
+              <button type="submit" class="btn light" style="padding:8px 12px;">Send</button>
+            </div>
+          </form>
         </div>
       </div>
     </section>
@@ -514,6 +544,28 @@
       // Setup event handlers
       window.addEventListener('DOMContentLoaded', () => {
         loadNotices();
+
+        // Send notice modal handlers
+        const sendBtn = document.getElementById('sendNoticeBtn');
+        const modal = document.getElementById('sendNoticeModal');
+        const cancelBtn = document.getElementById('cancelSendNotice');
+        const form = document.getElementById('sendNoticeForm');
+
+        if (sendBtn) sendBtn.addEventListener('click', (e) => { e.stopPropagation(); if (modal) modal.style.display = 'flex'; });
+        if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; form.reset(); } });
+
+        if (form) form.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const sender = document.getElementById('noticeSender').value || 'Adjutant';
+          const type = document.getElementById('noticeType').value.trim() || 'Notice';
+          const content = document.getElementById('noticeText').value.trim();
+          if (!content) { alert('Please enter notice content'); return; }
+          let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+          notices.unshift({ date: new Date().toISOString(), sender, type, content });
+          saveNotices(notices);
+          if (modal) { modal.style.display = 'none'; form.reset(); }
+          loadNotices();
+        });
       });
 
       // Reload notices every 30 seconds
