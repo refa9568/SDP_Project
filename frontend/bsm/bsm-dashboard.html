@@ -378,23 +378,23 @@
 
       <div class="stats">
         <div class="stat total">
-          <div class="num">450</div>
+          <div class="num" id="summary-total">450</div>
           <div class="txt">Total Strength</div>
         </div>
         <div class="stat present">
-          <div class="num">400</div>
+          <div class="num" id="summary-present">415</div>
           <div class="txt">Present</div>
         </div>
         <div class="stat leave">
-          <div class="num">32</div>
+          <div class="num" id="summary-leave">35</div>
           <div class="txt">Leave</div>
         </div>
         <div class="stat duty">
-          <div class="num">15</div>
+          <div class="num" id="summary-duty">16</div>
           <div class="txt">On Duty</div>
         </div>
         <div class="stat awol">
-          <div class="num">3</div>
+          <div class="num" id="summary-awol">03</div>
           <div class="txt">AWOL</div>
         </div>
       </div>
@@ -413,76 +413,55 @@
             <th>Leave</th>
             <th>On Duty</th>
             <th>AWOL</th>
-            <th>Status</th>
-            <th>Submitted By</th>
-            <th>Time</th>
-            <th style="width: 130px;">Action</th>
           </tr>
         </thead>
 
         <tbody>
           <tr>
             <td><span class="company-badge">HQ</span></td>
-            <td>120</td>
-            <td class="c-present">110</td>
-            <td class="c-leave">10</td>
-            <td class="c-duty">05</td>
-            <td class="c-awol">01</td>
-            <td class="status submitted">Submitted</td>
-            <td>Cpl Akib</td>
-            <td>08:45</td>
-            <td><button class="action-btn approved">Approved</button></td>
+            <td class="total-val">120</td>
+            <td class="present-val">110</td>
+            <td class="leave-val">10</td>
+            <td class="duty-val">05</td>
+            <td class="awol-val">01</td>
           </tr>
 
           <tr>
             <td><span class="company-badge">Radio</span></td>
-            <td>115</td>
-            <td class="c-present">105</td>
-            <td class="c-leave">10</td>
-            <td class="c-duty">04</td>
-            <td class="c-awol">00</td>
-            <td class="status submitted">Submitted</td>
-            <td>WO Arman</td>
-            <td>08:45</td>
-            <td><button class="action-btn approved">Approved</button></td>
+            <td class="total-val">115</td>
+            <td class="present-val">105</td>
+            <td class="leave-val">10</td>
+            <td class="duty-val">04</td>
+            <td class="awol-val">00</td>
           </tr>
 
           <tr>
             <td><span class="company-badge">RR</span></td>
-            <td>110</td>
-            <td class="c-present">100</td>
-            <td class="c-leave">10</td>
-            <td class="c-duty">04</td>
-            <td class="c-awol">01</td>
-            <td class="status pending">Pending</td>
-            <td>-</td>
-            <td>-</td>
-            <td><button class="action-btn approve">Approve</button></td>
+            <td class="total-val">110</td>
+            <td class="present-val">100</td>
+            <td class="leave-val">10</td>
+            <td class="duty-val">04</td>
+            <td class="awol-val">01</td>
           </tr>
 
           <tr>
             <td><span class="company-badge">BSC</span></td>
-            <td>105</td>
-            <td class="c-present">100</td>
-            <td class="c-leave">05</td>
-            <td class="c-duty">03</td>
-            <td class="c-awol">01</td>
-            <td class="status pending">Pending</td>
-            <td>-</td>
-            <td>-</td>
-            <td><button class="action-btn approve">Approve</button></td>
+            <td class="total-val">105</td>
+            <td class="present-val">100</td>
+            <td class="leave-val">05</td>
+            <td class="duty-val">03</td>
+            <td class="awol-val">01</td>
           </tr>
         </tbody>
 
         <tfoot>
           <tr>
             <td><strong>Total</strong></td>
-            <td>450</td>
-            <td class="c-present">415</td>
-            <td class="c-leave">35</td>
-            <td class="c-duty">16</td>
-            <td class="c-awol">03</td>
-            <td colspan="4"></td>
+            <td id="footer-total">450</td>
+            <td id="footer-present">415</td>
+            <td id="footer-leave">35</td>
+            <td id="footer-duty">16</td>
+            <td id="footer-awol">03</td>
           </tr>
         </tfoot>
       </table>
@@ -584,6 +563,42 @@
         // Clear the textarea
         document.getElementById('nextDayCommitment').value = '';
       }
+
+      // Auto-update Battalion Strength Summary from table
+      function updateBattalionSummary() {
+        let totalSum = 0, presentSum = 0, leaveSum = 0, dutySum = 0, awolSum = 0;
+        
+        document.querySelectorAll('tbody tr').forEach(row => {
+          const total = parseInt(row.querySelector('.total-val')?.textContent || 0);
+          const present = parseInt(row.querySelector('.present-val')?.textContent || 0);
+          const leave = parseInt(row.querySelector('.leave-val')?.textContent || 0);
+          const duty = parseInt(row.querySelector('.duty-val')?.textContent || 0);
+          const awol = parseInt(row.querySelector('.awol-val')?.textContent || 0);
+          
+          totalSum += total;
+          presentSum += present;
+          leaveSum += leave;
+          dutySum += duty;
+          awolSum += awol;
+        });
+        
+        // Update summary cards
+        document.getElementById('summary-total').textContent = totalSum;
+        document.getElementById('summary-present').textContent = presentSum;
+        document.getElementById('summary-leave').textContent = leaveSum;
+        document.getElementById('summary-duty').textContent = dutySum;
+        document.getElementById('summary-awol').textContent = awolSum < 10 ? '0' + awolSum : awolSum;
+        
+        // Update footer
+        document.getElementById('footer-total').textContent = totalSum;
+        document.getElementById('footer-present').textContent = presentSum;
+        document.getElementById('footer-leave').textContent = leaveSum;
+        document.getElementById('footer-duty').textContent = dutySum;
+        document.getElementById('footer-awol').textContent = awolSum < 10 ? '0' + awolSum : awolSum;
+      }
+      
+      // Run on page load
+      updateBattalionSummary();
     </script>
 
   </div>
