@@ -40,167 +40,10 @@ input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid r
 /* ensure print small-box has readable contrast */
 .button.print.small-box{background:var(--dark);color:var(--text);border:3px solid var(--sand)}
 
-/* Report table styling */
-.report-table{width:100%;border-collapse:collapse;margin-top:10px}
-.report-table th,.report-table td{padding:10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1)}
-.report-table th{background:rgba(0,0,0,0.2);font-weight:800}
-.report-table tr:hover{background:rgba(255,255,255,0.05)}
-.report-meta{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;margin-bottom:15px}
-.report-meta p{margin:5px 0;font-size:14px}
 
 </style>
 </head>
 <body>
-
-<script>
-// Sample data for demonstration
-const sampleData = [
-    {name: "Maj. Rahman", rank: "Major", company: "Alpha", status: "Present", duration: "N/A", remarks: "On duty"},
-    {name: "Capt. Karim", rank: "Captain", company: "Alpha", status: "Leave", duration: "3 days", remarks: "Medical leave"},
-    {name: "Lt. Ahmed", rank: "Lieutenant", company: "Alpha", status: "Training", duration: "7 days", remarks: "External course"},
-    {name: "Sub. Hassan", rank: "Subedar", company: "Alpha", status: "Present", duration: "N/A", remarks: "Duty"},
-    {name: "Hav. Ali", rank: "Havildar", company: "Alpha", status: "Deployed", duration: "14 days", remarks: "Field ops"},
-    {name: "NK. Rahim", rank: "Naik", company: "Alpha", status: "Present", duration: "N/A", remarks: "Guard duty"},
-    {name: "Sep. Habib", rank: "Sepoy", company: "Alpha", status: "Leave", duration: "2 days", remarks: "Casual leave"},
-    {name: "Sep. Jamal", rank: "Sepoy", company: "Alpha", status: "Present", duration: "N/A", remarks: "Barrack duty"}
-];
-
-// Filter function
-function filterData() {
-    const rankFilter = document.getElementById('rankFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    let filtered = sampleData.filter(person => {
-        let rankMatch = true;
-        let statusMatch = true;
-        
-        // Rank filtering
-        if (rankFilter !== 'all') {
-            if (rankFilter === 'officer') rankMatch = ['Major', 'Captain', 'Lieutenant'].includes(person.rank);
-            else if (rankFilter === 'jco') rankMatch = ['Subedar', 'Naib Subedar'].includes(person.rank);
-            else if (rankFilter === 'nco') rankMatch = ['Havildar', 'Naik', 'Lance Naik'].includes(person.rank);
-            else if (rankFilter === 'soldier') rankMatch = person.rank === 'Sepoy';
-        }
-        
-        // Status filtering
-        if (statusFilter !== 'all') {
-            statusMatch = person.status.toLowerCase() === statusFilter.toLowerCase();
-        }
-        
-        return rankMatch && statusMatch;
-    });
-    
-    return filtered;
-}
-
-// Generate report preview
-function generateReport() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const reportType = document.getElementById('reportType').value;
-    
-    // Get selected fields
-    const fields = {
-        name: document.getElementById('fieldName').checked,
-        rank: document.getElementById('fieldRank').checked,
-        company: document.getElementById('fieldCompany').checked,
-        status: document.getElementById('fieldStatus').checked,
-        duration: document.getElementById('fieldDuration').checked,
-        remarks: document.getElementById('fieldRemarks').checked
-    };
-    
-    // Filter data
-    const filteredData = filterData();
-    
-    // Generate HTML
-    let html = '<div class="report-meta">';
-    html += `<p><strong>Report Type:</strong> ${reportType.charAt(0).toUpperCase() + reportType.slice(1)}</p>`;
-    html += `<p><strong>Date Range:</strong> ${startDate || 'Not specified'} to ${endDate || 'Not specified'}</p>`;
-    html += `<p><strong>Total Records:</strong> ${filteredData.length}</p>`;
-    html += '</div>';
-    
-    if (filteredData.length === 0) {
-        html += '<p style="text-align:center;padding:20px">No data matches the selected filters</p>';
-    } else {
-        html += '<table class="report-table"><thead><tr>';
-        
-        // Table headers based on selected fields
-        if (fields.name) html += '<th>Name</th>';
-        if (fields.rank) html += '<th>Rank</th>';
-        if (fields.company) html += '<th>Company</th>';
-        if (fields.status) html += '<th>Status</th>';
-        if (fields.duration) html += '<th>Duration</th>';
-        if (fields.remarks) html += '<th>Remarks</th>';
-        
-        html += '</tr></thead><tbody>';
-        
-        // Table rows
-        filteredData.forEach(person => {
-            html += '<tr>';
-            if (fields.name) html += `<td>${person.name}</td>`;
-            if (fields.rank) html += `<td>${person.rank}</td>`;
-            if (fields.company) html += `<td>${person.company}</td>`;
-            if (fields.status) html += `<td>${person.status}</td>`;
-            if (fields.duration) html += `<td>${person.duration}</td>`;
-            if (fields.remarks) html += `<td>${person.remarks}</td>`;
-            html += '</tr>';
-        });
-        
-        html += '</tbody></table>';
-    }
-    
-    document.getElementById('reportPreview').innerHTML = html;
-}
-
-// Print functionality
-function printReport() {
-    const previewContent = document.getElementById('reportPreview').innerHTML;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Company Report</title>
-            <style>
-                body{font-family:Arial,sans-serif;padding:20px;color:#000}
-                .report-meta{background:#f0f0f0;padding:10px;margin-bottom:15px}
-                .report-meta p{margin:5px 0}
-                table{width:100%;border-collapse:collapse}
-                th,td{padding:8px;text-align:left;border:1px solid #ddd}
-                th{background:#556B2F;color:#fff}
-            </style>
-        </head>
-        <body>
-            <h1>Company Report</h1>
-            ${previewContent}
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-// Event listeners
-document.getElementById('generateBtn').addEventListener('click', generateReport);
-document.getElementById('printBtn').addEventListener('click', printReport);
-
-// Auto-generate on filter change
-document.getElementById('rankFilter').addEventListener('change', () => {
-    if (document.getElementById('reportPreview').innerHTML) generateReport();
-});
-document.getElementById('statusFilter').addEventListener('change', () => {
-    if (document.getElementById('reportPreview').innerHTML) generateReport();
-});
-document.getElementById('reportType').addEventListener('change', () => {
-    if (document.getElementById('reportPreview').innerHTML) generateReport();
-});
-
-// Set default dates
-const today = new Date();
-const lastWeek = new Date(today);
-lastWeek.setDate(lastWeek.getDate() - 7);
-document.getElementById('endDate').value = today.toISOString().split('T')[0];
-document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
-</script>
 <div class="header">
 <button class="back-button" onclick="history.back()" aria-label="Go back">← Back</button>
 <h2>Report Generation</h2>
@@ -208,59 +51,15 @@ document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0
 <div class="layout">
 <div class="panel">
 <h3><span class="small-box">Report Configuration</span></h3>
-
-<!-- Date Range Filter -->
-<label><span class="small-box">Start Date</span><input type="date" id="startDate"></label>
-<label><span class="small-box">End Date</span><input type="date" id="endDate"></label>
-
-<!-- Report Type Filter -->
-<label><span class="small-box">Report Type</span>
-<select id="reportType" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text)">
-<option value="attendance">Attendance Report</option>
-<option value="leave">Leave Report</option>
-<option value="deployment">Deployment Report</option>
-<option value="summary">Summary Report</option>
-</select>
-</label>
-
-<!-- Rank Filter -->
-<label><span class="small-box">Filter by Rank</span>
-<select id="rankFilter" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text)">
-<option value="all">All Ranks</option>
-<option value="officer">Officers Only</option>
-<option value="jco">JCOs Only</option>
-<option value="nco">NCOs Only</option>
-<option value="soldier">Soldiers Only</option>
-</select>
-</label>
-
-<!-- Status Filter -->
-<label><span class="small-box">Filter by Status</span>
-<select id="statusFilter" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text)">
-<option value="all">All Status</option>
-<option value="present">Present</option>
-<option value="leave">On Leave</option>
-<option value="deployed">Deployed</option>
-<option value="training">Training</option>
-</select>
-</label>
-
-<!-- Fields to Include -->
-<h3 style="margin-top:20px"><span class="small-box">Include Fields</span></h3>
-<label><input type="checkbox" id="fieldName" checked> Name</label>
-<label><input type="checkbox" id="fieldRank" checked> Rank</label>
-<label><input type="checkbox" id="fieldCompany" checked> Company</label>
-<label><input type="checkbox" id="fieldStatus" checked> Status</label>
-<label><input type="checkbox" id="fieldDuration"> Duration</label>
-<label><input type="checkbox" id="fieldRemarks"> Remarks</label>
-
+<label><span class="small-box">Start Date</span><input type="date"></label>
+<label><span class="small-box">End Date</span><input type="date"></label>
+<label><input type="checkbox" checked> Name</label>
+<label><input type="checkbox" checked> Rank</label>
+<label><input type="checkbox" checked> Company</label>
 <button id="generateBtn" class="button print small-box" type="button">Generate Preview</button>
-<button id="printBtn" class="button print small-box">Print Report</button>
+<button class="button print small-box">Print Report</button>
 </div>
-<div class="panel" id="previewPanel">
-<h3><span class="small-box">Report Preview</span></h3>
-<div id="reportPreview" style="color:var(--text);overflow-x:auto"></div>
-</div>
+<div class="panel"><h3><span class="small-box">Report Review</span></h3><p>Preview will appear here</p></div>
 </div>
 </body>
 </html>
