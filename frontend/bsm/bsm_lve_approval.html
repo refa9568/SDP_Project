@@ -138,6 +138,28 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
       
       if (request) {
         request.status = status;
+        
+        // If approved by BSM, send to Company Commander for final approval
+        if (status === 'Approved') {
+          request.bsmApproved = true;
+          request.coApprovalStatus = 'Pending'; // Waiting for CO approval
+          
+          // Add to Company Commander's pending list
+          const coPendingLeaves = JSON.parse(localStorage.getItem('coPendingLeaves') || '[]');
+          coPendingLeaves.push({
+            id: request.id,
+            soldier: request.soldier,
+            rank: request.rank,
+            company: request.company,
+            type: request.type,
+            date: request.date,
+            submitted: request.submitted,
+            bsmApproved: true,
+            status: 'Pending CO Approval'
+          });
+          localStorage.setItem('coPendingLeaves', JSON.stringify(coPendingLeaves));
+        }
+        
         localStorage.setItem('leaveRequests', JSON.stringify(requests));
         alert(`Leave request ${status.toLowerCase()} successfully!`);
         loadRequests();

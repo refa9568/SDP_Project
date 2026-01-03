@@ -280,7 +280,12 @@ function checkLeaveStatus() {
     
     // Sort by ID (most recent first) and find the latest non-pending leave
     myRequests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-    const latestProcessedLeave = myRequests.find(req => req.status === 'Approved' || req.status === 'Rejected');
+    const latestProcessedLeave = myRequests.find(req => 
+        req.status === 'Approved by CO' || 
+        req.status === 'Rejected by CO' ||
+        req.status === 'Approved' || 
+        req.status === 'Rejected'
+    );
     
     if (!latestProcessedLeave) {
         notification.style.display = 'none';
@@ -294,10 +299,11 @@ function checkLeaveStatus() {
     }
     
     // Show notification and mark as seen
-    if (latestProcessedLeave.status === 'Approved') {
+    // Only show approved/rejected if it's from CO (final decision)
+    if (latestProcessedLeave.status === 'Approved by CO' || latestProcessedLeave.status === 'Approved') {
         notification.className = 'notification-box approved';
         notification.textContent = '✓ Your leave is approved';
-    } else if (latestProcessedLeave.status === 'Rejected') {
+    } else if (latestProcessedLeave.status === 'Rejected by CO' || latestProcessedLeave.status === 'Rejected') {
         notification.className = 'notification-box rejected';
         notification.textContent = '✗ Your leave is rejected';
     }
