@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Parade State Report</title>
+    <style>
+        :root {
+            --bg: #2f3b2f;
+            --panel: #556634;
+            --card: #2f3f34;
+            --stroke: rgba(255,255,255,.14);
+            --text: #ffffff;
+            --muted: #ffffff;
+            --btn: #cbbd7c;
+            --btnText: #223017;
+            --green: #23b35a;
+            --amber: #d6a64f;
+            --red: #d94a3a;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                        radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                        var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 26px rgba(0,0,0,.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+        }
+
+        .header-info {
+            text-align: right;
+        }
+
+        .header-info p {
+            margin: 4px 0;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn {
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 900;
+            cursor: pointer;
+            background: var(--btn);
+            color: var(--btnText);
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 8px 18px rgba(0,0,0,.22);
+            transition: transform .20s ease, box-shadow .20s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 30px rgba(0,0,0,.28);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 8px 18px rgba(0,0,0,.2);
+        }
+
+        .summary-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .summary-card.present .value { color: var(--green); }
+        .summary-card.absent .value { color: var(--red); }
+        .summary-card.leave .value { color: var(--amber); }
+
+        .report-section {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 26px rgba(0,0,0,.25);
+        }
+
+        .report-section h2 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+            border-bottom: 2px solid var(--stroke);
+            padding-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--stroke);
+        }
+
+        th {
+            background: rgba(0,0,0,.3);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        td {
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-present {
+            background: rgba(35, 179, 90, 0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .status-leave {
+            background: rgba(214, 166, 79, 0.2);
+            color: var(--amber);
+            border: 1px solid var(--amber);
+        }
+
+        .status-absent {
+            background: rgba(217, 74, 58, 0.2);
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .company-section {
+            margin-bottom: 32px;
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,.2);
+            border-radius: 8px;
+            border: 1px solid var(--stroke);
+        }
+
+        .company-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .company-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .company-stats span {
+            opacity: 0.8;
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📋 Daily Parade State Report</h1>
+            </div>
+            <div class="header-info">
+                <p><strong>Date:</strong> <span id="currentDate"></span></p>
+                <p><strong>Time:</strong> <span id="currentTime"></span></p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <button class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('daily_parade_state')">📤 Send to CO</button>
+        </div>
+
+        <div style="margin-top: 24px;"></div>
+
+        <div class="summary-cards">
+            <div class="summary-card present">
+                <h3>Total Present</h3>
+                <p class="value" id="totalPresent">0</p>
+            </div>
+            <div class="summary-card absent">
+                <h3>Total Absent</h3>
+                <p class="value" id="totalAbsent">0</p>
+            </div>
+            <div class="summary-card leave">
+                <h3>On Leave</h3>
+                <p class="value" id="totalLeave">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Strength</h3>
+                <p class="value" id="totalStrength">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Readiness</h3>
+                <p class="value" id="readiness">0%</p>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2>🏢 Company-wise Parade State</h2>
+            
+            <div class="company-section">
+                <div class="company-header">
+                    <h3>Radio Coy</h3>
+                    <div class="company-stats">
+                        <span>Present: <strong style="color: var(--green);">45</strong></span>
+                        <span>Leave: <strong style="color: var(--amber);">8</strong></span>
+                        <span>Absent: <strong style="color: var(--red);">2</strong></span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Capt</td>
+                            <td>Rahman Ahmed</td>
+                            <td>BA-1234</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Sgt</td>
+                            <td>Kamal Hassan</td>
+                            <td>BA-2341</td>
+                            <td><span class="status-badge status-leave">Leave</span></td>
+                            <td>Medical Leave (3 days)</td>
+                        </tr>
+                        <tr>
+                            <td>Cpl</td>
+                            <td>Rafiq Islam</td>
+                            <td>BA-3456</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>LCpl</td>
+                            <td>Rahim Miah</td>
+                            <td>BA-4567</td>
+                            <td><span class="status-badge status-absent">Absent</span></td>
+                            <td>AWOL</td>
+                        </tr>
+                        <tr>
+                            <td>Sep</td>
+                            <td>Jamal Uddin</td>
+                            <td>BA-5678</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="company-section">
+                <div class="company-header">
+                    <h3>Op Coy</h3>
+                    <div class="company-stats">
+                        <span>Present: <strong style="color: var(--green);">48</strong></span>
+                        <span>Leave: <strong style="color: var(--amber);">5</strong></span>
+                        <span>Absent: <strong style="color: var(--red);">1</strong></span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Maj</td>
+                            <td>Salim Khan</td>
+                            <td>BA-6789</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Lt</td>
+                            <td>Faisal Ahmed</td>
+                            <td>BA-7890</td>
+                            <td><span class="status-badge status-leave">Leave</span></td>
+                            <td>Annual Leave (7 days)</td>
+                        </tr>
+                        <tr>
+                            <td>Sgt</td>
+                            <td>Habib Rahman</td>
+                            <td>BA-8901</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Cpl</td>
+                            <td>Aslam Hossain</td>
+                            <td>BA-9012</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="company-section">
+                <div class="company-header">
+                    <h3>HQ Coy</h3>
+                    <div class="company-stats">
+                        <span>Present: <strong style="color: var(--green);">42</strong></span>
+                        <span>Leave: <strong style="color: var(--amber);">6</strong></span>
+                        <span>Absent: <strong style="color: var(--red);">3</strong></span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Capt</td>
+                            <td>Nasir Uddin</td>
+                            <td>BA-0123</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Sgt</td>
+                            <td>Kabir Ahmed</td>
+                            <td>BA-1234</td>
+                            <td><span class="status-badge status-leave">Leave</span></td>
+                            <td>Sick Leave (2 days)</td>
+                        </tr>
+                        <tr>
+                            <td>LCpl</td>
+                            <td>Zahir Khan</td>
+                            <td>BA-2345</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="company-section">
+                <div class="company-header">
+                    <h3>RR Coy</h3>
+                    <div class="company-stats">
+                        <span>Present: <strong style="color: var(--green);">38</strong></span>
+                        <span>Leave: <strong style="color: var(--amber);">7</strong></span>
+                        <span>Absent: <strong style="color: var(--red);">2</strong></span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Maj</td>
+                            <td>Tariq Aziz</td>
+                            <td>BA-3456</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Lt</td>
+                            <td>Shakib Hassan</td>
+                            <td>BA-4567</td>
+                            <td><span class="status-badge status-leave">Leave</span></td>
+                            <td>Casual Leave (5 days)</td>
+                        </tr>
+                        <tr>
+                            <td>Sgt</td>
+                            <td>Matin Ahmed</td>
+                            <td>BA-5678</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>Cpl</td>
+                            <td>Iqbal Khan</td>
+                            <td>BA-6789</td>
+                            <td><span class="status-badge status-absent">Absent</span></td>
+                            <td>Sick</td>
+                        </tr>
+                        <tr>
+                            <td>Sep</td>
+                            <td>Masud Rana</td>
+                            <td>BA-7890</td>
+                            <td><span class="status-badge status-present">Present</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2>📊 Summary Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Officers</th>
+                        <th>JCOs</th>
+                        <th>NCOs</th>
+                        <th>ORs</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Present</strong></td>
+                        <td style="color: var(--green);">10</td>
+                        <td style="color: var(--green);">15</td>
+                        <td style="color: var(--green);">42</td>
+                        <td style="color: var(--green);">106</td>
+                        <td style="color: var(--green);"><strong>173</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>On Leave</strong></td>
+                        <td style="color: var(--amber);">2</td>
+                        <td style="color: var(--amber);">3</td>
+                        <td style="color: var(--amber);">7</td>
+                        <td style="color: var(--amber);">14</td>
+                        <td style="color: var(--amber);"><strong>26</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Absent</strong></td>
+                        <td style="color: var(--red);">0</td>
+                        <td style="color: var(--red);">1</td>
+                        <td style="color: var(--red);">3</td>
+                        <td style="color: var(--red);">4</td>
+                        <td style="color: var(--red);"><strong>8</strong></td>
+                    </tr>
+                    <tr style="background: rgba(0,0,0,.2);">
+                        <td><strong>Total Strength</strong></td>
+                        <td><strong>12</strong></td>
+                        <td><strong>19</strong></td>
+                        <td><strong>52</strong></td>
+                        <td><strong>124</strong></td>
+                        <td><strong>207</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="window.print()">🖨️ Print Report</button>
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Set current date and time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Calculate summary statistics
+        function calculateSummary() {
+            const present = 173;  // 45 + 48 + 42 + 38
+            const leave = 26;     // 8 + 5 + 6 + 7
+            const absent = 8;     // 2 + 1 + 3 + 2
+            const total = present + leave + absent;
+            const readiness = Math.round((present / total) * 100);
+
+            document.getElementById('totalPresent').textContent = present;
+            document.getElementById('totalLeave').textContent = leave;
+            document.getElementById('totalAbsent').textContent = absent;
+            document.getElementById('totalStrength').textContent = total;
+            document.getElementById('readiness').textContent = readiness + '%';
+        }
+
+        // Send Report to CO
+        function sendReportToCO(reportType) {
+            // Show success message
+            alert('📤 Report sent to CO successfully!\n\nThe ' + (reportType === 'daily_parade_state' ? 'Daily Parade State' : 'Weekly Summary') + ' report has been submitted to the Commanding Officer\'s Notice Board.');
+            
+            // Here you can add actual backend call to save the report
+            // For now, just showing confirmation
+        }
+
+        // Initialize on page load
+        updateDateTime();
+        calculateSummary();
+        setInterval(updateDateTime, 60000); // Update time every minute
+    </script>
+</body>
+</html>

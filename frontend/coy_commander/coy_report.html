@@ -51,6 +51,8 @@
     .btn{ border:1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 10px 16px; font-weight: 900; cursor:pointer; background: rgba(0,0,0,.20); color: var(--text); box-shadow: 0 8px 18px rgba(0,0,0,.22); }
     .btn.light{ background: var(--btn); color: var(--btnText); border-color: rgba(0,0,0,.25); }
     .btn.dark{ background: var(--btnDark); color: rgba(233,239,214,.88); }
+    .home-btn{ width:38px; height:38px; background:#3a4638; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; }
+    .home-btn:hover{ background:#4a5648; }
 
     /* layout */
     .grid{ margin-top: 18px; display:grid; grid-template-columns: 1.05fr .95fr; gap: 16px; }
@@ -65,6 +67,11 @@
     .input{ flex:1; display:flex; align-items:center; gap:10px; background: rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14); border-radius: 10px; height: 46px; padding: 0 12px; box-shadow: inset 0 6px 12px rgba(0,0,0,.18); }
     .input input{ flex:1; background: transparent; border:0; outline:0; color: var(--text); font-weight: 900; letter-spacing:.2px; }
     .input .icon{ width:22px; height:22px; opacity:.85; }
+    /* date-field: position calendar icon inside input and hide native indicator */
+    .date-field{ position:relative; }
+    .date-field input[type="date"]{ padding-right:44px; }
+    .date-field input[type="date"]::-webkit-calendar-picker-indicator{ display:none; -webkit-appearance:none; }
+    .date-field .calendar-icon{ position:absolute; right:12px; top:50%; transform:translateY(-50%); width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; }
     .field-label{ margin: 6px 2px 6px; color: var(--muted); font-weight: 900; }
 
     .checks{ display:flex; flex-direction:column; gap:8px; }
@@ -115,8 +122,8 @@
           <p>Generate and Export Parade State Reports</p>
         </div>
         <div class="top-actions">
-          <button class="btn light" onclick="location.href='Co\'s dashboard.html'">Home</button>
-          <button class="btn dark" onclick="location.href='login.html'">Logout</button>
+          <button class="btn light" onclick="location.href='coy_dashboard.html'">Home</button>
+          <button class="btn dark" onclick="location.href='../login.html'">Logout</button>
         </div>
       </div>
     </header>
@@ -138,28 +145,32 @@
           <div class="section">
             <div class="field-label">Start Date</div>
             <div class="input-row">
-              <div class="input" title="Start Date">
+              <div class="input date-field" title="Start Date">
                 <svg class="icon" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="4" width="18" height="16" rx="2" stroke="rgba(233,239,214,.9)" stroke-width="2"/>
                 </svg>
                 <input id="startDate" type="date" value="2025-01-01" aria-label="Start Date" />
-                <svg class="icon" viewBox="0 0 24 24" fill="none">
-                  <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
-                </svg>
+                <div class="calendar-icon" aria-hidden="true">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
           <div class="section">
             <div class="field-label">End Date</div>
             <div class="input-row">
-              <div class="input" title="End Date">
+              <div class="input date-field" title="End Date">
                 <svg class="icon" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="4" width="18" height="16" rx="2" stroke="rgba(233,239,214,.9)" stroke-width="2"/>
                 </svg>
                 <input id="endDate" type="date" value="2025-01-02" aria-label="End Date" />
-                <svg class="icon" viewBox="0 0 24 24" fill="none">
-                  <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
-                </svg>
+                <div class="calendar-icon" aria-hidden="true">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -196,7 +207,7 @@
           <div class="hint">Configure report settings and click Generate Preview</div>
         </div>
         <div class="footer">
-          <button class="back" onclick="location.href='Co\'s dashboard.html'">Back</button>
+          <button class="back" onclick="location.href='coy_dashboard.html'">Back</button>
         </div>
       </div>
     </section>
@@ -213,14 +224,14 @@
     };
 
     const sampleRows = [
-      { id:'001', rank:'LCPL', name:'Akib', company:'RR', status:'AWOL', remark:'Not Reported' },
+      { id:'001', rank:'LCPL', name:'Akib', company:'Radio', status:'AWOL', remark:'Not Reported' },
       { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
-      { id:'003', rank:'CPL', name:'Shawon', company:'HQ', status:'On Duty', remark:'RP Duty' },
+      { id:'003', rank:'CPL', name:'Shawon', company:'Radio', status:'On Duty', remark:'RP Duty' },
       { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
-      { id:'005', rank:'SGT', name:'Minhaz', company:'RR', status:'Present', remark:'' },
-      { id:'006', rank:'LCPL', name:'Rifat', company:'HQ', status:'Leave', remark:'Medical Leave' },
+      { id:'005', rank:'SGT', name:'Minhaz', company:'Radio', status:'Present', remark:'' },
+      { id:'006', rank:'LCPL', name:'Rifat', company:'Radio', status:'Leave', remark:'Medical Leave' },
       { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
-      { id:'008', rank:'SNK', name:'Shuvo', company:'HQ', status:'Present', remark:'' },
+      { id:'008', rank:'SNK', name:'Shuvo', company:'Radio', status:'Present', remark:'' },
     ];
 
     const statusPill = (s) => {
@@ -287,10 +298,39 @@
       preview.innerHTML = html;
     }
 
-    btnPreview.addEventListener('click', buildPreview);
+    // allow manual preview generation
+    let previewShown = false;
+    btnPreview.addEventListener('click', ()=>{ previewShown = true; buildPreview(); });
+
+    // debounce helper
+    function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
+
+    const debouncedBuild = debounce(()=>{ if(previewShown) buildPreview(); }, 250);
+
+    // dynamic update: when filters change, update preview automatically (after initial Generate)
+    ['startDate','endDate','colName','colRank','colCompany','colStatus','colRemark'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('change', debouncedBuild);
+    });
 
     btnPrint.addEventListener('click', () => {
       window.print();
+    });
+
+    // make calendar icon open/focus the native picker where supported (matches lve_mgt behavior)
+    document.querySelectorAll('.date-field').forEach(df=>{
+      const input = df.querySelector('input[type="date"]');
+      const icon = df.querySelector('.calendar-icon');
+      if(!input || !icon) return;
+      icon.addEventListener('click', ()=>{
+        if(typeof input.showPicker === 'function'){
+          input.showPicker();
+        } else {
+          input.focus();
+          try{ input.click(); }catch(e){}
+        }
+      });
     });
   </script>
 </body>

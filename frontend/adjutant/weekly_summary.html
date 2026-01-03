@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Summary Report</title>
+    <style>
+        :root {
+            --bg: #2f3b2f;
+            --panel: #556634;
+            --card: #2f3f34;
+            --stroke: rgba(255,255,255,.14);
+            --text: #e9efd6;
+            --muted: rgba(233,239,214,.72);
+            --btn: #cbbd7c;
+            --btnText: #223017;
+            --green: #23b35a;
+            --amber: #d6a64f;
+            --red: #d94a3a;
+            --blue: #2d6ef7;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                        radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                        var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 26px rgba(0,0,0,.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+        }
+
+        .header-info {
+            text-align: right;
+        }
+
+        .header-info p {
+            margin: 4px 0;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn {
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 900;
+            cursor: pointer;
+            background: var(--btn);
+            color: var(--btnText);
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 8px 18px rgba(0,0,0,.22);
+            transition: transform .20s ease, box-shadow .20s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 30px rgba(0,0,0,.28);
+        }
+
+        .summary-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .overview-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 18px rgba(0,0,0,.2);
+        }
+
+        .overview-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .overview-card .value {
+            font-size: 36px;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .overview-card.total .value { color: var(--blue); }
+        .overview-card.present .value { color: var(--green); }
+        .overview-card.leave .value { color: var(--amber); }
+        .overview-card.absent .value { color: var(--red); }
+
+        .chart-section {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 26px rgba(0,0,0,.25);
+        }
+
+        .chart-section h2 {
+            margin: 0 0 24px 0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+            border-bottom: 2px solid var(--stroke);
+            padding-bottom: 12px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+        }
+
+        .chart-container {
+            background: rgba(0,0,0,.2);
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 900;
+            margin: 0 0 20px 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 280px;
+            padding: 10px;
+            gap: 12px;
+        }
+
+        .bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar-fill {
+            width: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(0,0,0,.1));
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,.3);
+            border: 1px solid var(--stroke);
+        }
+
+        .bar-fill:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.4);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 900;
+            font-size: 14px;
+            background: rgba(0,0,0,.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .bar-label {
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bar-fill.total { background: linear-gradient(180deg, var(--blue), rgba(45, 110, 247, 0.4)); }
+        .bar-fill.present { background: linear-gradient(180deg, var(--green), rgba(35, 179, 90, 0.4)); }
+        .bar-fill.leave { background: linear-gradient(180deg, var(--amber), rgba(214, 166, 79, 0.4)); }
+        .bar-fill.absent { background: linear-gradient(180deg, var(--red), rgba(217, 74, 58, 0.4)); }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--stroke);
+        }
+
+        .comparison-table th {
+            background: rgba(0,0,0,.3);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .comparison-table td {
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(255,255,255,.03);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--stroke);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--stroke);
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📊 Weekly Summary Report</h1>
+            </div>
+            <div class="header-info">
+                <p><strong>Week:</strong> <span id="weekRange"></span></p>
+                <p><strong>Generated:</strong> <span id="currentDate"></span></p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <button class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('weekly_summary')">📤 Send to CO</button>
+        </div>
+
+        <div style="margin-top: 24px;"></div>
+
+        <div class="summary-overview">
+            <div class="overview-card total">
+                <h3>Total Strength</h3>
+                <p class="value">207</p>
+            </div>
+            <div class="overview-card present">
+                <h3>Average Present</h3>
+                <p class="value">173</p>
+            </div>
+            <div class="overview-card leave">
+                <h3>Average On Leave</h3>
+                <p class="value">26</p>
+            </div>
+            <div class="overview-card absent">
+                <h3>Average Absent</h3>
+                <p class="value">8</p>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h2>� Weekly Coy State Summary</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Total Strength</th>
+                        <th>Present</th>
+                        <th>On Leave</th>
+                        <th>Absent</th>
+                        <th>Readiness %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Radio Coy</strong></td>
+                        <td>55</td>
+                        <td>45</td>
+                        <td>8</td>
+                        <td>2</td>
+                        <td><strong>82%</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Op Coy</strong></td>
+                        <td>54</td>
+                        <td>48</td>
+                        <td>5</td>
+                        <td>1</td>
+                        <td><strong>89%</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>HQ Coy</strong></td>
+                        <td>51</td>
+                        <td>42</td>
+                        <td>6</td>
+                        <td>3</td>
+                        <td><strong>82%</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RR Coy</strong></td>
+                        <td>47</td>
+                        <td>38</td>
+                        <td>7</td>
+                        <td>2</td>
+                        <td><strong>81%</strong></td>
+                    </tr>
+                    <tr style="background: rgba(255,255,255,.05); font-weight: 900;">
+                        <td><strong>Total</strong></td>
+                        <td><strong>207</strong></td>
+                        <td><strong>173</strong></td>
+                        <td><strong>26</strong></td>
+                        <td><strong>8</strong></td>
+                        <td><strong>84%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="window.print()">🖨️ Print Report</button>
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Set current date and week range
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            // Calculate week range (last 7 days)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 6);
+            
+            const weekRange = startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + 
+                            ' - ' + 
+                            endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            document.getElementById('weekRange').textContent = weekRange;
+        }
+
+        // Send Report to CO
+        function sendReportToCO(reportType) {
+            // Show success message
+            alert('📤 Report sent to CO successfully!\n\nThe ' + (reportType === 'daily_parade_state' ? 'Daily Parade State' : 'Weekly Summary') + ' report has been submitted to the Commanding Officer\'s Notice Board.');
+            
+            // Here you can add actual backend call to save the report
+            // For now, just showing confirmation
+        }
+
+        // Initialize on page load
+        updateDateTime();
+    </script>
+</body>
+</html>

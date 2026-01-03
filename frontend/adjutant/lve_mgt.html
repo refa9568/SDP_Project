@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Leave Management System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    :root {
+        --bg-dark: #2f3a2f;
+        --bg-main: #5e6b3a;
+        --bg-panel: #6c7741;
+        --bg-input: #364034;
+        --bg-btn: #c6be92;
+        --bg-btn-dark: #3c4a36;
+        --text-light: #f2f2e8;
+        --text-muted: #d8d4b0;
+        --border-soft: #8b8f5a;
+    }
+
+    * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        background: var(--bg-dark);
+        color: var(--text-light);
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+        background: var(--bg-main);
+        padding: 20px 30px;
+        border-bottom: 2px solid var(--border-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+    }
+
+    .header p {
+        margin: 4px 0 0;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .icon-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 6px;
+        background: var(--bg-btn-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    /* project button styles (from adjt_report_gen.html) */
+    .btn{ border:1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor:pointer; background: transparent; color: var(--text-light); }
+    .btn.light{ background: var(--bg-btn); color: #223017; border-color: rgba(0,0,0,.25); }
+    .btn.dark{ background: var(--bg-btn-dark); color: rgba(233,239,214,.88); border-color: rgba(255,255,255,.12); }
+    .home-btn{ width:38px; height:38px; background:#3a4638; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; }
+    .home-btn:hover{ background:#4a5648; }
+
+    .logout-btn {
+        padding: 8px 18px;
+        background: transparent;
+        border: 1px solid var(--border-soft);
+        color: var(--text-light);
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    /* ===== MAIN CONTAINER ===== */
+    .container {
+        padding: 30px;
+    }
+
+    .panel {
+        background: var(--bg-panel);
+        border-radius: 10px;
+        padding: 30px;
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .tab {
+        padding: 14px 28px;
+        border-radius: 10px;
+        background: var(--bg-btn);
+        color: #2f2f1f;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .tab.active {
+        background: var(--bg-btn-dark);
+        color: var(--text-light);
+    }
+
+    /* ===== FORM ===== */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        margin-bottom: 25px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        margin-bottom: 6px;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    input,
+    select,
+    textarea {
+        background: var(--bg-input);
+        border: 1px solid var(--border-soft);
+        border-radius: 6px;
+        padding: 12px;
+        color: var(--text-light);
+        font-size: 14px;
+    }
+        .date-field {
+            position: relative;
+        }
+        .date-field .calendar-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-btn-dark);
+            border-radius: 6px;
+            color: var(--text-light);
+            pointer-events: none;
+            font-size: 14px;
+        }
+
+    .date-field {
+        position: relative;
+    }
+
+    .date-field .calendar-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-btn-dark);
+        border-radius: 6px;
+        color: var(--text-light);
+        pointer-events: none;
+        font-size: 14px;
+    }
+
+    /* ensure the calendar icon sits inside the input field */
+    .date-field input[type="date"] {
+        padding-right: 44px;
+        position: relative;
+        z-index: 1;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    /* hide native browser date picker icon (Chrome/Safari) */
+    .date-field input[type="date"]::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    /* show single custom SVG inside the field */
+        .date-field .calendar-icon {
+            right: 12px;
+            z-index: 2;
+            width: 22px;
+            height: 22px;
+            background: transparent;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #aeb39a;
+    }
+
+    /* ===== SUBMIT BUTTON ===== */
+    .submit-btn {
+        width: 100%;
+        padding: 16px;
+        background: var(--bg-btn);
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #2f2f1f;
+        cursor: pointer;
+           display: block;
+           max-width: 640px;
+           margin: 18px auto 0;
+    }
+
+    /* ===== FOOTER NAV ===== */
+    .footer-nav {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .back-btn {
+        padding: 10px 22px;
+        background: var(--bg-btn);
+        border-radius: 6px;
+        color: #2f2f1f;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tabs {
+            flex-direction: column;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div>
+        <h1>Leave Management System</h1>
+        <p>Submit and Track Leave Requests</p>
+    </div>
+
+    <div class="header-right">
+        <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
+        <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+    <div class="panel">
+
+        <!-- TABS -->
+        <div class="tabs">
+            <a class="tab active" href="lve_mgt.html">Apply for Leave</a>
+            <a class="tab" href="adjt_lve_approval.html">Approve Request</a>
+            <a class="tab" href="adjt_lve_hist.html">Leave History</a>
+        </div>
+
+        <!-- FORM -->
+        <form id="leaveForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="leaveType">Leave Type</label>
+                    <select id="leaveType" name="leaveType">
+                        <option>Annual Leave</option>
+                        <option>Sick Leave</option>
+                        <option>Casual Leave</option>
+                    </select>
+                </div>
+
+                <div class="form-group date-field">
+                    <label for="startDate">Start Date</label>
+                    <input id="startDate" name="startDate" type="date" aria-label="Start date">
+                    <div class="calendar-icon" aria-hidden="true">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" width="18" height="18">
+                            <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group date-field">
+                    <label for="endDate">End Date</label>
+                    <input id="endDate" name="endDate" type="date" aria-label="End date">
+                    <div class="calendar-icon" aria-hidden="true">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" width="18" height="18">
+                            <path d="M7 10h10M7 14h7" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="numDays">Number of Days</label>
+                    <input id="numDays" name="numDays" type="number" placeholder="" readonly>
+                </div>
+
+                <div class="form-group full">
+                    <label for="reason">Reason for Leave</label>
+                    <textarea id="reason" name="reason" placeholder="Provide detail reason for leave..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Submit leave application
+            </button>
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+(function(){
+    const start = document.getElementById('startDate');
+    const end = document.getElementById('endDate');
+    const num = document.getElementById('numDays');
+    const leaveType = document.getElementById('leaveType');
+    const reasonEl = document.getElementById('reason');
+
+    function calc(){
+        if(!start || !end || !num) return;
+        if(!start.value || !end.value) { num.value=''; return; }
+        const s = new Date(start.value);
+        const e = new Date(end.value);
+        if(isNaN(s)||isNaN(e) || e < s){ num.value=''; return; }
+        const days = Math.floor((e - s) / (1000*60*60*24)) + 1;
+        num.value = days;
+    }
+    start && start.addEventListener('change', calc);
+    end && end.addEventListener('change', calc);
+
+    function prefillFromQuery(){
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type') || params.get('leaveType') || params.get('leave_type');
+        const sVal = params.get('start') || params.get('startDate');
+        const eVal = params.get('end') || params.get('endDate');
+        const reason = params.get('reason') || '';
+
+        if(type && leaveType){
+            let found = false;
+            for(const opt of leaveType.options){
+                if(opt.text === type){ opt.selected = true; found = true; break; }
+            }
+            if(!found){
+                const o = document.createElement('option');
+                o.text = type;
+                o.selected = true;
+                leaveType.add(o);
+            }
+        }
+
+        if(sVal && start) start.value = sVal;
+        if(eVal && end) end.value = eVal;
+        if(reason && reasonEl) reasonEl.value = reason;
+
+        if(start && end && start.value && end.value){
+            calc();
+        }
+
+        const action = params.get('action');
+        if(action === 'approve' || action === 'reject'){
+            const f = document.getElementById('leaveForm');
+            if(f) f.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+    }
+
+    // populate from query params on load
+    prefillFromQuery();
+
+    // make calendar icon open/focus the native picker where supported
+    document.querySelectorAll('.date-field').forEach(df=>{
+        const input = df.querySelector('input[type="date"]');
+        const icon = df.querySelector('.calendar-icon');
+        if(!input || !icon) return;
+        // if browser supports showPicker(), use it; otherwise focus
+        icon.addEventListener('click', ()=>{
+            if(typeof input.showPicker === 'function'){
+                input.showPicker();
+            } else {
+                input.focus();
+                try{ input.click(); }catch(e){}
+            }
+        });
+    });
+
+    const form = document.getElementById('leaveForm');
+    if(form){
+        form.addEventListener('submit', function(ev){
+            ev.preventDefault();
+            if(!start.value || !end.value || !num.value){
+                alert('Please select valid start and end dates.');
+                return;
+            }
+            
+            // Get form values
+            const leaveType = document.getElementById('leaveType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const reason = document.getElementById('reason').value;
+            
+            // Get existing requests or initialize
+            const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+            
+            // Create new request - always use LCPL Akib
+            const newRequest = {
+                id: String(Date.now()),
+                soldier: 'Akib',
+                rank: 'LCPL',
+                company: 'RR',
+                type: leaveType,
+                date: startDate + '-' + endDate,
+                submitted: new Date().toLocaleDateString('en-GB'),
+                status: 'Pending',
+                reason: reason
+            };
+            
+            // Add to requests
+            requests.push(newRequest);
+            localStorage.setItem('leaveRequests', JSON.stringify(requests));
+            
+            alert('Leave application submitted successfully! Your request is now pending approval.');
+            form.reset();
+            num.value = '';
+        });
+    }
+})();
+</script>
+
+</body>
+</html>

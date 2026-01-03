@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Leave History</title>
+
+<style>
+/* ===== RESET & FULL HEIGHT FIX ===== */
+html, body{
+    margin:0;
+    padding:0;
+    height:100%;
+}
+
+body{
+    background:#2f3a32;     /* correct dark green background */
+    font-family:Segoe UI, Arial, sans-serif;
+    color:#ffffff;
+}
+
+/* ===== HEADER ===== */
+.header{
+    background:#6b7740;
+    padding:22px 32px;
+    border-bottom:2px solid #8f9960;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.header h1{
+    margin:0;
+    font-size:26px;
+}
+
+.header p{
+    margin:6px 0 0;
+    font-size:14px;
+    color:#dde2b5;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.home-btn{
+    width:38px;
+    height:38px;
+    background:#3a4638;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:20px;
+}
+.home-btn:hover{
+    background:#4a5648;
+}
+
+.logout{
+    padding:8px 18px;
+    background:#3a4638;
+    border:1px solid #8f9960;
+    color:white;
+    border-radius:6px;
+}
+
+/* project button styles (shared) */
+.btn{ border:1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor:pointer; background: transparent; color: #ffffff; }
+.btn.light{ background: #c9c295; color: #2f2f1f; border-color: rgba(0,0,0,.12); }
+.btn.dark{ background: #3a4638; color: #ffffff; border-color: rgba(255,255,255,.08); }
+
+/* ===== MAIN AREA ===== */
+.main{
+    padding:26px;
+}
+
+/* ===== PANEL ===== */
+.panel{
+    max-width:1150px;
+    margin:0 auto;
+    background:#6f7f46;
+    border-radius:10px;
+    padding:26px;
+    border:1px solid #8f9960;
+}
+
+/* ===== TABS ===== */
+.tabs{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:22px;
+    margin-bottom:28px;
+}
+
+.tab{
+    padding:16px 0;
+    text-align:center;
+    border-radius:10px;
+    font-weight:600;
+    background:#c9c295;
+    color:#2f2f1f;
+}
+
+.tab.active{
+    background:#2f3b32;
+    color:#dde2b5;
+}
+
+/* ===== TABLE ===== */
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+thead th{
+    text-align:left;
+    padding:14px 12px;
+    font-size:15px;
+    color:#dde2b5;
+    border-bottom:2px solid #8f9960;
+}
+
+tbody td{
+    padding:18px 12px;
+    font-size:16px;
+}
+
+tbody tr:not(:last-child){
+    border-bottom:1px solid #7f8a52;
+}
+
+/* ===== STATUS ===== */
+.status{
+    padding:6px 18px;
+    border-radius:16px;
+    font-weight:600;
+    display:inline-block;
+    min-width:100px;
+    text-align:center;
+}
+
+.pending{ background:#b08a2e; }
+.approved{ background:#5aa23f; }
+.rejected{ background:#c2332a; }
+
+/* ===== BACK BUTTON (INSIDE MAIN ONLY) ===== */
+.back-wrapper{
+    max-width:1150px;
+    margin:14px auto 0;
+    display:flex;
+    justify-content:flex-end;
+}
+
+.back{
+    padding:10px 22px;
+    background:#c9c295;
+    color:#2f2f1f;
+    border-radius:6px;
+    font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div>
+        <h1>Leave Management System</h1>
+        <p>Submit and Track Leave Requests</p>
+    </div>
+    <div class="header-right">
+        <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
+        <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="panel">
+
+        <!-- TABS -->
+        <div class="tabs">
+            <a class="tab" href="lve_mgt.html">Apply for Leave</a>
+            <a class="tab" href="adjt_lve_approval.html">Approve Request</a>
+            <a class="tab active" href="adjt_lve_hist.html">Leave History</a>
+        </div>
+
+        <div style="margin-bottom:14px;text-align:right;">
+            <button onclick="clearHistory()" style="padding:8px 16px;background:#d13b2f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Clear All History</button>
+        </div>
+
+        <!-- TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Soldier</th>
+                    <th>Rank</th>
+                    <th>Company</th>
+                    <th>Leave Type</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="historyTable">
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+// Load leave history from localStorage
+function loadHistory() {
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const tbody = document.getElementById('historyTable');
+    tbody.innerHTML = '';
+    
+    if (requests.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="6" style="text-align:center;padding:30px;color:#dde2b5;">No leave requests found</td>';
+        tbody.appendChild(row);
+        return;
+    }
+    
+    // Sort by most recent first
+    requests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    
+    requests.forEach(req => {
+        const row = document.createElement('tr');
+        const statusClass = req.status.toLowerCase();
+        row.innerHTML = `
+            <td>${req.soldier}</td>
+            <td>${req.rank}</td>
+            <td>${req.company}</td>
+            <td>${req.type}</td>
+            <td>${req.date}</td>
+            <td><span class="status ${statusClass}">${req.status}</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Clear all history
+function clearHistory() {
+    if (confirm('Are you sure you want to clear all leave history? This cannot be undone.')) {
+        localStorage.removeItem('leaveRequests');
+        loadHistory();
+        alert('All leave history has been cleared.');
+    }
+}
+
+// Load history on page load
+loadHistory();
+</script>
+
+</body>
+</html>

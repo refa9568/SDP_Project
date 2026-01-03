@@ -287,7 +287,7 @@
           <p>Battalion-Wide Command & Control Center</p>
         </div>
         <div class="top-actions">
-          <button class="btn light" onclick="window.location.href='report.html'">Report</button>
+          <button class="btn light" onclick="window.location.href='../coy_commander/report.html'">Reports</button>
           <button class="btn dark" onclick="window.location.href='../../login.html'">Logout</button>
         </div>
       </div>
@@ -408,70 +408,25 @@
     <!-- Bottom Panels -->
     <section class="grid-bottom">
       <div class="panel">
-<<<<<<< HEAD
-        <h3 class="panel-title">Quick Action</h3>
-        <button class="list-btn" onclick="window.location.href='report.html'">Generate Parade State Report</button>
-        <button class="list-btn" onclick="window.location.href='bsm-dashboard.html'">View Company States</button>
-        <button class="list-btn">Leave Management</button>
-=======
         <h3 class="panel-title">Strategic Reports & Documents</h3>
         <button class="list-btn" onclick="window.location.href='../coy_commander/report.html'">Battalion Strength Report</button>
         <button class="list-btn" onclick="window.location.href='../coy_commander/coy_reports.html'">Company Performance Reports</button>
         <button class="list-btn" onclick="window.location.href='../coy_commander/daily_employment.html'">Personnel Deployment Overview</button>
->>>>>>> 455bbf2053df1c0dacecacb6ceb7740a28da1a8e
       </div>
       <div class="panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-          <h3 class="panel-title" style="margin:0">Unit Notice Board</h3>
-          <div>
-            <button id="sendNoticeBtn" class="btn light" style="padding:8px 12px; font-size:13px;">Send Notice</button>
-          </div>
-        </div>
-
-        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px; margin-top:12px;">
+        <h3 class="panel-title">Unit Notice Board</h3>
+        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px;">
           <!-- Notices will be loaded here -->
-        </div>
-      </div>
-
-      <!-- Send Notice Modal -->
-      <div id="sendNoticeModal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; z-index:400;">
-        <div style="background:var(--panel); border:1px solid var(--stroke); padding:16px; border-radius:10px; width:520px; box-shadow:0 20px 50px rgba(0,0,0,.5); margin:auto;">
-          <h3 style="margin:0 0 8px; font-weight:900">Send Notice</h3>
-          <form id="sendNoticeForm">
-            <div style="display:flex; gap:8px; margin-bottom:8px;">
-              <select id="noticeSender" style="flex:1; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;">
-                <option value="BSM">BSM</option>
-                <option value="Adjutant">Adjutant</option>
-                <option value="Company Commander">Company Commander</option>
-              </select>
-              <input id="noticeType" placeholder="Type (Notice/Order)" style="width:180px; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;" />
-            </div>
-            <div style="margin-bottom:8px;">
-              <textarea id="noticeText" placeholder="Notice content" rows="6" style="width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;"></textarea>
-            </div>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button type="button" id="cancelSendNotice" class="btn dark" style="padding:8px 12px;">Cancel</button>
-              <button type="submit" class="btn light" style="padding:8px 12px;">Send</button>
-            </div>
-          </form>
         </div>
       </div>
     </section>
 
     <script>
-      // Helper: save notices array to localStorage
-      function saveNotices(notices) {
-        localStorage.setItem('CO_notices', JSON.stringify(notices));
-      }
-
-      // Load notices from localStorage and render (newest first)
+      // Load notices from localStorage
       function loadNotices() {
         const noticeBoard = document.getElementById('noticeBoard');
-        let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
-
-        // Sort newest first
-        notices.sort((a, b) => new Date(b.date) - new Date(a.date));
-
+        const notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+        
         if (notices.length === 0) {
           noticeBoard.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
@@ -485,13 +440,13 @@
           let noticesHTML = '';
           notices.forEach((notice, index) => {
             const date = new Date(notice.date);
-            const dateStr = date.toLocaleString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit'
+            const dateStr = date.toLocaleString('en-GB', { 
+              day: '2-digit', 
+              month: 'short', 
+              hour: '2-digit', 
+              minute: '2-digit' 
             });
-
+            
             noticesHTML += `
               <div 
                 id="notice-${index}" 
@@ -533,49 +488,26 @@
       // Toggle notice content visibility
       function toggleNotice(index) {
         const contentDiv = document.getElementById(`notice-content-${index}`);
-        if (!contentDiv) return;
-        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
+        if (contentDiv.style.display === 'none') {
+          contentDiv.style.display = 'block';
+        } else {
+          contentDiv.style.display = 'none';
+        }
       }
 
       // Delete notice
       function deleteNotice(index) {
         if (confirm('Are you sure you want to delete this notice?')) {
           let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
-          // We display notices sorted newest-first, so index maps directly to the sorted array
-          notices.sort((a, b) => new Date(b.date) - new Date(a.date));
           notices.splice(index, 1);
-          saveNotices(notices);
+          localStorage.setItem('CO_notices', JSON.stringify(notices));
           loadNotices();
         }
       }
 
-      // Setup event handlers
-      window.addEventListener('DOMContentLoaded', () => {
-        loadNotices();
-
-        // Send notice modal handlers
-        const sendBtn = document.getElementById('sendNoticeBtn');
-        const modal = document.getElementById('sendNoticeModal');
-        const cancelBtn = document.getElementById('cancelSendNotice');
-        const form = document.getElementById('sendNoticeForm');
-
-        if (sendBtn) sendBtn.addEventListener('click', (e) => { e.stopPropagation(); if (modal) modal.style.display = 'flex'; });
-        if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; form.reset(); } });
-
-        if (form) form.addEventListener('submit', (ev) => {
-          ev.preventDefault();
-          const sender = document.getElementById('noticeSender').value || 'Adjutant';
-          const type = document.getElementById('noticeType').value.trim() || 'Notice';
-          const content = document.getElementById('noticeText').value.trim();
-          if (!content) { alert('Please enter notice content'); return; }
-          let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
-          notices.unshift({ date: new Date().toISOString(), sender, type, content });
-          saveNotices(notices);
-          if (modal) { modal.style.display = 'none'; form.reset(); }
-          loadNotices();
-        });
-      });
-
+      // Load notices on page load
+      window.addEventListener('DOMContentLoaded', loadNotices);
+      
       // Reload notices every 30 seconds
       setInterval(loadNotices, 30000);
     </script>

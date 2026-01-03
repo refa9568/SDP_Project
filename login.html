@@ -16,26 +16,26 @@
             background: linear-gradient(135deg, #2E3D32, #3d4d37);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
-            padding: 20px;
+            padding: 40px 20px 20px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 12px;
             color: #C2B280;
         }
 
         .logo {
             font-size: 60px;
-            margin-bottom: 15px;
+            margin: 8px 0 6px;
             color: #2E3D32;
         }
 
         .header h1 {
             font-size: 28px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             color: #C2B280;
         }
 
@@ -108,6 +108,16 @@
             color: #C2B280;
         }
 
+        /* Fix autofill styling */
+        .input-group input:-webkit-autofill,
+        .input-group input:-webkit-autofill:hover,
+        .input-group input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #C2B280;
+            -webkit-box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            box-shadow: 0 0 0px 1000px #3d4d37 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .login-btn {
             width: 100%;
             padding: 12px;
@@ -155,26 +165,27 @@
     <div class="login-container">
         <h2>Secure Login</h2>
 
-        <form>
+        <form id="loginForm">
             <div class="input-group">
                 <label for="role">Role</label>
                 <select id="role" required>
                     <option value="">Select a role</option>
                     <option value="commanding_officer">Commanding Officer</option>
-                    <option value="officer">Officer</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
+                    <option value="coy_comd">Coy Comd</option>
+                    <option value="adjutant">Adjutant</option>
+                    <option value="bsm">BSM</option>
+                    <option value="soldier">Soldier</option>
                 </select>
             </div>
 
             <div class="input-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username" required>
+                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="off">
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+                <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="new-password">
             </div>
 
             <button type="submit" class="login-btn">Login</button>
@@ -188,6 +199,36 @@
     <div class="version-info">
         Version 1.0.0 | Secure Military System
     </div>
+
+    <script>
+    const credentials = {
+        commanding_officer: { username: 'co', password: '1234', dashboard: "frontend/CO/CO_dashboard.html" },
+        coy_comd: { username: 'coycomd', password: '1234', dashboard: 'frontend/coy_commander/dashboard.html' },
+        adjutant: { username: 'adjt', password: '1234', dashboard: 'frontend/adjutant/adjt_dashboard.html' },
+        bsm: { username: 'bsm', password: '1234', dashboard: 'frontend/bsm/bsm-dashboard.html' },
+        soldier: { username: 'soldier', password: '1234', dashboard: 'frontend/soldier/soldier_dashboard.html' }
+    };
+
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const role = document.getElementById('role').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!role) {
+            alert('Please select a role');
+            return;
+        }
+
+        const userCredentials = credentials[role];
+        
+        if (userCredentials && username === userCredentials.username && password === userCredentials.password) {
+            window.location.href = userCredentials.dashboard;
+        } else {
+            alert('Invalid credentials. Please try again.');
+        }
+    });
+    </script>
 
 </body>
 </html>
