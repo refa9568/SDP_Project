@@ -283,12 +283,12 @@
     <header class="topbar">
       <div class="topbar-row">
         <div class="title">
-          <h1>🎖️ Commanding Officer Dashboard</h1>
+          <h1>Commanding Officer Dashboard</h1>
           <p>Battalion-Wide Command & Control Center</p>
         </div>
         <div class="top-actions">
-          <button class="btn light" onclick="window.location.href='../coy_commander/report.html'">📊 Reports</button>
-          <button class="btn dark" onclick="window.location.href='../../login.html'">🚪 Logout</button>
+          <button class="btn light" onclick="window.location.href='../coy_commander/report.html'">Reports</button>
+          <button class="btn dark" onclick="window.location.href='../../login.html'">Logout</button>
         </div>
       </div>
     </header>
@@ -386,19 +386,19 @@
         </div>
         <div class="tasks">
           <div class="task">
-            <div class="title">📋 Battalion Readiness Check</div>
+            <div class="title">Battalion Readiness Check</div>
             <div class="meta">Scheduled: Today 1400 hrs</div>
           </div>
           <div class="task">
-            <div class="title">📋 Weekly Report Submission</div>
+            <div class="title">Weekly Report Submission</div>
             <div class="meta">Due: Today 1700 hrs</div>
           </div>
           <div class="task">
-            <div class="title">🔴 2 AWOL Cases</div>
+            <div class="title">2 AWOL Cases</div>
             <div class="meta">Action required within 24 hrs</div>
           </div>
           <div class="task">
-            <div class="title">📊 Monthly Training Review</div>
+            <div class="title">Monthly Training Review</div>
             <div class="meta">Scheduled: Tomorrow 0900 hrs</div>
           </div>
         </div>
@@ -408,22 +408,109 @@
     <!-- Bottom Panels -->
     <section class="grid-bottom">
       <div class="panel">
-        <h3 class="panel-title">📑 Strategic Reports & Documents</h3>
-        <button class="list-btn" onclick="window.location.href='../coy_commander/report.html'">📊 Battalion Strength Report</button>
-        <button class="list-btn" onclick="window.location.href='../coy_commander/coy_reports.html'">🏢 Company Performance Reports</button>
-        <button class="list-btn" onclick="window.location.href='../coy_commander/daily_employment.html'">👥 Personnel Deployment Overview</button>
+        <h3 class="panel-title">Strategic Reports & Documents</h3>
+        <button class="list-btn" onclick="window.location.href='../coy_commander/report.html'">Battalion Strength Report</button>
+        <button class="list-btn" onclick="window.location.href='../coy_commander/coy_reports.html'">Company Performance Reports</button>
+        <button class="list-btn" onclick="window.location.href='../coy_commander/daily_employment.html'">Personnel Deployment Overview</button>
       </div>
       <div class="panel">
-        <h3 class="panel-title">� Unit Notice Board</h3>
-        <div style="min-height: 180px; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-          <div style="font-size: 48px; opacity: 0.3; margin-bottom: 10px;">📋</div>
-          <div style="color: rgba(233,239,214,.50); font-weight: 700; text-align: center;">
-            No new notices or reports<br>
-            <span style="font-size: 13px; opacity: 0.7;">Awaiting updates from Adjutant, Coy Comd, or BSM</span>
-          </div>
+        <h3 class="panel-title">Unit Notice Board</h3>
+        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px;">
+          <!-- Notices will be loaded here -->
         </div>
       </div>
     </section>
+
+    <script>
+      // Load notices from localStorage
+      function loadNotices() {
+        const noticeBoard = document.getElementById('noticeBoard');
+        const notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+        
+        if (notices.length === 0) {
+          noticeBoard.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+              <div style="color: rgba(233,239,214,.50); font-weight: 700; text-align: center;">
+                No new notices or reports<br>
+                <span style="font-size: 13px; opacity: 0.7;">Awaiting updates from Adjutant, Coy Comd, or BSM</span>
+              </div>
+            </div>
+          `;
+        } else {
+          let noticesHTML = '';
+          notices.forEach((notice, index) => {
+            const date = new Date(notice.date);
+            const dateStr = date.toLocaleString('en-GB', { 
+              day: '2-digit', 
+              month: 'short', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            
+            noticesHTML += `
+              <div 
+                id="notice-${index}" 
+                style="background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: all 0.2s ease;"
+                onmouseover="this.style.background='rgba(0,0,0,.35)'; this.style.borderColor='rgba(255,255,255,.18)'"
+                onmouseout="this.style.background='rgba(0,0,0,.25)'; this.style.borderColor='rgba(255,255,255,.12)'"
+              >
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-weight: 900; color: #23b35a; cursor: pointer;" onclick="toggleNotice(${index})">
+                    ${notice.type || 'Notice'} from ${notice.sender || 'Unknown'}
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="font-size: 11px; color: rgba(233,239,214,.50);">${dateStr}</div>
+                    <button 
+                      onclick="deleteNotice(${index}); event.stopPropagation();" 
+                      style="background: #d94a3a; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 11px;"
+                      onmouseover="this.style.background='#c2332a'" 
+                      onmouseout="this.style.background='#d94a3a'"
+                    >Delete</button>
+                  </div>
+                </div>
+                <div 
+                  id="notice-content-${index}" 
+                  style="display: none; color: rgba(233,239,214,.90); font-weight: 600; white-space: pre-wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08); cursor: pointer;"
+                  onclick="toggleNotice(${index})"
+                >
+                  ${notice.content}
+                </div>
+                <div style="color: rgba(233,239,214,.50); font-size: 12px; font-weight: 700; margin-top: 6px; cursor: pointer;" onclick="toggleNotice(${index})">
+                  Click to ${index === 0 ? 'open' : 'view'}
+                </div>
+              </div>
+            `;
+          });
+          noticeBoard.innerHTML = noticesHTML;
+        }
+      }
+
+      // Toggle notice content visibility
+      function toggleNotice(index) {
+        const contentDiv = document.getElementById(`notice-content-${index}`);
+        if (contentDiv.style.display === 'none') {
+          contentDiv.style.display = 'block';
+        } else {
+          contentDiv.style.display = 'none';
+        }
+      }
+
+      // Delete notice
+      function deleteNotice(index) {
+        if (confirm('Are you sure you want to delete this notice?')) {
+          let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+          notices.splice(index, 1);
+          localStorage.setItem('CO_notices', JSON.stringify(notices));
+          loadNotices();
+        }
+      }
+
+      // Load notices on page load
+      window.addEventListener('DOMContentLoaded', loadNotices);
+      
+      // Reload notices every 30 seconds
+      setInterval(loadNotices, 30000);
+    </script>
 
   </div>
 </body>
