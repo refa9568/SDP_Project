@@ -160,6 +160,7 @@
       font-size: 22px;
       font-weight: 900;
       margin: 2px 0 6px;
+      color: var(--text);
     }
     .stat .txt{
       font-weight: 800;
@@ -176,20 +177,20 @@
 
     /* add hover distinction for present and on-duty boxes */
     .stat.present:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(35,179,90,.10); outline-color: rgba(35,179,90,.9); background: linear-gradient(180deg, rgba(35,179,90,.03), rgba(0,0,0,.06)); }
-    .stat.present:hover .num{ color: var(--accent-green); }
+    .stat.present:hover .num{ color: var(--text); }
 
     .stat.duty:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(45,110,247,.10); outline-color: rgba(45,110,247,.9); background: linear-gradient(180deg, rgba(45,110,247,.03), rgba(0,0,0,.06)); }
-    .stat.duty:hover .num{ color: var(--accent-blue); }
+    .stat.duty:hover .num{ color: var(--text); }
 
     /* match hover distinction for Total, Leave, and AWOL */
     .stat.total:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(255,255,255,.06); border-color: rgba(255,255,255,.28); background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.06)); }
     .stat.total:hover .num{ color: var(--text); }
 
     .stat.leave:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(214,166,79,.10); outline-color: rgba(214,166,79,.9); background: linear-gradient(180deg, rgba(214,166,79,.03), rgba(0,0,0,.06)); }
-    .stat.leave:hover .num{ color: var(--accent-orange); }
+    .stat.leave:hover .num{ color: var(--text); }
 
     .stat.awol:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(217,74,58,.10); outline-color: rgba(217,74,58,.9); background: linear-gradient(180deg, rgba(217,74,58,.03), rgba(0,0,0,.06)); }
-    .stat.awol:hover .num{ color: var(--accent-red); }
+    .stat.awol:hover .num{ color: var(--text); }
 
     /* table section */
     .table-panel{
@@ -251,10 +252,10 @@
     }
 
     /* colored numbers like screenshot */
-    .c-present{ color: var(--accent-green); font-weight: 900; }
-    .c-leave{ color: var(--accent-orange); font-weight: 900; }
-    .c-duty{ color: var(--accent-blue); font-weight: 900; }
-    .c-awol{ color: var(--accent-red); font-weight: 900; }
+    .c-present{ color: var(--text); font-weight: 900; }
+    .c-leave{ color: var(--text); font-weight: 900; }
+    .c-duty{ color: var(--text); font-weight: 900; }
+    .c-awol{ color: var(--text); font-weight: 900; }
 
     .status{
       font-weight: 900;
@@ -490,11 +491,100 @@
         <button class="big-btn light">Forward to CO</button>
         <button class="big-btn dark" onclick="window.location.href='report.html'">Generate Battalion Report</button>
       </div>
+    </section>
 
-      <div class="footer-row">
-        <button class="back">Back</button>
+    <!-- Next Day Commitments Section -->
+    <section class="panel" style="margin-top: 16px;">
+      <div class="panel-head">
+        <div class="icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M9 11l3 3L22 4" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="label">Important Notice</div>
+      </div>
+      <div style="background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 16px; margin: 6px;">
+        <textarea 
+          id="nextDayCommitment" 
+          placeholder="Enter tomorrow's commitments, tasks, or important notes..."
+          style="width: 100%; min-height: 100px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.10); border-radius: 8px; padding: 12px; color: #e9efd6; font-family: inherit; font-size: 14px; font-weight: 600; resize: vertical;"
+        ></textarea>
+        <div style="display: flex; gap: 12px; margin-top: 12px;">
+          <button 
+            onclick="sendCommitment('CO')" 
+            style="flex: 1; padding: 12px 16px; background: #2d6ef7; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#1e5dd6'" 
+            onmouseout="this.style.background='#2d6ef7'"
+          >Send to CO</button>
+          <button 
+            onclick="sendCommitment('Adjutant')" 
+            style="flex: 1; padding: 12px 16px; background: #23b35a; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#1a8f47'" 
+            onmouseout="this.style.background='#23b35a'"
+          >Send to Adjutant</button>
+          <button 
+            onclick="sendCommitment('Both')" 
+            style="flex: 1; padding: 12px 16px; background: #d6a64f; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#c89540'" 
+            onmouseout="this.style.background='#d6a64f'"
+          >Send to Both</button>
+        </div>
       </div>
     </section>
+
+    <script>
+      function sendCommitment(recipient) {
+        const commitment = document.getElementById('nextDayCommitment').value;
+        if (commitment.trim() === '') {
+          alert('⚠️ Please enter a commitment before sending.');
+          return;
+        }
+        
+        // Create commitment data
+        const commitmentData = {
+          content: commitment,
+          sender: 'BSM',
+          date: new Date().toISOString(),
+          type: 'Next Day Commitment'
+        };
+        
+        if (recipient === 'CO' || recipient === 'Both') {
+          // Send to CO's notice board
+          let coNotices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+          coNotices.unshift(commitmentData);
+          
+          if (coNotices.length > 10) {
+            coNotices = coNotices.slice(0, 10);
+          }
+          
+          localStorage.setItem('CO_notices', JSON.stringify(coNotices));
+        }
+        
+        if (recipient === 'Adjutant' || recipient === 'Both') {
+          // Send to Adjutant's notice board
+          let adjutantNotices = JSON.parse(localStorage.getItem('Adjutant_notices') || '[]');
+          adjutantNotices.unshift(commitmentData);
+          
+          if (adjutantNotices.length > 10) {
+            adjutantNotices = adjutantNotices.slice(0, 10);
+          }
+          
+          localStorage.setItem('Adjutant_notices', JSON.stringify(adjutantNotices));
+        }
+        
+        if (recipient === 'Both') {
+          alert('📤 Next day commitment sent to CO and Adjutant successfully!\n\nThe commitment will appear on both Notice Boards.');
+        } else if (recipient === 'CO') {
+          alert('📤 Next day commitment sent to CO successfully!\n\nThe commitment will appear on the CO\'s Notice Board.');
+        } else if (recipient === 'Adjutant') {
+          alert('📤 Next day commitment sent to Adjutant successfully!\n\nThe commitment will appear on the Adjutant\'s Notice Board.');
+        }
+        
+        // Clear the textarea
+        document.getElementById('nextDayCommitment').value = '';
+      }
+    </script>
 
   </div>
 </body>
