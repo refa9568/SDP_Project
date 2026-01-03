@@ -414,19 +414,49 @@
         <button class="list-btn" onclick="window.location.href='../coy_commander/daily_employment.html'">Personnel Deployment Overview</button>
       </div>
       <div class="panel">
-        <h3 class="panel-title">Unit Notice Board</h3>
-        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h3 class="panel-title" style="margin:0">Unit Notice Board</h3>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button id="addNoticeBtn" class="btn light" style="padding:8px 12px; font-size:13px;">Add Notice</button>
+          </div>
+        </div>
+
+        <div id="addNoticeForm" style="display:none; margin-top:12px; background: rgba(0,0,0,.14); border:1px solid rgba(255,255,255,.06); padding:12px; border-radius:8px;">
+          <form id="noticeForm">
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <input id="noticeSender" placeholder="Sender (e.g., Adjutant)" style="flex:1; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;" />
+              <input id="noticeType" placeholder="Type (Notice/Order)" style="width:160px; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;" />
+            </div>
+            <div style="margin-bottom:8px;">
+              <textarea id="noticeContent" placeholder="Notice content" rows="4" style="width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,.08); background:transparent; color:var(--text); font-weight:700;"></textarea>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" id="cancelNotice" class="btn dark" style="padding:8px 12px;">Cancel</button>
+              <button type="submit" class="btn light" style="padding:8px 12px;">Save Notice</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="noticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px; margin-top:12px;">
           <!-- Notices will be loaded here -->
         </div>
       </div>
     </section>
 
     <script>
-      // Load notices from localStorage
+      // Helper: save notices array to localStorage
+      function saveNotices(notices) {
+        localStorage.setItem('CO_notices', JSON.stringify(notices));
+      }
+
+      // Load notices from localStorage and render (newest first)
       function loadNotices() {
         const noticeBoard = document.getElementById('noticeBoard');
-        const notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
-        
+        let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+
+        // Sort newest first
+        notices.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         if (notices.length === 0) {
           noticeBoard.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
@@ -440,13 +470,13 @@
           let noticesHTML = '';
           notices.forEach((notice, index) => {
             const date = new Date(notice.date);
-            const dateStr = date.toLocaleString('en-GB', { 
-              day: '2-digit', 
-              month: 'short', 
-              hour: '2-digit', 
-              minute: '2-digit' 
+            const dateStr = date.toLocaleString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit'
             });
-            
+
             noticesHTML += `
               <div 
                 id="notice-${index}" 
@@ -488,26 +518,50 @@
       // Toggle notice content visibility
       function toggleNotice(index) {
         const contentDiv = document.getElementById(`notice-content-${index}`);
-        if (contentDiv.style.display === 'none') {
-          contentDiv.style.display = 'block';
-        } else {
-          contentDiv.style.display = 'none';
-        }
+        if (!contentDiv) return;
+        contentDiv.style.display = contentDiv.style.display === 'none' ? 'block' : 'none';
       }
 
       // Delete notice
       function deleteNotice(index) {
         if (confirm('Are you sure you want to delete this notice?')) {
           let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+          // We display notices sorted newest-first, so index maps directly to the sorted array
+          notices.sort((a, b) => new Date(b.date) - new Date(a.date));
           notices.splice(index, 1);
-          localStorage.setItem('CO_notices', JSON.stringify(notices));
+          saveNotices(notices);
           loadNotices();
         }
       }
 
-      // Load notices on page load
-      window.addEventListener('DOMContentLoaded', loadNotices);
-      
+      // Show / hide add form
+      function showAddForm() { document.getElementById('addNoticeForm').style.display = 'block'; document.getElementById('noticeSender').focus(); }
+      function hideAddForm() { document.getElementById('addNoticeForm').style.display = 'none'; document.getElementById('noticeForm').reset(); }
+
+      // Add new notice from form
+      function addNoticeFromForm(e) {
+        e && e.preventDefault();
+        const sender = document.getElementById('noticeSender').value.trim() || 'Adjutant';
+        const type = document.getElementById('noticeType').value.trim() || 'Notice';
+        const content = document.getElementById('noticeContent').value.trim();
+        if (!content) { alert('Please enter notice content'); return; }
+
+        let notices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+        // Add newest at start
+        notices.unshift({ date: new Date().toISOString(), sender, type, content });
+        saveNotices(notices);
+        hideAddForm();
+        loadNotices();
+      }
+
+      // Setup event handlers
+      window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('addNoticeBtn').addEventListener('click', showAddForm);
+        document.getElementById('cancelNotice').addEventListener('click', hideAddForm);
+        document.getElementById('noticeForm').addEventListener('submit', addNoticeFromForm);
+        loadNotices();
+      });
+
       // Reload notices every 30 seconds
       setInterval(loadNotices, 30000);
     </script>
