@@ -144,10 +144,30 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
 <div class="header">
   <h2>Daily Employment – Radio Coy</h2>
   <div class="nav-buttons">
-    <button class="back-button" onclick="window.location.href='coy_dashboard.html'" aria-label="Go back">Back</button>
-    <button class="next-button" onclick="window.location.href='coy_report.html'" aria-label="Go to reports">Next</button>
+    <button class="back-button" id="backBtn" onclick="goBack()" aria-label="Go back">Back</button>
+    <button class="next-button" id="nextBtn" onclick="window.location.href='coy_report.html'" aria-label="Go to reports">Next</button>
   </div>
 </div>
+<script>
+function goBack() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const from = urlParams.get('from');
+  if (from === 'co') {
+    window.location.href = '../CO/CO_dashboard.html';
+  } else {
+    window.location.href = 'coy_dashboard.html';
+  }
+}
+
+// Hide Next button if accessed from CO dashboard
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const from = urlParams.get('from');
+  if (from === 'co') {
+    document.getElementById('nextBtn').style.display = 'none';
+  }
+})();
+</script>
 <div class="employment">
   <div class="panel table-panel">
     <table>

@@ -301,8 +301,9 @@
         </div>
 
         <div style="display: flex; gap: 12px; align-items: center;">
-            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
-            <button class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('weekly_summary')">📤 Send to CO</button>
+            <a id="backToAdjDashBtn" href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <button id="sendToCOBtn" class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('weekly_summary')">📤 Send to CO</button>
+            <a id="backToCOBtn" href="../CO/CO_dashboard.html" class="btn" style="display: none;">← Back to CO Dashboard</a>
         </div>
 
         <div style="margin-top: 24px;"></div>
@@ -387,7 +388,7 @@
 
         <div style="text-align: center; margin: 30px 0;">
             <button class="btn" onclick="window.print()">🖨️ Print Report</button>
-            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <a id="backToAdjDashBtnBottom" href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
         </div>
     </div>
 
@@ -421,6 +422,18 @@
             // Here you can add actual backend call to save the report
             // For now, just showing confirmation
         }
+
+        // Check if accessed from CO dashboard and hide "Send to CO" button
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const from = urlParams.get('from');
+            if (from === 'co') {
+                document.getElementById('sendToCOBtn').style.display = 'none';
+                document.getElementById('backToAdjDashBtn').style.display = 'none';
+                document.getElementById('backToAdjDashBtnBottom').style.display = 'none';
+                document.getElementById('backToCOBtn').style.display = 'inline-block';
+            }
+        })();
 
         // Initialize on page load
         updateDateTime();
