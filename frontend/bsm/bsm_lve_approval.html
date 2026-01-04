@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approve Requests</title>
+<style>
+html,body{margin:0;padding:0;height:100%;font-family:Segoe UI, Arial, sans-serif;background:#2f3a32;color:#fff}
+.header{background:#6b7740;padding:18px 28px;border-bottom:2px solid #8f9960;display:flex;justify-content:space-between;align-items:center}
+.header h1{margin:0;font-size:22px}
+.header p{margin:4px 0 0;color:#dde2b5}
+.header-right{display:flex;gap:12px}
+.btn{border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;background:transparent;color:#fff}
+.btn.light{background:#c9c295;color:#2f2f1f}
+.btn.dark{background:#3a4638}
+.home-btn{width:38px;height:38px;background:#3a4638;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.home-btn:hover{background:#4a5648}
+.main{padding:20px}
+.panel{max-width:1150px;margin:0 auto;background:#6f7f46;border-radius:10px;padding:18px;border:1px solid #8f9960}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.tab{padding:12px 0;text-align:center;border-radius:8px;background:#c9c295;color:#2f2f1f;font-weight:700;text-decoration:none;display:block}
+.tab.inactive{background:#2f3b32;color:#dde2b5}
+table{width:100%;border-collapse:collapse;background:transparent}
+thead th{padding:10px 12px;text-align:left;color:#dde2b5;border-bottom:1px solid rgba(255,255,255,.08);font-weight:800}
+tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:700}
+.actions{display:flex;gap:8px}
+.approve{background:#5ea542;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.reject{background:#c2342a;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+@media(max-width:900px){.tabs{grid-template-columns:1fr}.panel{padding:12px}}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Leave Management System</h1>
+      <p>Approve Requests</p>
+    </div>
+    <div class="header-right">
+        <button class="btn light" onclick="location.href='bsm-dashboard.html'">Home</button>
+      <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <div class="tabs">
+        <a class="tab inactive" href="bsm_lve_mgt.html">Apply for Leave</a>
+        <a class="tab" href="bsm_lve_approval.html">Approve Request</a>
+        <a class="tab inactive" href="bsm_lve_hist.html">Leave History</a>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Soldier</th>
+            <th>Company</th>
+            <th>Leave Type</th>
+            <th>Date</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="requestsTable">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Initialize leave requests in localStorage if not exists
+    function initLeaveRequests() {
+      const existing = localStorage.getItem('leaveRequests');
+      if (!existing) {
+        // Start with empty array - no demo data
+        localStorage.setItem('leaveRequests', JSON.stringify([]));
+      }
+    }
+
+    // Load and display requests
+    function loadRequests() {
+      initLeaveRequests();
+      const requests = JSON.parse(localStorage.getItem('leaveRequests'));
+      const tbody = document.getElementById('requestsTable');
+      tbody.innerHTML = '';
+
+      const pendingRequests = requests.filter(req => req.status === 'Pending');
+      
+      if (pendingRequests.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">No pending leave requests</td>';
+        tbody.appendChild(row);
+        return;
+      }
+
+      pendingRequests.forEach(req => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', req.id);
+        row.innerHTML = `
+          <td>${req.rank} ${req.soldier}</td>
+          <td>${req.company}</td>
+          <td>${req.type}</td>
+          <td>${req.date.replace('-', ' - ')}</td>
+          <td>${req.submitted}</td>
+          <td class="status-cell">${req.status}</td>
+          <td class="actions">
+            <button class="approve" data-id="${req.id}">Approve</button>
+            <button class="reject" data-id="${req.id}">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      attachEventListeners();
+    }
+
+    // Attach approve/reject event listeners
+    function attachEventListeners() {
+      document.querySelectorAll('.approve').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          updateRequestStatus(id, 'Approved');
+        });
+      });
+
+      document.querySelectorAll('.reject').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          updateRequestStatus(id, 'Rejected');
+        });
+      });
+    }
+
+    // Update request status
+    function updateRequestStatus(id, status) {
+      const requests = JSON.parse(localStorage.getItem('leaveRequests'));
+      const request = requests.find(r => r.id === id);
+      
+      if (request) {
+        request.status = status;
+        
+        // If approved by BSM, send to Company Commander for final approval
+        if (status === 'Approved') {
+          request.bsmApproved = true;
+          request.coApprovalStatus = 'Pending'; // Waiting for CO approval
+          
+          // Add to Company Commander's pending list
+          const coPendingLeaves = JSON.parse(localStorage.getItem('coPendingLeaves') || '[]');
+          coPendingLeaves.push({
+            id: request.id,
+            soldier: request.soldier,
+            rank: request.rank,
+            company: request.company,
+            type: request.type,
+            date: request.date,
+            submitted: request.submitted,
+            bsmApproved: true,
+            status: 'Pending CO Approval'
+          });
+          localStorage.setItem('coPendingLeaves', JSON.stringify(coPendingLeaves));
+        }
+        
+        localStorage.setItem('leaveRequests', JSON.stringify(requests));
+        alert(`Leave request ${status.toLowerCase()} successfully!`);
+        loadRequests();
+      }
+    }
+
+    // Load requests on page load
+    loadRequests();
+  </script>
+</body>
+</html>
+
+

@@ -46,7 +46,12 @@
             letter-spacing:0.5px;
         }
 
-        .logout-btn {
+        .header-btns {
+            display:flex;
+            gap:10px;
+        }
+
+        .back-btn, .logout-btn {
             background:var(--sand);
             color:var(--dark);
             border:2px solid rgba(0,0,0,0.08);
@@ -58,7 +63,7 @@
             transition: opacity 0.2s;
         }
 
-        .logout-btn:hover {opacity:0.85}
+        .back-btn:hover, .logout-btn:hover {opacity:0.85}
 
         .leave-approval {margin-top:18px;display:flex;gap:10px}
 
@@ -179,7 +184,8 @@
     <div class="container">
         <header>
             <h1>Leave Approval</h1>
-            <div class="logout">
+            <div class="header-btns">
+                <button class="back-btn" onclick="history.back()">Back</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </header>
