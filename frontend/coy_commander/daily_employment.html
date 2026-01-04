@@ -19,11 +19,20 @@ h2,h3{font-weight:800;color:#ffffff;letter-spacing:0.5px}
   border-radius:12px;
   border:3px solid var(--sand);
   box-shadow:0 8px 20px rgba(0,0,0,0.3);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 .header h2{margin:0}
 
-/* Back button (enhanced visibility) */
-.back-button{
+/* Navigation buttons */
+.nav-buttons{
+  display:flex;
+  gap:10px;
+}
+
+/* Back and Next buttons (enhanced visibility) */
+.back-button, .next-button{
   appearance:none;
   background:rgba(255,255,255,0.1);
   border:2px solid var(--sand);
@@ -32,14 +41,13 @@ h2,h3{font-weight:800;color:#ffffff;letter-spacing:0.5px}
   border-radius:10px;
   cursor:pointer;
   font-weight:800;
-  margin-left:12px;
   transition:all 0.2s;
 }
-.back-button:hover{
+.back-button:hover, .next-button:hover{
   background:rgba(255,255,255,0.2);
-  transform:translateX(-2px);
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
 }
-.header .back-button{float:right}
 
 .panel{background:var(--olive);border:2px solid var(--sand);margin:0;padding:15px;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,0.25)}
 /* table panel should match dashboard personal roster */
@@ -134,8 +142,11 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
 </head>
 <body>
 <div class="header">
-  <button class="back-button" onclick="window.location.href='coy_dashboard.html'" aria-label="Go back">Back</button>
   <h2>Daily Employment – Radio Coy</h2>
+  <div class="nav-buttons">
+    <button class="back-button" onclick="window.location.href='coy_dashboard.html'" aria-label="Go back">Back</button>
+    <button class="next-button" onclick="window.location.href='coy_report.html'" aria-label="Go to reports">Next</button>
+  </div>
 </div>
 <div class="employment">
   <div class="panel table-panel">
