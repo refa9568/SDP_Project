@@ -155,10 +155,23 @@ th{
   font-weight:800;
   cursor:pointer;
   margin-top:6px;
+  transition: transform .18s ease, box-shadow .18s ease, opacity .12s ease;
+  will-change: transform, box-shadow;
 }
 
-.green{background:var(--green)}
+.green{background:var(--green);color:#fff}
 .red{background:var(--red);color:#fff}
+
+.btn:hover{
+  opacity:0.9;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+.btn:active{
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
 
 /* ---------- LINK ---------- */
 a{
@@ -330,16 +343,71 @@ a{
   <!-- PENDING LEAVE -->
   <div class="panel">
     <h3>Pending Leave</h3>
-    <p>
+    <p id="leaveDetails">
       <b>CPL Sazidul Islam</b><br>
       Annual Leave<br>
       2025-12-15 → 2025-12-20
     </p>
-    <button class="btn green">Approve</button>
-    <button class="btn red">Reject</button>
+    <div id="leaveActions">
+      <button class="btn green" onclick="approveLeave()">Approve</button>
+      <button class="btn red" onclick="rejectLeave()">Reject</button>
+    </div>
+    <p id="leaveMessage" style="display:none; color:var(--sand); font-weight:800; margin-top:12px;"></p>
   </div>
 
 </div>
+
+<script>
+function approveLeave() {
+  const message = document.getElementById('leaveMessage');
+  const actions = document.getElementById('leaveActions');
+  const details = document.getElementById('leaveDetails');
+  
+  // Hide buttons
+  actions.style.display = 'none';
+  
+  // Show approval message
+  message.textContent = '✓ Leave Approved Successfully';
+  message.style.color = 'var(--green)';
+  message.style.display = 'block';
+  
+  // Add strikethrough to leave details
+  details.style.textDecoration = 'line-through';
+  details.style.opacity = '0.6';
+  
+  // Optional: Clear after 3 seconds
+  setTimeout(() => {
+    details.style.display = 'none';
+    message.textContent = 'No pending leave requests';
+    message.style.color = 'var(--sand)';
+  }, 3000);
+}
+
+function rejectLeave() {
+  const message = document.getElementById('leaveMessage');
+  const actions = document.getElementById('leaveActions');
+  const details = document.getElementById('leaveDetails');
+  
+  // Hide buttons
+  actions.style.display = 'none';
+  
+  // Show rejection message
+  message.textContent = '✗ Leave Rejected';
+  message.style.color = 'var(--red)';
+  message.style.display = 'block';
+  
+  // Add strikethrough to leave details
+  details.style.textDecoration = 'line-through';
+  details.style.opacity = '0.6';
+  
+  // Optional: Clear after 3 seconds
+  setTimeout(() => {
+    details.style.display = 'none';
+    message.textContent = 'No pending leave requests';
+    message.style.color = 'var(--sand)';
+  }, 3000);
+}
+</script>
 
 </body>
 </html>
