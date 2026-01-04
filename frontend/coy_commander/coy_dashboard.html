@@ -191,9 +191,9 @@ a{
 
 <!-- ===== STATS ===== -->
 <div class="stats">
-  <div class="box">Total Strength<br><b>95</b></div>
-  <div class="box">On Parade<br><b>85</b></div>
-  <div class="box">Off Parade<br><b>10</b></div>
+  <div class="box">Total Strength<br><b id="totalStrength">95</b></div>
+  <div class="box">On Parade<br><b id="onParade">85</b></div>
+  <div class="box">Off Parade<br><b id="offParade">10</b></div>
   <div class="box">On Duty<br><b>77</b></div>
   <div class="box">Off Duty<br><b>08</b></div>
 
@@ -363,6 +363,9 @@ function approveLeave() {
   const actions = document.getElementById('leaveActions');
   const details = document.getElementById('leaveDetails');
   
+  // Update dashboard stats
+  updateDashboardStats('approve');
+  
   // Hide buttons
   actions.style.display = 'none';
   
@@ -374,6 +377,9 @@ function approveLeave() {
   // Add strikethrough to leave details
   details.style.textDecoration = 'line-through';
   details.style.opacity = '0.6';
+  
+  // Reload stats display
+  loadDashboardStats();
   
   // Optional: Clear after 3 seconds
   setTimeout(() => {
@@ -407,6 +413,36 @@ function rejectLeave() {
     message.style.color = 'var(--sand)';
   }, 3000);
 }
+
+function updateDashboardStats(action) {
+  // Get current stats from localStorage or use defaults
+  let stats = JSON.parse(localStorage.getItem('dashboardStats') || '{"onParade":85,"offParade":10,"onLeave":0}');
+  
+  if (action === 'approve') {
+    // Reduce on parade by 1, increase off parade leave count
+    stats.onParade = Math.max(0, stats.onParade - 1);
+    stats.offParade = stats.offParade + 1;
+    stats.onLeave = (stats.onLeave || 0) + 1;
+  }
+  
+  // Save updated stats
+  localStorage.setItem('dashboardStats', JSON.stringify(stats));
+}
+
+function loadDashboardStats() {
+  // Get stats from localStorage
+  let stats = JSON.parse(localStorage.getItem('dashboardStats') || '{"onParade":85,"offParade":10,"onLeave":0}');
+  
+  // Update the display using IDs
+  const onParadeEl = document.getElementById('onParade');
+  const offParadeEl = document.getElementById('offParade');
+  
+  if (onParadeEl) onParadeEl.textContent = stats.onParade;
+  if (offParadeEl) offParadeEl.textContent = stats.offParade;
+}
+
+// Load stats on page load
+window.addEventListener('DOMContentLoaded', loadDashboardStats);
 </script>
 
 </body>

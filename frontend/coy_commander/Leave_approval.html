@@ -380,6 +380,9 @@
             row.dataset.status = 'approved';
             statusCell.innerHTML = '<span class="status-label approved">Approved</span>';
             
+            // Update dashboard stats in localStorage
+            updateDashboardStats('approve');
+            
             // Remove from pending view
             row.style.display = 'none';
             
@@ -412,6 +415,21 @@
                 emptyState.style.display = 'block';
                 document.querySelector('.leave-table').style.display = 'none';
             }
+        }
+
+        function updateDashboardStats(action) {
+            // Get current stats from localStorage or use defaults
+            let stats = JSON.parse(localStorage.getItem('dashboardStats') || '{"onParade":85,"offParade":10,"onLeave":0}');
+            
+            if (action === 'approve') {
+                // Reduce on parade by 1, increase off parade leave count
+                stats.onParade = Math.max(0, stats.onParade - 1);
+                stats.offParade = stats.offParade + 1;
+                stats.onLeave = (stats.onLeave || 0) + 1;
+            }
+            
+            // Save updated stats
+            localStorage.setItem('dashboardStats', JSON.stringify(stats));
         }
 
         // Show all by default on page load
