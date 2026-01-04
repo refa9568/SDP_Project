@@ -46,7 +46,12 @@
             letter-spacing:0.5px;
         }
 
-        .logout-btn {
+        .header-btns {
+            display:flex;
+            gap:10px;
+        }
+
+        .back-btn, .logout-btn {
             background:var(--sand);
             color:var(--dark);
             border:2px solid rgba(0,0,0,0.08);
@@ -58,7 +63,7 @@
             transition: opacity 0.2s;
         }
 
-        .logout-btn:hover {opacity:0.85}
+        .back-btn:hover, .logout-btn:hover {opacity:0.85}
 
         .leave-approval {margin-top:18px;display:flex;gap:10px}
 
@@ -179,7 +184,8 @@
     <div class="container">
         <header>
             <h1>Leave Approval</h1>
-            <div class="logout">
+            <div class="header-btns">
+                <button class="back-btn" onclick="history.back()">Back</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </header>
@@ -280,36 +286,6 @@
     </div>
 
     <script>
-        // Load leave requests from BSM on page load
-        function loadLeaveRequests() {
-            const coPendingLeaves = JSON.parse(localStorage.getItem('coPendingLeaves') || '[]');
-            const tbody = document.getElementById('leaveTableBody');
-            
-            // Keep static rows and add dynamic ones
-            const staticRowsCount = tbody.querySelectorAll('tr').length;
-            
-            coPendingLeaves.forEach(leave => {
-                const row = tbody.insertRow();
-                row.dataset.status = 'pending';
-                row.dataset.id = leave.id;
-                
-                row.innerHTML = `
-                    <td>${leave.soldier}</td>
-                    <td>${leave.rank}</td>
-                    <td>${leave.rank}</td>
-                    <td>${leave.company}</td>
-                    <td>${leave.type}</td>
-                    <td><span class="status-label pending">Pending</span></td>
-                    <td class="action-cell" style="display:none">
-                        <div class="action-btns">
-                            <button class="approve" onclick="approveLeave(this)">Approve</button>
-                            <button class="reject" onclick="rejectLeave(this)">Reject</button>
-                        </div>
-                    </td>
-                `;
-            });
-        }
-        
         function logout() {
             sessionStorage.clear();
             localStorage.clear();
@@ -399,27 +375,10 @@
         function approveLeave(button) {
             const row = button.closest('tr');
             const statusCell = row.querySelector('td:nth-child(6)');
-            const leaveId = row.dataset.id;
             
-            // Update status in UI
+            // Update status
             row.dataset.status = 'approved';
             statusCell.innerHTML = '<span class="status-label approved">Approved</span>';
-            
-            // Update in leaveRequests if it came from BSM
-            if (leaveId) {
-                const leaveRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
-                const leave = leaveRequests.find(l => l.id === leaveId);
-                if (leave) {
-                    leave.coApprovalStatus = 'Approved';
-                    leave.status = 'Approved by CO';
-                    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-                }
-                
-                // Remove from coPendingLeaves
-                let coPendingLeaves = JSON.parse(localStorage.getItem('coPendingLeaves') || '[]');
-                coPendingLeaves = coPendingLeaves.filter(l => l.id !== leaveId);
-                localStorage.setItem('coPendingLeaves', JSON.stringify(coPendingLeaves));
-            }
             
             // Remove from pending view
             row.style.display = 'none';
@@ -431,27 +390,10 @@
         function rejectLeave(button) {
             const row = button.closest('tr');
             const statusCell = row.querySelector('td:nth-child(6)');
-            const leaveId = row.dataset.id;
             
-            // Update status in UI
+            // Update status
             row.dataset.status = 'rejected';
             statusCell.innerHTML = '<span class="status-label rejected">Rejected</span>';
-            
-            // Update in leaveRequests if it came from BSM
-            if (leaveId) {
-                const leaveRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
-                const leave = leaveRequests.find(l => l.id === leaveId);
-                if (leave) {
-                    leave.coApprovalStatus = 'Rejected';
-                    leave.status = 'Rejected by CO';
-                    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-                }
-                
-                // Remove from coPendingLeaves
-                let coPendingLeaves = JSON.parse(localStorage.getItem('coPendingLeaves') || '[]');
-                coPendingLeaves = coPendingLeaves.filter(l => l.id !== leaveId);
-                localStorage.setItem('coPendingLeaves', JSON.stringify(coPendingLeaves));
-            }
             
             // Remove from pending view
             row.style.display = 'none';
@@ -472,9 +414,6 @@
             }
         }
 
-        // Load BSM-approved leaves on page load
-        loadLeaveRequests();
-        
         // Show all by default on page load
         showAll();
     </script>
