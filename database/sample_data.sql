@@ -8,8 +8,10 @@
 
 -- ============================================
 -- Sample Users
--- Password: '1234' hashed with bcrypt (cost 10)
--- Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
+-- All passwords are '1234' for easy testing
+-- NOTE: These use the SAME hash intentionally for development convenience
+-- In production, each user should have unique passwords
+-- Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi (bcrypt, cost 10)
 -- ============================================
 
 INSERT INTO users (username, password_hash, role, email) VALUES

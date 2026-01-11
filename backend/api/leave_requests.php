@@ -179,19 +179,50 @@ elseif ($method === 'PUT') {
         $userId = $_SESSION['user_id'];
         
         // Determine new status and update fields based on role
-        $statusMap = [
-            'coy_comd' => 'approved_coy_comd',
-            'adjutant' => 'approved_adjutant',
-            'bsm' => 'approved_bsm',
-            'commanding_officer' => 'approved_co'
+        // Using whitelist approach for security - only predefined field names allowed
+        $approvalFields = [
+            'coy_comd' => [
+                'status' => 'approved_coy_comd',
+                'approver' => 'coy_comd_approved_by',
+                'time' => 'coy_comd_approved_at',
+                'remarks' => 'coy_comd_remarks'
+            ],
+            'adjutant' => [
+                'status' => 'approved_adjutant',
+                'approver' => 'adjutant_approved_by',
+                'time' => 'adjutant_approved_at',
+                'remarks' => 'adjutant_remarks'
+            ],
+            'bsm' => [
+                'status' => 'approved_bsm',
+                'approver' => 'bsm_approved_by',
+                'time' => 'bsm_approved_at',
+                'remarks' => 'bsm_remarks'
+            ],
+            'commanding_officer' => [
+                'status' => 'approved_co',
+                'approver' => 'co_approved_by',
+                'time' => 'co_approved_at',
+                'remarks' => 'co_remarks'
+            ]
         ];
         
         if ($action === 'approve') {
-            $newStatus = $statusMap[$userRole] ?? 'pending';
-            $approverField = str_replace('approved_', '', $newStatus) . '_approved_by';
-            $approverTimeField = str_replace('approved_', '', $newStatus) . '_approved_at';
-            $remarksField = str_replace('approved_', '', $newStatus) . '_remarks';
+            // Validate role exists in whitelist
+            if (!isset($approvalFields[$userRole])) {
+                sendJsonResponse([
+                    'success' => false,
+                    'error' => 'Invalid user role for approval'
+                ], 403);
+            }
             
+            $fields = $approvalFields[$userRole];
+            $newStatus = $fields['status'];
+            $approverField = $fields['approver'];
+            $approverTimeField = $fields['time'];
+            $remarksField = $fields['remarks'];
+            
+            // Now safe to use these validated field names in query
             $stmt = $db->prepare("
                 UPDATE leave_requests 
                 SET status = :status,

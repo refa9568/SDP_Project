@@ -276,30 +276,57 @@ app.put('/api/leave-requests/:id', authenticateToken, async (req, res) => {
         const { action, remarks } = req.body; // action: 'approve' or 'reject'
         const { role, user_id } = req.user;
         
-        const statusMap = {
-            'coy_comd': 'approved_coy_comd',
-            'adjutant': 'approved_adjutant',
-            'bsm': 'approved_bsm',
-            'commanding_officer': 'approved_co'
+        // Whitelist approach for security - only predefined field names allowed
+        const approvalFields = {
+            'coy_comd': {
+                status: 'approved_coy_comd',
+                approver: 'coy_comd_approved_by',
+                time: 'coy_comd_approved_at',
+                remarks: 'coy_comd_remarks'
+            },
+            'adjutant': {
+                status: 'approved_adjutant',
+                approver: 'adjutant_approved_by',
+                time: 'adjutant_approved_at',
+                remarks: 'adjutant_remarks'
+            },
+            'bsm': {
+                status: 'approved_bsm',
+                approver: 'bsm_approved_by',
+                time: 'bsm_approved_at',
+                remarks: 'bsm_remarks'
+            },
+            'commanding_officer': {
+                status: 'approved_co',
+                approver: 'co_approved_by',
+                time: 'co_approved_at',
+                remarks: 'co_remarks'
+            }
         };
         
         let query, params;
         
         if (action === 'approve') {
-            const newStatus = statusMap[role];
-            const approverField = newStatus.replace('approved_', '') + '_approved_by';
-            const approverTimeField = newStatus.replace('approved_', '') + '_approved_at';
-            const remarksField = newStatus.replace('approved_', '') + '_remarks';
+            // Validate role exists in whitelist
+            if (!approvalFields[role]) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Invalid user role for approval'
+                });
+            }
             
+            const fields = approvalFields[role];
+            
+            // Now safe to use these validated field names in query
             query = `
                 UPDATE leave_requests 
                 SET status = ?,
-                    ${approverField} = ?,
-                    ${approverTimeField} = NOW(),
-                    ${remarksField} = ?
+                    ${fields.approver} = ?,
+                    ${fields.time} = NOW(),
+                    ${fields.remarks} = ?
                 WHERE request_id = ?
             `;
-            params = [newStatus, user_id, remarks || '', requestId];
+            params = [fields.status, user_id, remarks || '', requestId];
             
         } else {
             query = `
