@@ -179,8 +179,8 @@
             </div>
 
             <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="off">
+                <label for="username">Service Number</label>
+                <input type="text" id="username" name="username" placeholder="Enter service number (e.g., BA-12170)" required autocomplete="off">
             </div>
 
             <div class="input-group">
@@ -201,18 +201,21 @@
     </div>
 
     <script>
-    const credentials = {
-        commanding_officer: { username: 'co', password: '1234', dashboard: "frontend/CO/CO_dashboard.html" },
-        coy_comd: { username: 'coycomd', password: '1234', dashboard: 'frontend/coy_commander/coy_dashboard.html' },
-        adjutant: { username: 'adjt', password: '1234', dashboard: 'frontend/adjutant/adjt_dashboard.html' },
-        bsm: { username: 'bsm', password: '1234', dashboard: 'frontend/bsm/bsm-dashboard.html' },
-        soldier: { username: 'soldier', password: '1234', dashboard: 'frontend/soldier/soldier_dashboard.html' }
+    const API_BASE = 'http://localhost:5000';
+
+    const dashboardRoutes = {
+        'commanding_officer': 'frontend/CO/CO_dashboard.html',
+        'coy_comd': 'frontend/coy_commander/coy_dashboard.html',
+        'adjutant': 'frontend/adjutant/adjt_dashboard.html',
+        'bsm': 'frontend/bsm/bsm-dashboard.html',
+        'soldier': 'frontend/soldier/soldier_dashboard.html'
     };
 
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
         event.preventDefault();
+        
         const role = document.getElementById('role').value;
-        const username = document.getElementById('username').value;
+        const service_number = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
 
         if (!role) {
@@ -220,12 +223,39 @@
             return;
         }
 
-        const userCredentials = credentials[role];
-        
-        if (userCredentials && username === userCredentials.username && password === userCredentials.password) {
-            window.location.href = userCredentials.dashboard;
-        } else {
-            alert('Invalid credentials. Please try again.');
+        if (!service_number || !password) {
+            alert('Please enter both service number and password');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    service_number: service_number,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Save token and user info
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Redirect to appropriate dashboard
+                const dashboard = dashboardRoutes[data.user.role] || dashboardRoutes.soldier;
+                window.location.href = dashboard;
+            } else {
+                alert(data.message || 'Invalid credentials. Please try again.');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Connection error. Please check if the server is running.');
         }
     });
     </script>
