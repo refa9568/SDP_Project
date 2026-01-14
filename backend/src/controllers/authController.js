@@ -45,6 +45,7 @@ const login = async (req, res) => {
     activeSessions.add(token);
 
     res.json({
+      success: true,
       message: 'Login successful',
       token,
       user: {
