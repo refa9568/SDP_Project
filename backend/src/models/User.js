@@ -17,7 +17,7 @@ class User {
   static async findById(user_id) {
     try {
       const [rows] = await pool.query(
-        'SELECT user_id, service_number, name, rank, role, unit FROM users WHERE user_id = ?',
+        'SELECT user_id, service_number, name, rank, role, company FROM users WHERE user_id = ?',
         [user_id]
       );
       return rows[0] || null;
@@ -29,7 +29,7 @@ class User {
   static async getAllUsers() {
     try {
       const [rows] = await pool.query(
-        'SELECT user_id, service_number, name, rank, role, unit FROM users ORDER BY name'
+        'SELECT user_id, service_number, name, rank, role, company FROM users ORDER BY name'
       );
       return rows;
     } catch (error) {
@@ -70,6 +70,28 @@ class User {
     } catch (error) {
       console.error('Password validation error:', error);
       return false;
+    }
+  }
+
+  static async createUser(userData) {
+    try {
+      const [result] = await pool.query(
+        `INSERT INTO users (service_number, name, rank, role, company, email, phone, password_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userData.service_number,
+          userData.name,
+          userData.rank,
+          userData.role,
+          userData.company,
+          userData.email,
+          userData.phone,
+          userData.password_hash
+        ]
+      );
+      return result.insertId;
+    } catch (error) {
+      throw new Error(`Error creating user: ${error.message}`);
     }
   }
 }

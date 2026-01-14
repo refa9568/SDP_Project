@@ -9,5 +9,6 @@ router.post('/logout', authController.logout);
 
 // Protected routes
 router.get('/verify', authenticateToken, authController.verifyToken);
+router.post('/register', authenticateToken, authController.register);
 
 module.exports = router;

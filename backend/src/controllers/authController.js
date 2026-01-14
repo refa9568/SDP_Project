@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { JWT_SECRET } = require('../middleware/auth');
 
@@ -35,7 +36,7 @@ const login = async (req, res) => {
         name: user.name,
         rank: user.rank,
         role: user.role,
-        unit: user.unit
+        company: user.company
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -54,7 +55,7 @@ const login = async (req, res) => {
         name: user.name,
         rank: user.rank,
         role: user.role,
-        unit: user.unit
+        company: user.company
       }
     });
   } catch (error) {
@@ -92,8 +93,56 @@ const verifyToken = async (req, res) => {
   }
 };
 
+const register = async (req, res) => {
+  try {
+    const { service_number, name, rank, role, company, email, phone, password } = req.body;
+    const requestingUser = req.user;
+
+    // Only admins/adjutants can register new users
+    if (!['adjutant', 'commanding_officer'].includes(requestingUser.role)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    // Validate required fields
+    if (!service_number || !name || !rank || !role || !password) {
+      return res.status(400).json({ error: 'All required fields must be provided' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findByServiceNumber(service_number);
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this service number already exists' });
+    }
+
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const userId = await User.createUser({
+      service_number,
+      name,
+      rank,
+      role,
+      company: company || null,
+      email: email || null,
+      phone: phone || null,
+      password_hash
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      user_id: userId
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+};
+
 module.exports = {
   login,
   logout,
-  verifyToken
+  verifyToken,
+  register
 };
