@@ -10,7 +10,7 @@ class Leave {
           l.leave_type_id,
           l.start_date,
           l.end_date,
-          l.days,
+          l.total_days as days,
           l.reason,
           l.status,
           l.approved_by,
@@ -19,7 +19,7 @@ class Leave {
           u.name,
           u.service_number,
           u.rank,
-          u.unit,
+          u.company,
           u.role,
           lt.type_name,
           lt.max_days,
@@ -44,7 +44,7 @@ class Leave {
       }
 
       if (filters.unit) {
-        query += ' AND u.unit = ?';
+        query += ' AND u.company = ?';
         params.push(filters.unit);
       }
 
@@ -65,7 +65,7 @@ class Leave {
           u.name,
           u.service_number,
           u.rank,
-          u.unit,
+          u.company,
           lt.type_name,
           approver.name as approver_name
         FROM leaves l
@@ -84,7 +84,7 @@ class Leave {
   static async create(leaveData) {
     try {
       const [result] = await pool.query(
-        `INSERT INTO leaves (user_id, leave_type_id, start_date, end_date, days, reason, status)
+        `INSERT INTO leaves (user_id, leave_type_id, start_date, end_date, total_days, reason, status)
          VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
         [
           leaveData.user_id,

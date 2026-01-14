@@ -2,7 +2,7 @@ const Leave = require('../models/Leave');
 
 const getAllLeaves = async (req, res) => {
   try {
-    const { status, unit } = req.query;
+    const { status, company } = req.query;
     const user = req.user;
 
     let filters = {};
@@ -12,8 +12,8 @@ const getAllLeaves = async (req, res) => {
       // Soldiers see only their own leaves
       filters.user_id = user.user_id;
     } else if (user.role === 'coy_comd') {
-      // Company Commander sees leaves from their unit
-      filters.unit = user.unit;
+      // Company Commander sees leaves from their company
+      filters.unit = user.company;
     }
     // adjutant, bsm, commanding_officer see all leaves
 
@@ -22,9 +22,9 @@ const getAllLeaves = async (req, res) => {
       filters.status = status;
     }
 
-    // Apply unit filter if provided (for CO/adjutant viewing specific units)
-    if (unit && (user.role === 'adjutant' || user.role === 'commanding_officer' || user.role === 'bsm')) {
-      filters.unit = unit;
+    // Apply company filter if provided (for CO/adjutant viewing specific companies)
+    if (company && (user.role === 'adjutant' || user.role === 'commanding_officer' || user.role === 'bsm')) {
+      filters.unit = company;
     }
 
     const leaves = await Leave.findAll(filters);
@@ -55,7 +55,7 @@ const getLeaveById = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    if (user.role === 'coy_comd' && leave.unit !== user.unit) {
+    if (user.role === 'coy_comd' && leave.company !== user.company) {
       return res.status(403).json({ error: 'Access denied' });
     }
 

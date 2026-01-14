@@ -243,6 +243,12 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
+                // Check if selected role matches user's actual role
+                if (data.user.role !== role) {
+                    alert(`Role mismatch! You selected "${role}" but your account role is "${data.user.role}". Please select the correct role.`);
+                    return;
+                }
+                
                 // Save token and user info
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));

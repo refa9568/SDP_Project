@@ -215,6 +215,8 @@ textarea{
 </div>
 
 <script>
+const API_BASE = 'http://localhost:5000';
+
 // Get form elements
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
@@ -268,7 +270,6 @@ window.addEventListener('DOMContentLoaded', function() {
     
     if (type) {
         leaveTypeInput.value = type;
-        // Disable the dropdown if leave type is pre-selected
         leaveTypeInput.disabled = true;
         leaveTypeInput.style.cursor = 'not-allowed';
         leaveTypeInput.style.opacity = '0.7';
@@ -283,14 +284,21 @@ window.addEventListener('DOMContentLoaded', function() {
         reasonInput.value = reasonParam;
     }
     
-    // Calculate days if both dates are present
     if (start && end) {
         calculateDays();
     }
 });
 
-// Form submission
-form.addEventListener('submit', function(e) {
+// Leave type mapping to database IDs
+const leaveTypeMap = {
+    'Annual Leave': 1,
+    'Casual Leave': 2,
+    'Medical Leave': 3,
+    'Emergency Leave': 4
+};
+
+// Form submission - API based
+form.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const leaveType = leaveTypeInput.value;
@@ -309,38 +317,49 @@ form.addEventListener('submit', function(e) {
         return;
     }
     
-    // Get existing requests or initialize
-    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Session expired. Please login again.');
+        window.location.href = '../../login.html';
+        return;
+    }
     
-    // Create new request - use Arman as the soldier
-    const newRequest = {
-        id: String(Date.now()),
-        soldier: 'Arman',
-        rank: 'WO',
-        company: 'Radio',
-        type: leaveType,
-        date: startDate + ' - ' + endDate,
-        submitted: new Date().toLocaleDateString('en-GB'),
-        status: 'Pending',
-        reason: reason,
-        days: numDays
-    };
-    
-    // Add to requests
-    requests.push(newRequest);
-    localStorage.setItem('leaveRequests', JSON.stringify(requests));
-    
-    // Show success message
-    alert('Leave application submitted successfully!\n\n' +
-          'Type: ' + leaveType + '\n' +
-          'From: ' + startDate + '\n' +
-          'To: ' + endDate + '\n' +
-          'Days: ' + numDays + '\n' +
-          'Status: Pending Approval');
-    
-    // Reset form
-    form.reset();
-    numDaysInput.value = '';
+    try {
+        const response = await fetch(`${API_BASE}/api/leaves`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                leave_type_id: leaveTypeMap[leaveType] || 1,
+                start_date: startDate,
+                end_date: endDate,
+                days: parseInt(numDays),
+                reason: reason
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            alert('Leave application submitted successfully!\n\n' +
+                  'Type: ' + leaveType + '\n' +
+                  'From: ' + startDate + '\n' +
+                  'To: ' + endDate + '\n' +
+                  'Days: ' + numDays + '\n' +
+                  'Status: Pending Approval');
+            
+            form.reset();
+            numDaysInput.value = '';
+        } else {
+            alert(data.message || 'Failed to submit leave application. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Connection error. Please check if the server is running.');
+    }
 });
 
 // Navigation functions
@@ -350,6 +369,8 @@ function goHome() {
 
 function doLogout() {
     if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '../../login.html';
     }
 }

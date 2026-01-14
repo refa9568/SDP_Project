@@ -68,50 +68,79 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
   </div>
 
   <script>
-    // Initialize leave requests in localStorage if not exists
-    function initLeaveRequests() {
-      const existing = localStorage.getItem('leaveRequests');
-      if (!existing) {
-        // Start with empty array - no demo data
-        localStorage.setItem('leaveRequests', JSON.stringify([]));
+    const API_BASE = 'http://localhost:5000';
+
+    // Get token from localStorage
+    function getToken() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Session expired. Please login again.');
+        window.location.href = '../../login.html';
+        return null;
       }
+      return token;
     }
 
-    // Load and display requests
-    function loadRequests() {
-      initLeaveRequests();
-      const requests = JSON.parse(localStorage.getItem('leaveRequests'));
+    // Load and display pending requests from API
+    async function loadRequests() {
+      const token = getToken();
+      if (!token) return;
+
       const tbody = document.getElementById('requestsTable');
-      tbody.innerHTML = '';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">Loading...</td></tr>';
 
-      const pendingRequests = requests.filter(req => req.status === 'Pending');
-      
-      if (pendingRequests.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">No pending leave requests</td>';
-        tbody.appendChild(row);
-        return;
+      try {
+        const response = await fetch(`${API_BASE}/api/leaves?status=pending`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!response.ok) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ff6b6b;">Error loading requests</td></tr>';
+          return;
+        }
+
+        const pendingRequests = data.leaves || [];
+        
+        if (pendingRequests.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">No pending leave requests</td></tr>';
+          return;
+        }
+
+        pendingRequests.forEach(req => {
+          const row = document.createElement('tr');
+          row.setAttribute('data-id', req.leave_id);
+          
+          // Format dates
+          const startDate = new Date(req.start_date).toLocaleDateString('en-GB');
+          const endDate = new Date(req.end_date).toLocaleDateString('en-GB');
+          const submitted = new Date(req.created_at).toLocaleDateString('en-GB');
+          
+          row.innerHTML = `
+            <td>${req.rank || ''} ${req.name}</td>
+            <td>${req.company || 'N/A'}</td>
+            <td>${req.type_name}</td>
+            <td>${startDate} - ${endDate}</td>
+            <td>${submitted}</td>
+            <td class="status-cell">${req.status}</td>
+            <td class="actions">
+              <button class="approve" data-id="${req.leave_id}">Approve</button>
+              <button class="reject" data-id="${req.leave_id}">Reject</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        attachEventListeners();
+      } catch (error) {
+        console.error('Error:', error);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ff6b6b;">Connection error. Please check server.</td></tr>';
       }
-
-      pendingRequests.forEach(req => {
-        const row = document.createElement('tr');
-        row.setAttribute('data-id', req.id);
-        row.innerHTML = `
-          <td>${req.rank} ${req.soldier}</td>
-          <td>${req.company}</td>
-          <td>${req.type}</td>
-          <td>${req.date.replace('-', ' - ')}</td>
-          <td>${req.submitted}</td>
-          <td class="status-cell">${req.status}</td>
-          <td class="actions">
-            <button class="approve" data-id="${req.id}">Approve</button>
-            <button class="reject" data-id="${req.id}">Reject</button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      attachEventListeners();
     }
 
     // Attach approve/reject event listeners
@@ -119,28 +148,44 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
       document.querySelectorAll('.approve').forEach(btn => {
         btn.addEventListener('click', function() {
           const id = this.getAttribute('data-id');
-          updateRequestStatus(id, 'Approved');
+          updateRequestStatus(id, 'approved');
         });
       });
 
       document.querySelectorAll('.reject').forEach(btn => {
         btn.addEventListener('click', function() {
           const id = this.getAttribute('data-id');
-          updateRequestStatus(id, 'Rejected');
+          updateRequestStatus(id, 'rejected');
         });
       });
     }
 
-    // Update request status
-    function updateRequestStatus(id, status) {
-      const requests = JSON.parse(localStorage.getItem('leaveRequests'));
-      const request = requests.find(r => r.id === id);
-      
-      if (request) {
-        request.status = status;
-        localStorage.setItem('leaveRequests', JSON.stringify(requests));
-        alert(`Leave request ${status.toLowerCase()} successfully!`);
-        loadRequests();
+    // Update request status via API
+    async function updateRequestStatus(id, status) {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/leaves/${id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: status })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          alert(`Leave request ${status} successfully!`);
+          loadRequests(); // Reload the table
+        } else {
+          alert(data.message || `Failed to ${status} request`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Connection error. Please try again.');
       }
     }
 
