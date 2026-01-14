@@ -68,7 +68,7 @@ const getLeaveById = async (req, res) => {
 
 const createLeave = async (req, res) => {
   try {
-    const { leave_type_id, start_date, end_date, days, reason } = req.body;
+    const { leave_type_id, start_date, end_date, days, reason, contact_number, address_during_leave } = req.body;
     const user = req.user;
 
     if (!leave_type_id || !start_date || !end_date || !days || !reason) {
@@ -81,7 +81,9 @@ const createLeave = async (req, res) => {
       start_date,
       end_date,
       days,
-      reason
+      reason,
+      contact_number: contact_number || null,
+      address_during_leave: address_during_leave || null
     };
 
     const leave_id = await Leave.create(leaveData);

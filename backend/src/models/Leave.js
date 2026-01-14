@@ -12,6 +12,8 @@ class Leave {
           l.end_date,
           l.total_days as days,
           l.reason,
+          l.address_during_leave,
+          l.contact_number,
           l.status,
           l.approved_by,
           l.created_at,
@@ -84,15 +86,17 @@ class Leave {
   static async create(leaveData) {
     try {
       const [result] = await pool.query(
-        `INSERT INTO leaves (user_id, leave_type_id, start_date, end_date, total_days, reason, status)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+        `INSERT INTO leaves (user_id, leave_type_id, start_date, end_date, total_days, reason, address_during_leave, contact_number, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           leaveData.user_id,
           leaveData.leave_type_id,
           leaveData.start_date,
           leaveData.end_date,
           leaveData.days,
-          leaveData.reason
+          leaveData.reason,
+          leaveData.address_during_leave,
+          leaveData.contact_number
         ]
       );
       return result.insertId;

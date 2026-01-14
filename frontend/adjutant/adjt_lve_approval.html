@@ -26,6 +26,16 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
 .actions{display:flex;gap:8px}
 .approve{background:#5ea542;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
 .reject{background:#c2342a;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.view-details{background:#4a90e2;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:#6f7f46;border-radius:10px;padding:25px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;border:2px solid #8f9960}
+.modal-content h2{margin:0 0 20px;color:#fff}
+.detail-row{margin:15px 0;padding:10px;background:rgba(0,0,0,.2);border-radius:6px}
+.detail-row label{display:block;color:#dde2b5;font-size:12px;margin-bottom:5px;font-weight:800}
+.detail-row div{color:#fff;font-size:14px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.close-btn{background:#3a4638;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700}
 @media(max-width:900px){.tabs{grid-template-columns:1fr}.panel{padding:12px}}
 </style>
 </head>
@@ -56,14 +66,26 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
             <th>Company</th>
             <th>Leave Type</th>
             <th>Date</th>
-            <th>Submitted</th>
-            <th>Status</th>
+            <th>Days</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody id="requestsTable">
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div id="detailsModal" class="modal">
+    <div class="modal-content">
+      <h2>Leave Request Details</h2>
+      <div id="modalDetails"></div>
+      <div class="modal-actions">
+        <button class="close-btn" onclick="closeModal()">Close</button>
+        <button class="approve" id="modalApprove">Approve</button>
+        <button class="reject" id="modalReject">Reject</button>
+      </div>
     </div>
   </div>
 
@@ -119,29 +141,97 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
           // Format dates
           const startDate = new Date(req.start_date).toLocaleDateString('en-GB');
           const endDate = new Date(req.end_date).toLocaleDateString('en-GB');
-          const submitted = new Date(req.created_at).toLocaleDateString('en-GB');
           
           row.innerHTML = `
-            <td>${req.rank || ''} ${req.name}</td>
+            <td>${req.rank || ''} ${req.name}<br><small style="color:#dde2b5">${req.service_number}</small></td>
             <td>${req.company || 'N/A'}</td>
             <td>${req.type_name}</td>
             <td>${startDate} - ${endDate}</td>
-            <td>${submitted}</td>
-            <td class="status-cell">${req.status}</td>
+            <td>${req.days} days</td>
             <td class="actions">
-              <button class="approve" data-id="${req.leave_id}">Approve</button>
-              <button class="reject" data-id="${req.leave_id}">Reject</button>
+              <button class="view-details" onclick="viewDetails(${req.leave_id})">Details</button>
             </td>
           `;
           tbody.appendChild(row);
         });
 
+        // Store leaves data globally for details view
+        window.leavesData = pendingRequests;
+
         attachEventListeners();
       } catch (error) {
         console.error('Error:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ff6b6b;">Connection error. Please check server.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#ff6b6b;">Connection error. Please check server.</td></tr>';
       }
     }
+
+    // View leave details in modal
+    function viewDetails(leaveId) {
+      const leave = window.leavesData.find(l => l.leave_id === leaveId);
+      if (!leave) return;
+
+      const startDate = new Date(leave.start_date).toLocaleDateString('en-GB');
+      const endDate = new Date(leave.end_date).toLocaleDateString('en-GB');
+      const submitted = new Date(leave.created_at).toLocaleDateString('en-GB');
+
+      const detailsHTML = `
+        <div class="detail-row">
+          <label>Soldier</label>
+          <div>${leave.rank || ''} ${leave.name} (${leave.service_number})</div>
+        </div>
+        <div class="detail-row">
+          <label>Company</label>
+          <div>${leave.company || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Leave Type</label>
+          <div>${leave.type_name}</div>
+        </div>
+        <div class="detail-row">
+          <label>Duration</label>
+          <div>${startDate} to ${endDate} (${leave.days} days)</div>
+        </div>
+        <div class="detail-row">
+          <label>Contact Number</label>
+          <div>${leave.contact_number || 'Not provided'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Address During Leave</label>
+          <div>${leave.address_during_leave || 'Not provided'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Reason</label>
+          <div>${leave.reason}</div>
+        </div>
+        <div class="detail-row">
+          <label>Submitted On</label>
+          <div>${submitted}</div>
+        </div>
+      `;
+
+      document.getElementById('modalDetails').innerHTML = detailsHTML;
+      document.getElementById('modalApprove').onclick = () => {
+        updateRequestStatus(leaveId, 'approved');
+        closeModal();
+      };
+      document.getElementById('modalReject').onclick = () => {
+        updateRequestStatus(leaveId, 'rejected');
+        closeModal();
+      };
+
+      document.getElementById('detailsModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').classList.remove('show');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('detailsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
 
     // Attach approve/reject event listeners
     function attachEventListeners() {

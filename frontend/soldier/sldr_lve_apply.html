@@ -200,6 +200,16 @@ textarea{
                 <input type="number" id="numDays" readonly>
             </div>
 
+            <div class="form-group">
+                <label>Contact Number</label>
+                <input type="tel" id="contactNumber" placeholder="Mobile number during leave" required>
+            </div>
+
+            <div class="form-group textarea-group">
+                <label>Address During Leave</label>
+                <textarea id="address" placeholder="Address where you will be staying during leave..." required></textarea>
+            </div>
+
             <div class="form-group textarea-group">
                 <label>Reason for Leave</label>
                 <textarea id="reason" placeholder="Provide detail reason for leave..." required></textarea>
@@ -223,6 +233,8 @@ const endDateInput = document.getElementById('endDate');
 const numDaysInput = document.getElementById('numDays');
 const leaveTypeInput = document.getElementById('leaveType');
 const reasonInput = document.getElementById('reason');
+const contactNumberInput = document.getElementById('contactNumber');
+const addressInput = document.getElementById('address');
 const form = document.getElementById('leaveForm');
 
 // Set minimum date to today
@@ -306,8 +318,10 @@ form.addEventListener('submit', async function(e) {
     const endDate = endDateInput.value;
     const numDays = numDaysInput.value;
     const reason = reasonInput.value;
+    const contactNumber = contactNumberInput.value;
+    const address = addressInput.value;
     
-    if (!leaveType || !startDate || !endDate || !reason) {
+    if (!leaveType || !startDate || !endDate || !reason || !contactNumber || !address) {
         alert('Please fill all required fields!');
         return;
     }
@@ -337,7 +351,9 @@ form.addEventListener('submit', async function(e) {
                 start_date: startDate,
                 end_date: endDate,
                 days: parseInt(numDays),
-                reason: reason
+                reason: reason,
+                contact_number: contactNumber,
+                address_during_leave: address
             })
         });
         
