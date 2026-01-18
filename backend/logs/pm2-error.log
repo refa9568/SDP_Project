@@ -1,0 +1,140 @@
+2026-01-15T01:04:24: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Captain', 'Test User', 'soldier', 'Radio', '$2a$10$Yfu2/mse6cVFIcSQ4IVetO8ElgSIOHRlK4qGNPrhu/ncL35ZuY5cu', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:04:37: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Captain', 'Test User', 'soldier', 'Radio', '$2a$10$iLQVZUP1JfIhVUF.hVyfk.yeaj.gSEcf6YiGYmh5qVHm1w0CZiyae', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:28:41: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Major', 'Suraiya Mustari Labiba', 'co', 'BHQ', '$2a$10$eEls5KsNCtq.jeZwmkKpZ.76NjzyTSIxkDg.73OrwzcjZJy7M0jPG', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:33:50: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:33:56: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:34:48: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:40:10: Get leave balance error: Error: Unknown column '$1' in 'on clause'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.getLeaveBalance (D:\SDP_Project\backend\src\models\Leave.js:143:31)
+    at getLeaveBalance (D:\SDP_Project\backend\src\controllers\leaveController.js:224:35)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: '\n' +
+    '      SELECT lt.type_name, lt.max_days,\n' +
+    "             COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.total_days ELSE 0 END), 0) as used_days,\n" +
+    "             lt.max_days - COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.total_days ELSE 0 END), 0) as remaining_days\n" +
+    '      FROM leave_types lt\n' +
+    '      LEFT JOIN leaves l ON lt.leave_type_id = l.leave_type_id AND l.user_id = $1\n' +
+    '      GROUP BY lt.leave_type_id, lt.type_name, lt.max_days\n' +
+    '      ORDER BY lt.type_name\n' +
+    '    ',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column '$1' in 'on clause'"
+}
+2026-01-15T01:40:10: Get leaves error: Error: Undeclared variable: $3
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.findAll (D:\SDP_Project\backend\src\models\Leave.js:83:31)
+    at getAllLeaves (D:\SDP_Project\backend\src\controllers\leaveController.js:67:34)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_SP_UNDECLARED_VAR',
+  errno: 1327,
+  sql: '\n' +
+    '      SELECT l.*, u.service_number, u.rank, u.name, u.company, lt.type_name,\n' +
+    '             approver.name as approved_by_name\n' +
+    '      FROM leaves l\n' +
+    '      JOIN users u ON l.user_id = u.user_id\n' +
+    '      JOIN leave_types lt ON l.leave_type_id = lt.leave_type_id\n' +
+    '      LEFT JOIN users approver ON l.approved_by = approver.user_id\n' +
+    '      WHERE 1=1\n' +
+    '     AND l.user_id = $1 AND l.status = $2 ORDER BY l.created_at DESC LIMIT $3',
+  sqlState: '42000',
+  sqlMessage: 'Undeclared variable: $3'
+}

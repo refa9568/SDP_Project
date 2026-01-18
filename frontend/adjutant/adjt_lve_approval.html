@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approve Requests</title>
+<style>
+html,body{margin:0;padding:0;height:100%;font-family:Segoe UI, Arial, sans-serif;background:#2f3a32;color:#fff}
+.header{background:#6b7740;padding:18px 28px;border-bottom:2px solid #8f9960;display:flex;justify-content:space-between;align-items:center}
+.header h1{margin:0;font-size:22px}
+.header p{margin:4px 0 0;color:#dde2b5}
+.header-right{display:flex;gap:12px}
+.btn{border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;background:transparent;color:#fff}
+.btn.light{background:#c9c295;color:#2f2f1f}
+.btn.dark{background:#3a4638}
+.home-btn{width:38px;height:38px;background:#3a4638;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.home-btn:hover{background:#4a5648}
+.main{padding:20px}
+.panel{max-width:1150px;margin:0 auto;background:#6f7f46;border-radius:10px;padding:18px;border:1px solid #8f9960}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.tab{padding:12px 0;text-align:center;border-radius:8px;background:#c9c295;color:#2f2f1f;font-weight:700;text-decoration:none;display:block}
+.tab.inactive{background:#2f3b32;color:#dde2b5}
+table{width:100%;border-collapse:collapse;background:transparent}
+thead th{padding:10px 12px;text-align:left;color:#dde2b5;border-bottom:1px solid rgba(255,255,255,.08);font-weight:800}
+tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:700}
+.actions{display:flex;gap:8px}
+.approve{background:#5ea542;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.reject{background:#c2342a;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.view-details{background:#4a90e2;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:700}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:#6f7f46;border-radius:10px;padding:25px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;border:2px solid #8f9960}
+.modal-content h2{margin:0 0 20px;color:#fff}
+.detail-row{margin:15px 0;padding:10px;background:rgba(0,0,0,.2);border-radius:6px}
+.detail-row label{display:block;color:#dde2b5;font-size:12px;margin-bottom:5px;font-weight:800}
+.detail-row div{color:#fff;font-size:14px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.close-btn{background:#3a4638;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700}
+@media(max-width:900px){.tabs{grid-template-columns:1fr}.panel{padding:12px}}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Leave Management System</h1>
+      <p>Approve Requests</p>
+    </div>
+    <div class="header-right">
+      <button class="btn light" onclick="location.href='adjt_dashboard.html'">Home</button>
+      <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <div class="tabs">
+        <a class="tab inactive" href="lve_mgt.html">Apply for Leave</a>
+        <div class="tab">Approve Request</div>
+        <a class="tab inactive" href="adjt_lve_hist.html">Leave History</a>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Soldier</th>
+            <th>Company</th>
+            <th>Leave Type</th>
+            <th>Date</th>
+            <th>Days</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="requestsTable">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div id="detailsModal" class="modal">
+    <div class="modal-content">
+      <h2>Leave Request Details</h2>
+      <div id="modalDetails"></div>
+      <div class="modal-actions">
+        <button class="close-btn" onclick="closeModal()">Close</button>
+        <button class="approve" id="modalApprove">Approve</button>
+        <button class="reject" id="modalReject">Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000';
+
+    // Get token from localStorage
+    function getToken() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Session expired. Please login again.');
+        window.location.href = '../../login.html';
+        return null;
+      }
+      return token;
+    }
+
+    // Load and display pending requests from API
+    async function loadRequests() {
+      const token = getToken();
+      if (!token) return;
+
+      const tbody = document.getElementById('requestsTable');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">Loading...</td></tr>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/leaves?status=pending`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        tbody.innerHTML = '';
+
+        if (!response.ok) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ff6b6b;">Error loading requests</td></tr>';
+          return;
+        }
+
+        const pendingRequests = data.leaves || [];
+        
+        if (pendingRequests.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#dde2b5;">No pending leave requests</td></tr>';
+          return;
+        }
+
+        pendingRequests.forEach(req => {
+          const row = document.createElement('tr');
+          row.setAttribute('data-id', req.leave_id);
+          
+          // Format dates
+          const startDate = new Date(req.start_date).toLocaleDateString('en-GB');
+          const endDate = new Date(req.end_date).toLocaleDateString('en-GB');
+          
+          row.innerHTML = `
+            <td>${req.rank || ''} ${req.name}<br><small style="color:#dde2b5">${req.service_number}</small></td>
+            <td>${req.company || 'N/A'}</td>
+            <td>${req.type_name}</td>
+            <td>${startDate} - ${endDate}</td>
+            <td>${req.days} days</td>
+            <td class="actions">
+              <button class="view-details" onclick="viewDetails(${req.leave_id})">Details</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // Store leaves data globally for details view
+        window.leavesData = pendingRequests;
+
+        attachEventListeners();
+      } catch (error) {
+        console.error('Error:', error);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#ff6b6b;">Connection error. Please check server.</td></tr>';
+      }
+    }
+
+    // View leave details in modal
+    function viewDetails(leaveId) {
+      const leave = window.leavesData.find(l => l.leave_id === leaveId);
+      if (!leave) return;
+
+      const startDate = new Date(leave.start_date).toLocaleDateString('en-GB');
+      const endDate = new Date(leave.end_date).toLocaleDateString('en-GB');
+      const submitted = new Date(leave.created_at).toLocaleDateString('en-GB');
+
+      const detailsHTML = `
+        <div class="detail-row">
+          <label>Soldier</label>
+          <div>${leave.rank || ''} ${leave.name} (${leave.service_number})</div>
+        </div>
+        <div class="detail-row">
+          <label>Company</label>
+          <div>${leave.company || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Leave Type</label>
+          <div>${leave.type_name}</div>
+        </div>
+        <div class="detail-row">
+          <label>Duration</label>
+          <div>${startDate} to ${endDate} (${leave.days} days)</div>
+        </div>
+        <div class="detail-row">
+          <label>Contact Number</label>
+          <div>${leave.contact_number || 'Not provided'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Address During Leave</label>
+          <div>${leave.address_during_leave || 'Not provided'}</div>
+        </div>
+        <div class="detail-row">
+          <label>Reason</label>
+          <div>${leave.reason}</div>
+        </div>
+        <div class="detail-row">
+          <label>Submitted On</label>
+          <div>${submitted}</div>
+        </div>
+      `;
+
+      document.getElementById('modalDetails').innerHTML = detailsHTML;
+      document.getElementById('modalApprove').onclick = () => {
+        updateRequestStatus(leaveId, 'approved');
+        closeModal();
+      };
+      document.getElementById('modalReject').onclick = () => {
+        updateRequestStatus(leaveId, 'rejected');
+        closeModal();
+      };
+
+      document.getElementById('detailsModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').classList.remove('show');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('detailsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // Attach approve/reject event listeners
+    function attachEventListeners() {
+      document.querySelectorAll('.approve').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          updateRequestStatus(id, 'approved');
+        });
+      });
+
+      document.querySelectorAll('.reject').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          updateRequestStatus(id, 'rejected');
+        });
+      });
+    }
+
+    // Update request status via API
+    async function updateRequestStatus(id, status) {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/leaves/${id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: status })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          alert(`Leave request ${status} successfully!`);
+          loadRequests(); // Reload the table
+        } else {
+          alert(data.message || `Failed to ${status} request`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Connection error. Please try again.');
+      }
+    }
+
+    // Load requests on page load
+    loadRequests();
+  </script>
+</body>
+</html>
+
+
