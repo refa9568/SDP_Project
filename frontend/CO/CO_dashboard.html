@@ -287,7 +287,7 @@
           <p>Battalion-Wide Command & Control Center</p>
         </div>
         <div class="top-actions">
-          <button class="btn dark" onclick="window.location.href='../../login.html'">Logout</button>
+          <button class="btn dark" onclick="logout()">Logout</button>
         </div>
       </div>
     </header>
@@ -509,6 +509,15 @@
       
       // Reload notices every 30 seconds
       setInterval(loadNotices, 30000);
+
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+        }
+      }
     </script>
 
   </div>

@@ -1,177 +1,169 @@
-const pool = require('../../database/database');
+const mongoose = require('mongoose');
 
-class Leave {
-  static async findAll(filters = {}) {
-    try {
-      let query = `
-        SELECT 
-          l.leave_id,
-          l.user_id,
-          l.leave_type_id,
-          l.start_date,
-          l.end_date,
-          l.total_days as days,
-          l.reason,
-          l.address_during_leave,
-          l.contact_number,
-          l.status,
-          l.approved_by,
-          l.created_at,
-          l.updated_at,
-          u.name,
-          u.service_number,
-          u.rank,
-          u.company,
-          u.role,
-          lt.type_name,
-          lt.max_days,
-          approver.name as approver_name
-        FROM leaves l
-        JOIN users u ON l.user_id = u.user_id
-        JOIN leave_types lt ON l.leave_type_id = lt.leave_type_id
-        LEFT JOIN users approver ON l.approved_by = approver.user_id
-        WHERE 1=1
-      `;
-      
-      const params = [];
+const leaveTypeSchema = new mongoose.Schema({
+  type_name: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  max_days: {
+    type: Number,
+    required: true
+  }
+});
 
-      if (filters.user_id) {
-        query += ' AND l.user_id = ?';
-        params.push(filters.user_id);
+const leaveSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  leave_type_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LeaveType',
+    required: true
+  },
+  start_date: {
+    type: Date,
+    required: true
+  },
+  end_date: {
+    type: Date,
+    required: true
+  },
+  total_days: {
+    type: Number,
+    required: true
+  },
+  reason: {
+    type: String,
+    required: true
+  },
+  address_during_leave: {
+    type: String
+  },
+  contact_number: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'cancelled'],
+    default: 'pending'
+  },
+  approved_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rejection_reason: {
+    type: String
+  }
+}, {
+  timestamps: true
+});
+
+// Static methods
+leaveSchema.statics.findAll = function(filters = {}) {
+  let query = this.find();
+
+  if (filters.user_id) {
+    query = query.where('user_id').equals(filters.user_id);
+  }
+
+  if (filters.status) {
+    query = query.where('status').equals(filters.status);
+  }
+
+  if (filters.unit) {
+    // This requires population and filtering
+    query = query.populate({
+      path: 'user_id',
+      match: { company: filters.unit }
+    });
+  }
+
+  return query
+    .populate('user_id', 'name service_number rank company role')
+    .populate('leave_type_id', 'type_name max_days')
+    .populate('approved_by', 'name')
+    .sort({ createdAt: -1 });
+};
+
+leaveSchema.statics.findById = function(leave_id) {
+  return this.findById(leave_id)
+    .populate('user_id', 'name service_number rank company')
+    .populate('leave_type_id', 'type_name')
+    .populate('approved_by', 'name');
+};
+
+leaveSchema.statics.create = function(leaveData) {
+  const leave = new this(leaveData);
+  return leave.save();
+};
+
+leaveSchema.statics.approve = function(leave_id, approved_by) {
+  return this.findByIdAndUpdate(
+    leave_id,
+    {
+      status: 'approved',
+      approved_by: approved_by
+    },
+    { new: true }
+  );
+};
+
+leaveSchema.statics.reject = function(leave_id, approved_by, rejection_reason = null) {
+  return this.findByIdAndUpdate(
+    leave_id,
+    {
+      status: 'rejected',
+      approved_by: approved_by,
+      rejection_reason: rejection_reason
+    },
+    { new: true }
+  );
+};
+
+leaveSchema.statics.getLeaveTypes = function() {
+  return this.model('LeaveType').find().sort('type_name');
+};
+
+leaveSchema.statics.getLeaveBalance = async function(user_id) {
+  const leaveTypes = await this.model('LeaveType').find();
+
+  const balances = await Promise.all(leaveTypes.map(async (type) => {
+    const usedDays = await this.aggregate([
+      {
+        $match: {
+          user_id: mongoose.Types.ObjectId(user_id),
+          leave_type_id: type._id,
+          status: 'approved'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$total_days' }
+        }
       }
+    ]);
 
-      if (filters.status) {
-        query += ' AND l.status = ?';
-        params.push(filters.status);
-      }
+    const used = usedDays.length > 0 ? usedDays[0].total : 0;
+    return {
+      type_name: type.type_name,
+      max_days: type.max_days,
+      used_days: used,
+      remaining_days: type.max_days - used
+    };
+  }));
 
-      if (filters.unit) {
-        query += ' AND u.company = ?';
-        params.push(filters.unit);
-      }
+  return balances;
+};
 
-      query += ' ORDER BY l.created_at DESC';
+leaveSchema.statics.delete = function(leave_id) {
+  return this.findByIdAndDelete(leave_id);
+};
 
-      const [rows] = await pool.query(query, params);
-      return rows;
-    } catch (error) {
-      throw new Error(`Error fetching leaves: ${error.message}`);
-    }
-  }
-
-  static async findById(leave_id) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT 
-          l.*,
-          u.name,
-          u.service_number,
-          u.rank,
-          u.company,
-          lt.type_name,
-          approver.name as approver_name
-        FROM leaves l
-        JOIN users u ON l.user_id = u.user_id
-        JOIN leave_types lt ON l.leave_type_id = lt.leave_type_id
-        LEFT JOIN users approver ON l.approved_by = approver.user_id
-        WHERE l.leave_id = ?`,
-        [leave_id]
-      );
-      return rows[0] || null;
-    } catch (error) {
-      throw new Error(`Error fetching leave: ${error.message}`);
-    }
-  }
-
-  static async create(leaveData) {
-    try {
-      const [result] = await pool.query(
-        `INSERT INTO leaves (user_id, leave_type_id, start_date, end_date, total_days, reason, address_during_leave, contact_number, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-        [
-          leaveData.user_id,
-          leaveData.leave_type_id,
-          leaveData.start_date,
-          leaveData.end_date,
-          leaveData.days,
-          leaveData.reason,
-          leaveData.address_during_leave,
-          leaveData.contact_number
-        ]
-      );
-      return result.insertId;
-    } catch (error) {
-      throw new Error(`Error creating leave: ${error.message}`);
-    }
-  }
-
-  static async approve(leave_id, approved_by) {
-    try {
-      const [result] = await pool.query(
-        `UPDATE leaves 
-         SET status = 'approved', approved_by = ?, updated_at = NOW()
-         WHERE leave_id = ? AND status = 'pending'`,
-        [approved_by, leave_id]
-      );
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw new Error(`Error approving leave: ${error.message}`);
-    }
-  }
-
-  static async reject(leave_id, approved_by, rejection_reason = null) {
-    try {
-      const [result] = await pool.query(
-        `UPDATE leaves 
-         SET status = 'rejected', approved_by = ?, rejection_reason = ?, updated_at = NOW()
-         WHERE leave_id = ? AND status = 'pending'`,
-        [approved_by, rejection_reason, leave_id]
-      );
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw new Error(`Error rejecting leave: ${error.message}`);
-    }
-  }
-
-  static async getLeaveTypes() {
-    try {
-      const [rows] = await pool.query('SELECT * FROM leave_types ORDER BY type_name');
-      return rows;
-    } catch (error) {
-      throw new Error(`Error fetching leave types: ${error.message}`);
-    }
-  }
-
-  static async getLeaveBalance(user_id) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT 
-          lt.type_name,
-          lt.max_days,
-          COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.days ELSE 0 END), 0) as used_days,
-          lt.max_days - COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.days ELSE 0 END), 0) as remaining_days
-        FROM leave_types lt
-        LEFT JOIN leaves l ON lt.leave_type_id = l.leave_type_id AND l.user_id = ?
-        GROUP BY lt.leave_type_id, lt.type_name, lt.max_days`,
-        [user_id]
-      );
-      return rows;
-    } catch (error) {
-      throw new Error(`Error fetching leave balance: ${error.message}`);
-    }
-  }
-
-  static async delete(leave_id) {
-    try {
-      const [result] = await pool.query(
-        'DELETE FROM leaves WHERE leave_id = ? AND status = "pending"',
-        [leave_id]
-      );
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw new Error(`Error deleting leave: ${error.message}`);
-    }
-  }
-}
+const Leave = mongoose.model('Leave', leaveSchema);
+const LeaveType = mongoose.model('LeaveType', leaveTypeSchema);
 
 module.exports = Leave;

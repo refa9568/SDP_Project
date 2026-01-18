@@ -1,25 +1,15 @@
-const mysql = require('mysql2/promise');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Create connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'paradeops_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/paradeops_db');
 
-// Test connection
-pool.getConnection()
-  .then(connection => {
-    console.log('✓ Database connected successfully');
-    connection.release();
-  })
-  .catch(err => {
-    console.error('✗ Database connection failed:', err.message);
-  });
+    console.log('✓ MongoDB connected successfully');
+  } catch (error) {
+    console.error('✗ MongoDB connection failed:', error.message);
+    process.exit(1);
+  }
+};
 
-module.exports = pool;
+module.exports = connectDB;

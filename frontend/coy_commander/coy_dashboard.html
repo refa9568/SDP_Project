@@ -186,7 +186,7 @@ a{
 <!-- ===== HEADER ===== -->
 <div class="header">
   <h2>Dashboard – Radio Coy Comd (Comd's Voice)</h2>
-  <a href="../../login.html" class="logout">Logout</a>
+  <button onclick="logout()" class="logout">Logout</button>
 </div> 
 
 <!-- ===== STATS ===== -->
@@ -443,6 +443,15 @@ function loadDashboardStats() {
 
 // Load stats on page load
 window.addEventListener('DOMContentLoaded', loadDashboardStats);
+
+// Logout function
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '../../login.html';
+  }
+}
 </script>
 
 </body>

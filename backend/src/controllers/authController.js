@@ -96,16 +96,16 @@ const verifyToken = async (req, res) => {
 const register = async (req, res) => {
   try {
     const { service_number, name, rank, role, company, email, phone, password } = req.body;
-    const requestingUser = req.user;
+    const requestingUser = req.user; // May be undefined if no token
 
-    // Only admins/adjutants can register new users
-    if (!['adjutant', 'commanding_officer'].includes(requestingUser.role)) {
+    // Only check permissions if user is authenticated
+    if (requestingUser && !['adjutant', 'commanding_officer'].includes(requestingUser.role)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    // Validate required fields
-    if (!service_number || !name || !rank || !role || !password) {
-      return res.status(400).json({ error: 'All required fields must be provided' });
+    // Validate required fields (password not required since we use default "1234")
+    if (!service_number || !name || !rank || !role) {
+      return res.status(400).json({ error: 'Service number, name, rank, and role are required' });
     }
 
     // Check if user already exists
@@ -114,8 +114,8 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'User with this service number already exists' });
     }
 
-    // Hash password
-    const password_hash = await bcrypt.hash(password, 10);
+    // Hash password (always use "1234" for all users)
+    const password_hash = await bcrypt.hash("1234", 10);
 
     // Create user
     const userId = await User.createUser({

@@ -1,14 +1,19 @@
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('../database/database');
 const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const equipmentRoutes = require('./routes/equipmentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB
+connectDB();
+
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:8081',
+  origin: 'http://localhost:8000',
   credentials: true
 }));
 app.use(express.json());
@@ -28,6 +33,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/equipment', equipmentRoutes);
 
 // 404 handler
 app.use((req, res) => {

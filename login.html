@@ -167,18 +167,6 @@
 
         <form id="loginForm">
             <div class="input-group">
-                <label for="role">Role</label>
-                <select id="role" required>
-                    <option value="">Select a role</option>
-                    <option value="commanding_officer">Commanding Officer</option>
-                    <option value="coy_comd">Coy Comd</option>
-                    <option value="adjutant">Adjutant</option>
-                    <option value="bsm">BSM</option>
-                    <option value="soldier">Soldier</option>
-                </select>
-            </div>
-
-            <div class="input-group">
                 <label for="username">Service Number</label>
                 <input type="text" id="username" name="username" placeholder="Enter service number (e.g., BA-12170)" required autocomplete="off">
             </div>
@@ -193,6 +181,8 @@
 
         <div class="footer-message">
             Authorized Access Only
+            <br>
+            <a href="frontend/user-registration.html" style="color: #C2B280; text-decoration: underline;">New User? Register Here</a>
         </div>
     </div>
 
@@ -214,14 +204,8 @@
     document.getElementById('loginForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         
-        const role = document.getElementById('role').value;
         const service_number = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
-
-        if (!role) {
-            alert('Please select a role');
-            return;
-        }
 
         if (!service_number || !password) {
             alert('Please enter both service number and password');
@@ -243,12 +227,6 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Check if selected role matches user's actual role
-                if (data.user.role !== role) {
-                    alert(`Role mismatch! You selected "${role}" but your account role is "${data.user.role}". Please select the correct role.`);
-                    return;
-                }
-                
                 // Save token and user info
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));

@@ -299,7 +299,7 @@
           <p>Real-Time Manpower Readiness Overview</p>
         </div>
         <div class="top-actions">
-          <a class="btn dark" href="../../login.html">Logout</a>
+          <button class="btn dark" onclick="logout()">Logout</button>
         </div>
       </div>
     </header>
@@ -574,6 +574,15 @@
         
         // Clear the textarea after sending
         document.getElementById('nextDayCommitment').value = '';
+      }
+
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+        }
       }
     </script>
 

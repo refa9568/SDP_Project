@@ -358,7 +358,7 @@
         </div>
 
         <div class="top-actions">
-          <button class="logout" onclick="window.location.href='../../login.html'">Logout</button>
+          <button class="logout" onclick="logout()">Logout</button>
         </div>
       </div>
     </header>
@@ -629,6 +629,15 @@
         
         localStorage.setItem('battalion_strength_report', JSON.stringify(reportData));
         alert('✅ Battalion Strength Report forwarded to CO successfully!');
+      }
+
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+        }
       }
     </script>
 

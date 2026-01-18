@@ -198,10 +198,10 @@ body{
     <!-- PERSONAL INFO -->
     <div class="panel">
         <div class="panel-title">Personal Info</div>
-        <div class="info-box">Name &nbsp;&nbsp;&nbsp;: Arman</div>
-        <div class="info-box">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 001</div>
-        <div class="info-box">Rank &nbsp;&nbsp;&nbsp;: WO</div>
-        <div class="info-box">Company : Radio</div>
+        <div class="info-box" id="user-name">Name &nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-id">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-rank">Rank &nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-company">Company : Loading...</div>
     </div>
 
     <!-- LEAVE BALANCE -->
@@ -264,14 +264,66 @@ body{
 </div>
 
 <script>
+// Load user data from localStorage
+function loadUserData() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    if (!user) {
+        // No user logged in, redirect to login
+        window.location.href = '../../login.html';
+        return;
+    }
+    
+    // Populate personal info
+    document.getElementById('user-name').textContent = `Name     : ${user.name}`;
+    document.getElementById('user-id').textContent = `ID         : ${user.service_number}`;
+    document.getElementById('user-rank').textContent = `Rank     : ${user.rank}`;
+    document.getElementById('user-company').textContent = `Company : ${user.company}`;
+    
+    return user;
+}
+
+// Load leave balance from API
+async function loadLeaveBalance() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch('http://localhost:5000/api/leaves/balance', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.balance && Array.isArray(data.balance)) {
+                // Map leave types to the dashboard cards
+                const balanceMap = {};
+                data.balance.forEach(item => {
+                    const type = item.type_name.toLowerCase();
+                    balanceMap[type] = item.remaining_days;
+                });
+                
+                // Update the counts
+                document.querySelector('.balance-card:nth-child(1) .count').textContent = balanceMap['annual leave'] || balanceMap['annual'] || 0;
+                document.querySelector('.balance-card:nth-child(2) .count').textContent = balanceMap['recreational leave'] || balanceMap['recreational'] || 0;
+                document.querySelector('.balance-card:nth-child(3) .count').textContent = balanceMap['casual leave'] || balanceMap['casual'] || 0;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading leave balance:', error);
+    }
+}
+
 // Check leave status and display notification
-function checkLeaveStatus() {
+function checkLeaveStatus(user) {
     const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
     const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
     const notification = document.getElementById('leaveNotification');
     
-    // Filter requests for current soldier (Arman)
-    const myRequests = requests.filter(req => req.soldier === 'Arman');
+    // Filter requests for current soldier
+    const myRequests = requests.filter(req => req.soldier === user.name);
     
     if (myRequests.length === 0) {
         notification.style.display = 'none';
@@ -321,12 +373,20 @@ function applyLeave(leaveType) {
 // Logout function
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
+        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = '../../login.html';
     }
 }
 
-// Check leave status on page load
-window.addEventListener('DOMContentLoaded', checkLeaveStatus);
+// Initialize page
+window.addEventListener('DOMContentLoaded', function() {
+    const user = loadUserData();
+    if (user) {
+        checkLeaveStatus(user);
+        loadLeaveBalance();
+    }
+});
 </script>
 
 </body>

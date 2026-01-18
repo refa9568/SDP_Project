@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Leave = require('../models/Leave');
 
 const getAllLeaves = async (req, res) => {
@@ -76,11 +77,11 @@ const createLeave = async (req, res) => {
     }
 
     const leaveData = {
-      user_id: user.user_id,
-      leave_type_id,
-      start_date,
-      end_date,
-      days,
+      user_id: mongoose.Types.ObjectId(user.user_id),
+      leave_type_id: mongoose.Types.ObjectId(leave_type_id),
+      start_date: start_date,
+      end_date: end_date,
+      total_days: parseInt(days),
       reason,
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null
@@ -89,6 +90,7 @@ const createLeave = async (req, res) => {
     const leave_id = await Leave.create(leaveData);
 
     res.status(201).json({
+      success: true,
       message: 'Leave application submitted successfully',
       leave_id
     });
