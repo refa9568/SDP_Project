@@ -49,7 +49,7 @@ userSchema.set('toObject', { virtuals: true });
 
 // Static methods
 userSchema.statics.findByServiceNumber = function(service_number) {
-  return this.findOne({ service_number });
+  return this.findOne({ service_number: new RegExp('^' + service_number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
 };
 
 userSchema.statics.findById = function(user_id) {

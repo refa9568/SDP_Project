@@ -50,14 +50,14 @@ const addUser = async () => {
 
     // User data - modify these values as needed
     const userData = {
-      service_number: 'NEW-001', // Change this
-      name: 'New User', // Change this
-      rank: 'Soldier', // Change this
-      role: 'soldier', // Change this
+      service_number: 'BSM-001', // Change this
+      name: 'Battalion Sergeant Major', // Change this
+      rank: 'Warrant Officer', // Change this
+      role: 'bsm', // Change this
       company: 'BHQ', // Change this
-      email: 'newuser@example.com', // Optional
+      email: 'bsm@example.com', // Optional
       phone: '1234567890', // Optional
-      password_hash: await bcrypt.hash('1234', 10) // Default password
+      password_hash: await bcrypt.hash('password123', 10) // Default password
     };
 
     // Check if user already exists

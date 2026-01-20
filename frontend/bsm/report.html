@@ -220,6 +220,26 @@
           </div>
         </div>
 
+        <div class="section">
+          <h4>Company Filter</h4>
+          <div class="input-row">
+            <div class="input">
+              <svg class="icon" viewBox="0 0 24 24" fill="none">
+                <path d="M3 7h18M3 12h18M3 17h18" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <select id="companyFilter" onchange="buildPreview()">
+                <option value="all">All Companies</option>
+                <option value="BHQ">BHQ</option>
+                <option value="HQ">HQ</option>
+                <option value="Radio">Radio</option>
+                <option value="RR">RR</option>
+                <option value="BSC">BSC</option>
+                <option value="Operating">Operating</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="actions">
           <button id="btnPrint" class="action-btn secondary">Print Report</button>
         </div>
@@ -255,17 +275,6 @@
       return `${d}/${m}/${y}`;
     };
 
-    const sampleRows = [
-      { id:'001', rank:'LCPL', name:'Akib', company:'RR', status:'AWOL', remark:'Not Reported' },
-      { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
-      { id:'003', rank:'CPL', name:'Shawon', company:'HQ', status:'On Duty', remark:'RP Duty' },
-      { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
-      { id:'005', rank:'SGT', name:'Minhaz', company:'RR', status:'Present', remark:'' },
-      { id:'006', rank:'LCPL', name:'Rifat', company:'HQ', status:'Leave', remark:'Medical Leave' },
-      { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
-      { id:'008', rank:'SNK', name:'Shuvo', company:'HQ', status:'Present', remark:'' },
-    ];
-
     const statusPill = (s) => {
       const map = {
         'Present': 'green',
@@ -277,7 +286,21 @@
       return `<span class="pill ${cls}">${s}</span>`;
     };
 
-    function buildPreview(){
+    const API_BASE = 'http://localhost:5000';
+
+    // Fallback sample data
+    const sampleRows = [
+      { id:'001', rank:'LCPL', name:'Akib', company:'RR', status:'AWOL', remark:'Not Reported' },
+      { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
+      { id:'003', rank:'CPL', name:'Shawon', company:'HQ', status:'On Duty', remark:'RP Duty' },
+      { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
+      { id:'005', rank:'SGT', name:'Minhaz', company:'RR', status:'Present', remark:'' },
+      { id:'006', rank:'LCPL', name:'Rifat', company:'HQ', status:'Leave', remark:'Medical Leave' },
+      { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
+      { id:'008', rank:'SNK', name:'Shuvo', company:'HQ', status:'Present', remark:'' },
+    ];
+
+    async function buildPreview(){
       const startIso = (document.getElementById('startDate').value || '').trim();
       const endIso = (document.getElementById('endDate').value || '').trim();
       const start = fmt(startIso); const end = fmt(endIso);
@@ -290,48 +313,185 @@
         remark: document.getElementById('colRemark').checked,
       };
 
-      const counts = sampleRows.reduce((acc, r)=>{
-        acc.total++; if(r.status==='Present') acc.present++; if(r.status==='Leave') acc.leave++; if(r.status==='AWOL') acc.awol++; return acc;
-      }, { total:0, present:0, leave:0, awol:0 });
+      // Fetch real soldier data
+      const token = localStorage.getItem('token');
+      if (!token) {
+        preview.innerHTML = '<div class="hint">Please login to generate reports</div>';
+        return;
+      }
 
-      const headers = ['ID'];
-      if(include.rank) headers.push('Rank');
-      if(include.name) headers.push('Name');
-      if(include.company) headers.push('Company');
-      if(include.status) headers.push('Status');
-      if(include.remark) headers.push('Remarks');
+      try {
+        const userResponse = await fetch(`${API_BASE}/api/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-      const rowsHtml = sampleRows.map(r=>{
-        const cells = [r.id];
-        if(include.rank) cells.push(r.rank);
-        if(include.name) cells.push(r.name);
-        if(include.company) cells.push(r.company);
-        if(include.status) cells.push(statusPill(r.status));
-        if(include.remark) cells.push(r.remark);
-        return `<tr>${cells.map((c,i)=>`<td>${c || ''}</td>`).join('')}</tr>`;
-      }).join('');
+        if (!userResponse.ok) {
+          preview.innerHTML = '<div class="hint">Failed to load soldier data</div>';
+          return;
+        }
 
-      const html = `
-        <div class="preview-card">
-          <div class="report-title">PARADE STATE REPORT</div>
-          <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : '—'}</div>
-          <div class="summary">
-            <div class="badge total"><div><span style="font-size:20px">${counts.total}</span><span class="small">Total</span></div></div>
-            <div class="badge present"><div><span style="font-size:20px">${counts.present}</span><span class="small">Present</span></div></div>
-            <div class="badge leave"><div><span style="font-size:20px">${counts.leave}</span><span class="small">Leave</span></div></div>
-            <div class="badge awol"><div><span style="font-size:20px">${counts.awol}</span><span class="small">AWOL</span></div></div>
-          </div>
-          <table class="report-table">
-            <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        </div>`;
+        const userData = await userResponse.json();
+        const soldiers = userData.users.filter(user => user.role === 'soldier');
 
-      preview.innerHTML = html;
+        // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        let leaves = [];
+        if (leaveResponse.ok) {
+          const leaveData = await leaveResponse.json();
+          leaves = leaveData.leaves;
+        }
+
+        // Determine active leaves
+        const now = new Date();
+        const activeLeaveUserIds = new Set();
+        leaves.forEach(leave => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          if (now >= start && now <= end) {
+            activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+          }
+        });
+
+        // Build soldier rows with real data
+        const today = new Date().toISOString().split('T')[0];
+        let realRows = soldiers.map(soldier => {
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+
+          let status = 'Present';
+          let remark = '';
+
+          if (special === 'AWOL' || special === 'awol') {
+            status = 'AWOL';
+            remark = 'Not Reported';
+          } else if (special === 'Leave' || special === 'leave' || activeLeaveUserIds.has(soldier._id)) {
+            status = 'Leave';
+            remark = 'On Leave';
+          } else if (special === 'on_duty') {
+            status = 'On Duty';
+            remark = 'Duty Assignment';
+          }
+
+          return {
+            id: soldier.service_number,
+            rank: soldier.rank,
+            name: soldier.name,
+            company: soldier.company || 'Unknown',
+            status: status,
+            remark: remark
+          };
+        });
+
+        // Filter by company
+        const selectedCompany = document.getElementById('companyFilter').value;
+        if (selectedCompany !== 'all') {
+          realRows = realRows.filter(r => r.company === selectedCompany);
+        }
+
+        let filteredRows = realRows;
+
+        const counts = realRows.reduce((acc, r)=>{
+          acc.total++; 
+          if(r.status==='Present') acc.present++; 
+          if(r.status==='Leave') acc.leave++; 
+          if(r.status==='AWOL') acc.awol++; 
+          if(r.status==='On Duty') acc.duty++;
+          return acc;
+        }, { total:0, present:0, leave:0, awol:0, duty:0 });
+
+        const headers = ['ID'];
+        if(include.rank) headers.push('Rank');
+        if(include.name) headers.push('Name');
+        if(include.company) headers.push('Company');
+        if(include.status) headers.push('Status');
+        if(include.remark) headers.push('Remarks');
+
+        const rowsHtml = filteredRows.map(r=>{
+          const cells = [r.id];
+          if(include.rank) cells.push(r.rank);
+          if(include.name) cells.push(r.name);
+          if(include.company) cells.push(r.company);
+          if(include.status) cells.push(statusPill(r.status));
+          if(include.remark) cells.push(r.remark);
+          return `<tr>${cells.map((c,i)=>`<td>${c || ''}</td>`).join('')}</tr>`;
+        }).join('');
+
+        const html = `
+          <div class="preview-card">
+            <div class="report-title">PARADE STATE REPORT</div>
+            <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : 'Current Day'}</div>
+            <div class="summary">
+              <div class="badge total"><div><span style="font-size:20px">${counts.total}</span><span class="small">Total</span></div></div>
+              <div class="badge present"><div><span style="font-size:20px">${counts.present}</span><span class="small">Present</span></div></div>
+              <div class="badge leave"><div><span style="font-size:20px">${counts.leave}</span><span class="small">Leave</span></div></div>
+              <div class="badge awol"><div><span style="font-size:20px">${counts.awol}</span><span class="small">AWOL</span></div></div>
+            </div>
+            <table class="report-table">
+              <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>`;
+
+        preview.innerHTML = html;
+      } catch (error) {
+        console.error('Error building preview:', error);
+        // Fallback to sample data
+        let filteredRows = sampleRows;
+        const selectedCompany = document.getElementById('companyFilter').value;
+        if (selectedCompany !== 'all') {
+          filteredRows = sampleRows.filter(r => r.company === selectedCompany);
+        }
+
+        const counts = filteredRows.reduce((acc, r)=>{
+          acc.total++; if(r.status==='Present') acc.present++; if(r.status==='Leave') acc.leave++; if(r.status==='AWOL') acc.awol++; if(r.status==='On Duty') acc.duty++; return acc;
+        }, { total:0, present:0, leave:0, awol:0, duty:0 });
+
+        const headers = ['ID'];
+        if(include.rank) headers.push('Rank');
+        if(include.name) headers.push('Name');
+        if(include.company) headers.push('Company');
+        if(include.status) headers.push('Status');
+        if(include.remark) headers.push('Remarks');
+
+        const rowsHtml = filteredRows.map(r=>{
+          const cells = [r.id];
+          if(include.rank) cells.push(r.rank);
+          if(include.name) cells.push(r.name);
+          if(include.company) cells.push(r.company);
+          if(include.status) cells.push(statusPill(r.status));
+          if(include.remark) cells.push(r.remark);
+          return `<tr>${cells.map((c,i)=>`<td>${c || ''}</td>`).join('')}</tr>`;
+        }).join('');
+
+        const html = `
+          <div class="preview-card">
+            <div class="report-title">PARADE STATE REPORT</div>
+            <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : 'Sample Data'}</div>
+            <div class="summary">
+              <div class="badge total"><div><span style="font-size:20px">${counts.total}</span><span class="small">Total</span></div></div>
+              <div class="badge present"><div><span style="font-size:20px">${counts.present}</span><span class="small">Present</span></div></div>
+              <div class="badge leave"><div><span style="font-size:20px">${counts.leave}</span><span class="small">Leave</span></div></div>
+              <div class="badge awol"><div><span style="font-size:20px">${counts.awol}</span><span class="small">AWOL</span></div></div>
+            </div>
+            <table class="report-table">
+              <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>`;
+
+        preview.innerHTML = html;
+      }
     }
 
     // Auto-generate preview on page load
-    window.addEventListener('DOMContentLoaded', buildPreview);
+    async function init() {
+      await buildPreview();
+    }
+    window.addEventListener('DOMContentLoaded', init);
 
     btnPrint.addEventListener('click', () => {
       window.print();

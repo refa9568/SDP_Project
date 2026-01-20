@@ -40,14 +40,25 @@ h2,h3{
   padding:18px;
   margin:20px;
   border-radius:12px; /* 12px rounded corners as requested */
-  position:relative; /* allow positioning logout box */
+}
+
+.header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.title h2{
+  margin:0;
+}
+
+.header-actions{
+  display:flex;
+  gap:15px;
 }
 
 /* logout button in header */
 .logout{
-  position:absolute;
-  top:12px;
-  right:16px;
   background:var(--sand);
   color:var(--dark);
   padding:8px 10px;
@@ -185,10 +196,14 @@ a{
 
 <!-- ===== HEADER ===== -->
 <div class="header">
-  <h2>Dashboard – Radio Coy Comd (Comd's Voice)</h2>
-  <div style="position:absolute; top:12px; right:16px; display:flex; gap:10px;">
-    <button onclick="changePassword()" class="logout">Change Password</button>
-    <button onclick="logout()" class="logout">Logout</button>
+  <div class="header-row">
+    <div class="title">
+      <h2>Dashboard – Radio Coy Comd (Comd's Voice)</h2>
+    </div>
+    <div class="header-actions">
+      <button onclick="changePassword()" class="logout">Change Password</button>
+      <button onclick="logout()" class="logout">Logout</button>
+    </div>
   </div>
 </div> 
 
@@ -470,17 +485,17 @@ function changePassword() {
         <form id="changePasswordForm">
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
-                <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="password" id="currentPassword" name="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
                 <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
-                <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="password" id="newPassword" name="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
-                <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="password" id="confirmPassword" name="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
             <div style="display: flex; gap: 10px;">
                 <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>

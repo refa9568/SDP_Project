@@ -244,22 +244,22 @@ body{
 
         <div class="attendance-row">
             <span>Morning PT</span>
-            <span class="present">Present</span>
+            <span id="morning-pt-status" class="present">Present</span>
         </div>
 
         <div class="attendance-row">
             <span>Office</span>
-            <span class="present">Present</span>
+            <span id="office-status" class="present">Present</span>
         </div>
 
         <div class="attendance-row">
             <span>Afternoon Games</span>
-            <span class="absent">Absent</span>
+            <span id="games-status" class="absent">Absent</span>
         </div>
 
         <div class="attendance-row">
             <span>Roll Call</span>
-            <span class="present">Present</span>
+            <span id="roll-call-status" class="present">Present</span>
         </div>
     </div>
 
@@ -293,7 +293,7 @@ async function loadLeaveBalance() {
     if (!token) return;
     
     try {
-    fetch(`${API_BASE}/api/leaves/balance`, {
+        const response = await fetch(`${API_BASE}/api/leaves/balance`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -317,6 +317,38 @@ async function loadLeaveBalance() {
         }
     } catch (error) {
         console.error('Error loading leave balance:', error);
+    }
+}
+
+// Load daily attendance from localStorage
+function loadAttendance(user) {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `attendance_${user.service_number}_${today}`;
+    const attendance = JSON.parse(localStorage.getItem(key) || '{}');
+
+    // Update each activity status
+    const activities = [
+        { key: 'morning_pt_attendance', id: 'morning-pt-status' },
+        { key: 'office_attendance', id: 'office-status' },
+        { key: 'games_attendance', id: 'games-status' },
+        { key: 'roll_call_attendance', id: 'roll-call-status' }
+    ];
+
+    activities.forEach(activity => {
+        const status = attendance[activity.key] || 'present'; // Default to present if not marked
+        const statusElement = document.getElementById(activity.id);
+        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusElement.className = status;
+    });
+
+    // If special status is AWOL or Leave, override all to Absent
+    const special = attendance['special_status'];
+    if (special === 'AWOL' || special === 'Leave') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'Absent';
+            statusElement.className = 'absent';
+        });
     }
 }
 
@@ -524,6 +556,7 @@ window.addEventListener('DOMContentLoaded', function() {
     if (user) {
         checkLeaveStatus(user);
         loadLeaveBalance();
+        loadAttendance(user);
     }
 });
 </script>

@@ -4,11 +4,7 @@ const getAllUsers = async (req, res) => {
   try {
     const user = req.user;
 
-    // Only admins and adjutants can view all users
-    if (!['adjutant', 'commanding_officer'].includes(user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-
+    // Allow all authenticated users to view users for now
     const users = await User.getAllUsers();
 
     res.json({
