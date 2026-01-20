@@ -188,7 +188,10 @@ body{
 <!-- HEADER -->
 <div class="header">
     <h1>Soldier Self-Service Portal</h1>
-    <button class="logout" onclick="logout()">Logout</button>
+    <div style="display: flex; gap: 10px;">
+        <button class="logout" onclick="changePassword()">Change Password</button>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
 </div>
 
 <!-- MAIN -->
@@ -241,22 +244,22 @@ body{
 
         <div class="attendance-row">
             <span>Morning PT</span>
-            <span class="present">Present</span>
+            <span id="morning-pt-status" class="present">Present</span>
         </div>
 
         <div class="attendance-row">
             <span>Office</span>
-            <span class="present">Present</span>
+            <span id="office-status" class="present">Present</span>
         </div>
 
         <div class="attendance-row">
             <span>Afternoon Games</span>
-            <span class="absent">Absent</span>
+            <span id="games-status" class="absent">Absent</span>
         </div>
 
         <div class="attendance-row">
             <span>Roll Call</span>
-            <span class="present">Present</span>
+            <span id="roll-call-status" class="present">Present</span>
         </div>
     </div>
 
@@ -264,6 +267,7 @@ body{
 </div>
 
 <script>
+const API_BASE = 'http://localhost:5000';
 // Load user data from localStorage
 function loadUserData() {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -289,7 +293,7 @@ async function loadLeaveBalance() {
     if (!token) return;
     
     try {
-        const response = await fetch('http://localhost:5000/api/leaves/balance', {
+        const response = await fetch(`${API_BASE}/api/leaves/balance`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -313,6 +317,38 @@ async function loadLeaveBalance() {
         }
     } catch (error) {
         console.error('Error loading leave balance:', error);
+    }
+}
+
+// Load daily attendance from localStorage
+function loadAttendance(user) {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `attendance_${user.service_number}_${today}`;
+    const attendance = JSON.parse(localStorage.getItem(key) || '{}');
+
+    // Update each activity status
+    const activities = [
+        { key: 'morning_pt_attendance', id: 'morning-pt-status' },
+        { key: 'office_attendance', id: 'office-status' },
+        { key: 'games_attendance', id: 'games-status' },
+        { key: 'roll_call_attendance', id: 'roll-call-status' }
+    ];
+
+    activities.forEach(activity => {
+        const status = attendance[activity.key] || 'present'; // Default to present if not marked
+        const statusElement = document.getElementById(activity.id);
+        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusElement.className = status;
+    });
+
+    // If special status is AWOL or Leave, override all to Absent
+    const special = attendance['special_status'];
+    if (special === 'AWOL' || special === 'Leave') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'Absent';
+            statusElement.className = 'absent';
+        });
     }
 }
 
@@ -370,6 +406,141 @@ function applyLeave(leaveType) {
     window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
 }
 
+// Change password function
+function changePassword() {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+        z-index: 1000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    `;
+
+    modalContent.innerHTML = `
+        <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+        <form id="changePasswordForm">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
+                <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
+                <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
+                <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthDiv = document.getElementById('passwordStrength');
+        if (password.length === 0) {
+            strengthDiv.textContent = '';
+            strengthDiv.style.color = '';
+            return;
+        }
+
+        let score = 0;
+        if (password.length >= 6) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+        if (score === 1) {
+            strengthDiv.textContent = 'Weak';
+            strengthDiv.style.color = '#e74c3c';
+        } else if (score === 2) {
+            strengthDiv.textContent = 'Medium';
+            strengthDiv.style.color = '#f39c12';
+        } else if (score === 3) {
+            strengthDiv.textContent = 'Strong';
+            strengthDiv.style.color = '#27ae60';
+        }
+    }
+
+    // Add event listener to new password input
+    document.getElementById('newPassword').addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+
+    // Form submit
+    document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+
+        // Password validation
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not logged in!');
+            document.body.removeChild(modal);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await response.json();
+            console.log('Password change response:', data);
+
+            if (data.success) {
+                console.log('Redirecting to login...');
+                // Immediately logout and redirect for security
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/login.html';
+            } else {
+                alert(data.error || 'Failed to change password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Connection error. Please try again.');
+        }
+    });
+
+    // Cancel button
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+    });
+}
+
 // Logout function
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
@@ -385,6 +556,7 @@ window.addEventListener('DOMContentLoaded', function() {
     if (user) {
         checkLeaveStatus(user);
         loadLeaveBalance();
+        loadAttendance(user);
     }
 });
 </script>

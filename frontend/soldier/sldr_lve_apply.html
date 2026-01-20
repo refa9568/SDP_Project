@@ -316,12 +316,12 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Leave type mapping to database IDs
-const leaveTypeMap = {
-    'Annual': '696bcac19a7be26639bc57ad',
-    'Casual': '696bcac19a7be26639bc57ae',
-    'Medical': '696bcac19a7be26639bc57af',
-    'Recreational': '696bcac19a7be26639bc57b0'
+// Leave type mapping to database names
+const dbLeaveTypeMap = {
+    'Annual Leave': 'Annual',
+    'Casual Leave': 'Casual',
+    'Medical Leave': 'Medical',
+    'Recreation Leave': 'Recreational'
 };
 
 // Form submission - API based
@@ -362,7 +362,7 @@ form.addEventListener('submit', async function(e) {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                leave_type_id: leaveTypeMap[leaveType] || 1,
+                leave_type: dbLeaveTypeMap[leaveType] || 'Annual',
                 start_date: startDate,
                 end_date: endDate,
                 days: parseInt(numDays),
@@ -373,6 +373,9 @@ form.addEventListener('submit', async function(e) {
         });
         
         const data = await response.json();
+        
+        console.log('Response status:', response.status);
+        console.log('Response data:', data);
         
         if (response.ok && data.success) {
             alert('Leave application submitted successfully!\n\n' +
@@ -385,7 +388,7 @@ form.addEventListener('submit', async function(e) {
             form.reset();
             numDaysInput.value = '';
         } else {
-            alert('Failed: ' + JSON.stringify(data));
+            alert(data.error || data.message || 'Failed to submit leave application. Please try again.');
         }
     } catch (error) {
         console.error('Error:', error);

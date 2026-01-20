@@ -167,8 +167,20 @@
 
         <form id="loginForm">
             <div class="input-group">
+                <label for="role">Role</label>
+                <select id="role" required>
+                    <option value="">Select a role</option>
+                    <option value="commanding_officer">Commanding Officer</option>
+                    <option value="coy_comd">Coy Comd</option>
+                    <option value="adjutant">Adjutant</option>
+                    <option value="bsm">BSM</option>
+                    <option value="soldier">Soldier</option>
+                </select>
+            </div>
+
+            <div class="input-group">
                 <label for="username">Service Number</label>
-                <input type="text" id="username" name="username" placeholder="Enter service number (e.g., BA-12170)" required autocomplete="off">
+                <input type="text" id="username" name="username" placeholder="enter your service number" required autocomplete="off">
             </div>
 
             <div class="input-group">
@@ -177,12 +189,12 @@
             </div>
 
             <button type="submit" class="login-btn">Login</button>
+            <button type="button" class="login-btn" style="background: #C2B280; color: #2E3D32; margin-top: 10px;" onclick="window.location.href='frontend/user-registration.html'">Register New User</button>
         </form>
 
         <div class="footer-message">
             Authorized Access Only
-            <br>
-            <a href="frontend/user-registration.html" style="color: #C2B280; text-decoration: underline;">New User? Register Here</a>
+            <!-- Test credentials: BSM-001 / 1234 (BSM), BA-12170 / password123 (Soldier) -->
         </div>
     </div>
 

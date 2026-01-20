@@ -69,35 +69,55 @@ const getLeaveById = async (req, res) => {
 
 const createLeave = async (req, res) => {
   try {
-    const { leave_type_id, start_date, end_date, days, reason, contact_number, address_during_leave } = req.body;
+    const { leave_type, start_date, end_date, days, reason, contact_number, address_during_leave } = req.body;
     const user = req.user;
 
-    if (!leave_type_id || !start_date || !end_date || !days || !reason) {
+    console.log('User ID:', user.user_id);
+    console.log('Leave type:', leave_type);
+
+    if (!leave_type || !start_date || !end_date || !days || !reason) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Validate dates
-    const start = new Date(start_date);
-    const end = new Date(end_date);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.status(400).json({ error: 'Invalid dates' });
+    // Find the leave type by name
+    const LeaveType = mongoose.model('LeaveType');
+    const leaveTypeDoc = await LeaveType.findOne({ type_name: leave_type });
+    if (!leaveTypeDoc) {
+      return res.status(400).json({ error: 'Invalid leave type' });
     }
 
-    const total_days = parseInt(days);
-    if (isNaN(total_days) || total_days <= 0) {
-      return res.status(400).json({ error: 'Invalid number of days' });
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    const totalDays = parseInt(days);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    if (start > end) {
+      return res.status(400).json({ error: 'Start date must be before or equal to end date' });
+    }
+
+    if (totalDays <= 0) {
+      return res.status(400).json({ error: 'Number of days must be positive' });
     }
 
     const leaveData = {
-      user_id: new mongoose.Types.ObjectId(user.user_id),
-      leave_type_id: new mongoose.Types.ObjectId(leave_type_id),
+      user_id: mongoose.Types.ObjectId(user.user_id),
+      leave_type_id: leaveTypeDoc._id,
       start_date: start,
       end_date: end,
-      total_days: total_days,
+      total_days: totalDays,
       reason,
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null
     };
+      reason,
+      contact_number: contact_number || null,
+      address_during_leave: address_during_leave || null
+    };
+
+    console.log('Creating leave with data:', leaveData);
 
     const leave_id = await Leave.create(leaveData);
 
