@@ -38,12 +38,17 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
+            font-weight: 300;
             box-sizing: border-box;
         }
         input:focus, select:focus {
             outline: none;
             border-color: #4CAF50;
             box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+        input::placeholder {
+            font-weight: 200;
+            color: #aaa;
         }
         .required {
             color: #e74c3c;
@@ -147,22 +152,24 @@
                     <option value="Radio">Radio</option>
                     <option value="RR">RR</option>
                     <option value="BSC">BSC</option>
+                    <option value="Operating">Operating</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="example@gmail.com" required>
             </div>
 
             <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone">
+                <label for="phone">Phone <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" pattern="(013|014|015|016|017|018|019)[0-9]{8}" title="Phone number must start with 013,014,015,016,017,018, or 019 and be 11 digits" required>
             </div>
 
             <div class="form-group">
                 <label for="password">Password <span class="required">*</span></label>
-                <input type="password" id="password" name="password" required>
+                <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
             </div>
 
             <button type="submit" id="submitBtn">
@@ -171,11 +178,23 @@
         </form>
 
         <div id="message" class="message"></div>
+
+        <p style="text-align: center; margin-top: 20px;">
+            Already have an account? <a href="login.html">Login here</a>
+        </p>
     </div>
 
     <script>
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // Password validation
+            const password = document.getElementById('password').value;
+            const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+            if (!passwordRegex.test(password)) {
+                alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
+                return;
+            }
 
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
