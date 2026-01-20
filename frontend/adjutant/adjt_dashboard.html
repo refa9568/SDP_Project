@@ -299,6 +299,7 @@
           <p>Real-Time Manpower Readiness Overview</p>
         </div>
         <div class="top-actions">
+          <button class="btn light" onclick="refreshData()">Refresh Data</button>
           <button class="btn light" onclick="changePassword()">Change Password</button>
           <button class="btn dark" onclick="logout()">Logout</button>
         </div>
@@ -882,13 +883,32 @@
         });
       }
 
+      // Refresh data with loading indicator
+      async function refreshData() {
+        const btn = document.querySelector('button[onclick="refreshData()"]');
+        const originalText = btn.textContent;
+        btn.textContent = 'Refreshing...';
+        btn.disabled = true;
+
+        try {
+          await fetchTotalUsers();
+          alert('Data refreshed successfully!');
+        } catch (error) {
+          console.error('Refresh failed:', error);
+          alert('Failed to refresh data. Please check your connection.');
+        } finally {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      }
+
       // Load notices on page load and fetch data
       window.addEventListener('DOMContentLoaded', function() {
         loadAdjutantNotices();
         fetchTotalUsers();
 
-        // Auto-refresh every 60 seconds
-        setInterval(fetchTotalUsers, 60000);
+        // Auto-refresh every 30 seconds
+        setInterval(fetchTotalUsers, 30000);
       });
     </script>
 
