@@ -76,12 +76,24 @@ const createLeave = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Validate dates
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ error: 'Invalid dates' });
+    }
+
+    const total_days = parseInt(days);
+    if (isNaN(total_days) || total_days <= 0) {
+      return res.status(400).json({ error: 'Invalid number of days' });
+    }
+
     const leaveData = {
-      user_id: mongoose.Types.ObjectId(user.user_id),
-      leave_type_id: mongoose.Types.ObjectId(leave_type_id),
-      start_date: start_date,
-      end_date: end_date,
-      total_days: parseInt(days),
+      user_id: new mongoose.Types.ObjectId(user.user_id),
+      leave_type_id: new mongoose.Types.ObjectId(leave_type_id),
+      start_date: start,
+      end_date: end,
+      total_days: total_days,
       reason,
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null

@@ -178,10 +178,10 @@ textarea{
                 <label>Leave Type</label>
                 <select id="leaveType" required>
                     <option value="">Select Leave Type</option>
-                    <option value="Annual Leave">Annual Leave</option>
-                    <option value="Casual Leave">Casual Leave</option>
-                    <option value="Recreation Leave">Recreation Leave</option>
-                    <option value="Medical Leave">Medical Leave</option>
+                    <option value="Annual">Annual</option>
+                    <option value="Casual">Casual</option>
+                    <option value="Medical">Medical</option>
+                    <option value="Recreational">Recreational</option>
                 </select>
             </div>
 
@@ -236,6 +236,21 @@ const reasonInput = document.getElementById('reason');
 const contactNumberInput = document.getElementById('contactNumber');
 const addressInput = document.getElementById('address');
 const form = document.getElementById('leaveForm');
+
+// Auto-select leave type from URL parameter
+const urlParams = new URLSearchParams(window.location.search);
+const leaveTypeParam = urlParams.get('type');
+if (leaveTypeParam) {
+    // Map URL param to select value
+    const typeMapping = {
+        'Annual Leave': 'Annual',
+        'Casual Leave': 'Casual',
+        'Medical Leave': 'Medical',
+        'Recreational Leave': 'Recreational'
+    };
+    const selectValue = typeMapping[leaveTypeParam] || leaveTypeParam;
+    leaveTypeInput.value = selectValue;
+}
 
 // Set minimum date to today
 const today = new Date().toISOString().split('T')[0];
@@ -303,10 +318,10 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // Leave type mapping to database IDs
 const leaveTypeMap = {
-    'Annual Leave': 1,
-    'Casual Leave': 2,
-    'Medical Leave': 3,
-    'Emergency Leave': 4
+    'Annual': '696bcac19a7be26639bc57ad',
+    'Casual': '696bcac19a7be26639bc57ae',
+    'Medical': '696bcac19a7be26639bc57af',
+    'Recreational': '696bcac19a7be26639bc57b0'
 };
 
 // Form submission - API based
@@ -340,7 +355,7 @@ form.addEventListener('submit', async function(e) {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/api/leaves`, {
+        const response = await fetch(`${API_BASE}/api/leaves/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -370,7 +385,7 @@ form.addEventListener('submit', async function(e) {
             form.reset();
             numDaysInput.value = '';
         } else {
-            alert(data.message || 'Failed to submit leave application. Please try again.');
+            alert('Failed: ' + JSON.stringify(data));
         }
     } catch (error) {
         console.error('Error:', error);
