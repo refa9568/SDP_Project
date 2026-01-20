@@ -427,7 +427,7 @@
       <div class="panel">
         <h3 class="panel-title">Quick Action</h3>
         <button class="list-btn" onclick="window.location.href='adjt_report_gen.html'">Generate Parade State Report</button>
-        <button class="list-btn" onclick="window.location.href='adjt_coy_state.html'">View Company States</button>
+        <button class="list-btn" onclick="showSoldiersList()">View Company States</button>
         <a class="list-btn" href="lve_mgt.html">Leave Management</a>
       </div>
     </section>
@@ -747,6 +747,9 @@
           const userData = await userResponse.json();
           const soldiers = userData.users.filter(user => user.role === 'soldier');
 
+          // Store soldiers data for later use
+          window.soldiersData = soldiers;
+
           // Fetch leaves
           const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
             headers: {
@@ -900,6 +903,219 @@
           btn.textContent = originalText;
           btn.disabled = false;
         }
+      }
+
+      // Show soldiers list modal with company grouping and status
+      function showSoldiersList() {
+        if (!window.soldiersData || window.soldiersData.length === 0) {
+          alert('No soldier records found in the database. Please ensure soldiers are registered with role "soldier".');
+          return;
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 30px; border-radius: 12px; width: 90%; max-width: 1000px; max-height: 80%;
+          overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        let soldiersList = '<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-green); padding-bottom: 10px;">Soldiers by Company</h3>';
+        soldiersList += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total Soldiers: ' + window.soldiersData.length + '</div>';
+
+        // Get unique companies
+        const companies = [...new Set(window.soldiersData.map(s => s.company || 'Unknown'))].sort();
+
+        // Add company filter
+        soldiersList += '<div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Filter by Company:</label>';
+        soldiersList += '<select id="companyFilter" onchange="filterSoldiers()" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">';
+        soldiersList += '<option value="all">All Companies</option>';
+        companies.forEach(company => {
+          soldiersList += `<option value="${company}">${company}</option>`;
+        });
+        soldiersList += '</select>';
+        soldiersList += '</div>';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Filter by Status:</label>';
+        soldiersList += '<select id="statusFilter" onchange="filterSoldiers()" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">';
+        soldiersList += '<option value="all">All Status</option>';
+        soldiersList += '<option value="present">Present</option>';
+        soldiersList += '<option value="leave">On Leave</option>';
+        soldiersList += '<option value="awol">AWOL</option>';
+        soldiersList += '<option value="duty">On Duty</option>';
+        soldiersList += '</select>';
+        soldiersList += '</div>';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Search:</label>';
+        soldiersList += '<input type="text" id="soldierSearch" oninput="filterSoldiers()" placeholder="Name or Service Number" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px; width: 200px;">';
+        soldiersList += '</div>';
+        soldiersList += '</div>';
+
+        // Group soldiers by company
+        const companyGroups = {};
+        const today = new Date().toISOString().split('T')[0];
+        
+        window.soldiersData.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyGroups[company]) {
+            companyGroups[company] = [];
+          }
+          
+          // Determine soldier status
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+          
+          let status = 'Present';
+          let statusColor = 'var(--accent-green)';
+          
+          if (special === 'AWOL') {
+            status = 'AWOL';
+            statusColor = 'var(--accent-red)';
+          } else if (special === 'Leave') {
+            status = 'On Leave';
+            statusColor = 'var(--accent-orange)';
+          } else if (special === 'on_duty') {
+            status = 'On Duty';
+            statusColor = 'var(--accent-blue)';
+          }
+          
+          soldier.currentStatus = status;
+          soldier.statusColor = statusColor;
+          companyGroups[company].push(soldier);
+        });
+
+        soldiersList += '<div id="soldiersContainer">';
+
+        // Display all initially
+        Object.keys(companyGroups).forEach(company => {
+          soldiersList += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Company: ${company} (${companyGroups[company].length} soldiers)</h4>`;
+          soldiersList += '<div style="display: grid; gap: 10px;">';
+          companyGroups[company].forEach(soldier => {
+            soldiersList += `
+              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
+                  <div style="color: var(--muted); font-size: 14px;">
+                    Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: bold; color: ${soldier.statusColor}; margin-bottom: 5px;">${soldier.currentStatus}</div>
+                  <button onclick="showAttendanceModal('${JSON.stringify(soldier).replace(/'/g, '\\\'')}')" style="background: var(--accent-blue); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button>
+                </div>
+              </div>
+            `;
+          });
+          soldiersList += '</div>';
+        });
+
+        soldiersList += '</div>';
+        soldiersList += '<button onclick="this.closest(\'.modal-overlay\').remove()" style="margin-top: 20px; padding: 10px 20px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Close</button>';
+
+        modalContent.innerHTML = soldiersList;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+      }
+
+      // Filter soldiers function (to be called from modal)
+      function filterSoldiers() {
+        const companyFilter = document.getElementById('companyFilter')?.value || 'all';
+        const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+        const searchTerm = document.getElementById('soldierSearch')?.value?.toLowerCase() || '';
+
+        const soldierCards = document.querySelectorAll('#soldiersContainer > div > div');
+        
+        soldierCards.forEach(card => {
+          const company = card.closest('div').previousElementSibling?.textContent?.split(': ')[1]?.split(' (')[0] || '';
+          const soldierName = card.querySelector('div:first-child div:first-child')?.textContent?.toLowerCase() || '';
+          const serviceNumber = card.querySelector('div:first-child div:last-child')?.textContent?.toLowerCase() || '';
+          const status = card.querySelector('div:last-child div:first-child')?.textContent || '';
+
+          const matchesCompany = companyFilter === 'all' || company === companyFilter;
+          const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'present' && status === 'Present') ||
+            (statusFilter === 'leave' && status === 'On Leave') ||
+            (statusFilter === 'awol' && status === 'AWOL') ||
+            (statusFilter === 'duty' && status === 'On Duty');
+          const matchesSearch = soldierName.includes(searchTerm) || serviceNumber.includes(searchTerm);
+
+          if (matchesCompany && matchesStatus && matchesSearch) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      // Show attendance modal for individual soldier
+      function showAttendanceModal(soldierData) {
+        const soldier = typeof soldierData === 'string' ? JSON.parse(soldierData) : soldierData;
+        
+        // Create attendance modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1001;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 30px; border-radius: 12px; width: 500px; max-width: 90%;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+        const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+
+        let modalHTML = `
+          <h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-green); padding-bottom: 10px;">${soldier.name}</h3>
+          <div style="margin-bottom: 20px;">
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Service Number:</strong> ${soldier.service_number}</div>
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Rank:</strong> ${soldier.rank}</div>
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Company:</strong> ${soldier.company || 'Unknown'}</div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: var(--text); margin-bottom: 10px;">Today's Attendance</h4>
+            <div style="background: var(--panel-3); padding: 15px; border-radius: 8px;">
+              <div style="color: var(--text); margin-bottom: 5px;"><strong>Status:</strong> <span style="color: ${soldier.statusColor};">${soldier.currentStatus}</span></div>
+              ${attendance.notes ? `<div style="color: var(--muted); margin-bottom: 5px;"><strong>Notes:</strong> ${attendance.notes}</div>` : ''}
+              ${attendance.timestamp ? `<div style="color: var(--muted); font-size: 12px;"><strong>Last Updated:</strong> ${new Date(attendance.timestamp).toLocaleString()}</div>` : ''}
+            </div>
+          </div>
+          <button onclick="this.closest('.modal-overlay').remove()" style="width: 100%; padding: 10px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+        `;
+
+        modalContent.innerHTML = modalHTML;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
       }
 
       // Load notices on page load and fetch data
