@@ -76,12 +76,28 @@ const createLeave = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    const totalDays = parseInt(days);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    if (start > end) {
+      return res.status(400).json({ error: 'Start date must be before or equal to end date' });
+    }
+
+    if (totalDays <= 0) {
+      return res.status(400).json({ error: 'Number of days must be positive' });
+    }
+
     const leaveData = {
       user_id: mongoose.Types.ObjectId(user.user_id),
       leave_type_id: mongoose.Types.ObjectId(leave_type_id),
-      start_date: start_date,
-      end_date: end_date,
-      total_days: parseInt(days),
+      start_date: start,
+      end_date: end,
+      total_days: totalDays,
       reason,
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null
