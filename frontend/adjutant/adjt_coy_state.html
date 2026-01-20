@@ -327,10 +327,165 @@ tbody td{
 </div>
 
 <script>
+const API_BASE = 'http://localhost:5000';
+let companyStats = {}; // Global variable to store company stats
+
+// Function to fetch and update company state
+async function loadCompanyState() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = '../../login.html';
+            return;
+        }
+
+        // Fetch soldiers
+        const userResponse = await fetch(`${API_BASE}/api/users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!userResponse.ok) {
+            console.error('Failed to fetch users:', userResponse.status);
+            alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+            return;
+        }
+
+        const userData = await userResponse.json();
+        const soldiers = userData.users.filter(user => user.role === 'soldier');
+
+        // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        let leaves = [];
+        if (leaveResponse.ok) {
+            const leaveData = await leaveResponse.json();
+            leaves = leaveData.leaves;
+        } else {
+            console.error('Failed to fetch leaves:', leaveResponse.status);
+        }
+
+        // Determine active leaves
+        const now = new Date();
+        const activeLeaveUserIds = new Set();
+        leaves.forEach(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            if (now >= start && now <= end) {
+                activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            }
+        });
+
+        // Group soldiers by company
+        companyStats = {};
+        const today = new Date().toISOString().split('T')[0];
+
+        soldiers.forEach(soldier => {
+            const company = soldier.company || 'Unknown';
+            if (!companyStats[company]) {
+                companyStats[company] = {
+                    total: 0,
+                    present: 0,
+                    onLeave: 0,
+                    awol: 0,
+                    onDuty: 0,
+                    status: 'Approved' // Default status
+                };
+            }
+            companyStats[company].total++;
+
+            // Check attendance
+            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (special === 'AWOL') {
+                companyStats[company].awol++;
+            } else if (special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+                companyStats[company].onLeave++;
+            } else if (special === 'on_duty') {
+                companyStats[company].onDuty++;
+            } else {
+                companyStats[company].present++;
+            }
+        });
+
+        // Calculate totals
+        const totals = {
+            total: soldiers.length,
+            present: 0,
+            onLeave: 0,
+            awol: 0,
+            onDuty: 0
+        };
+
+        Object.values(companyStats).forEach(stats => {
+            totals.present += stats.present;
+            totals.onLeave += stats.onLeave;
+            totals.awol += stats.awol;
+            totals.onDuty += stats.onDuty;
+        });
+
+        // Update the table
+        updateCompanyStateTable(companyStats, totals);
+
+    } catch (error) {
+        console.error('Error loading company state:', error);
+        alert('Error loading company state. Please check your connection.');
+    }
+}
+
+function updateCompanyStateTable(companyStats, totals) {
+    const tbody = document.querySelector('.state-table tbody');
+    
+    // Clear existing rows except total
+    const rows = tbody.querySelectorAll('tr');
+    for (let i = 0; i < rows.length - 1; i++) {
+        rows[i].remove();
+    }
+
+    // Add company rows
+    Object.entries(companyStats).forEach(([company, stats]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${company}</td>
+            <td>${stats.total}</td>
+            <td class="green">${stats.present}</td>
+            <td class="orange">${stats.onLeave}</td>
+            <td class="blue">${stats.onDuty}</td>
+            <td class="red">${stats.awol}</td>
+            <td class="status-${stats.status.toLowerCase()}">${stats.status}</td>
+            <td>-</td>
+            <td>-</td>
+        `;
+        tbody.insertBefore(row, tbody.lastElementChild);
+    });
+
+    // Update total row
+    const totalRow = tbody.lastElementChild;
+    totalRow.cells[1].textContent = totals.total;
+    totalRow.cells[2].textContent = totals.present;
+    totalRow.cells[3].textContent = totals.onLeave;
+    totalRow.cells[4].textContent = totals.onDuty;
+    totalRow.cells[5].textContent = totals.awol;
+}
+
 function sendCoyStateToCO() {
     // Create company state summary data
+    const totalSoldiers = document.querySelector('.total-row td:nth-child(2)').textContent;
+    const present = document.querySelector('.total-row td:nth-child(3)').textContent;
+    const onLeave = document.querySelector('.total-row td:nth-child(4)').textContent;
+    const onDuty = document.querySelector('.total-row td:nth-child(5)').textContent;
+    const awol = document.querySelector('.total-row td:nth-child(6)').textContent;
+
     const coyStateData = {
-        content: "Battalion Consolidated Parade State:\n\nTotal Strength: 450\nPresent: 415\nOn Leave: 35\nOn Duty: 16\nAWOL: 3\n\nCompany Breakdown:\n- HQ Company: 120 (Approved)\n- Radio Company: 115 (Approved)\n- RR Company: 110 (Pending)\n- BSC Company: 105 (Pending)",
+        content: `Battalion Consolidated Parade State:\n\nTotal Strength: ${totalSoldiers}\nPresent: ${present}\nOn Leave: ${onLeave}\nOn Duty: ${onDuty}\nAWOL: ${awol}\n\nCompany Breakdown:\n${Object.entries(companyStats || {}).map(([company, stats]) => `- ${company}: ${stats.total} (${stats.status})`).join('\n')}`,
         sender: 'Adjutant',
         date: new Date().toISOString(),
         type: 'Company State Report'
@@ -349,6 +504,9 @@ function sendCoyStateToCO() {
     
     alert('Battalion Parade State has been forwarded to Commanding Officer successfully!\n\nThe report will appear on the CO\'s Notice Board.');
 }
+
+// Load data on page load
+window.addEventListener('DOMContentLoaded', loadCompanyState);
 </script>
 
 </body>

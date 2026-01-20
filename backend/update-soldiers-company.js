@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   },
   company: {
     type: String,
-    required: true
+    required: false
   },
   email: {
     type: String
@@ -42,42 +42,22 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-const addUser = async () => {
+const updateSoldiersCompany = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/paradeops_db');
     console.log('✓ Connected to MongoDB');
 
-    // User data - modify these values as needed
-    const userData = {
-      service_number: 'BSM-001', // Change this
-      name: 'Battalion Sergeant Major', // Change this
-      rank: 'Warrant Officer', // Change this
-      role: 'bsm', // Change this
-      company: 'BHQ', // Change this
-      email: 'bsm@example.com', // Optional
-      phone: '1234567890', // Optional
-      password_hash: await bcrypt.hash('1234', 10) // Default password
-    };
+    // Update all soldiers to have company: 'Radio'
+    const result = await User.updateMany(
+      { role: 'soldier' },
+      { $set: { company: 'Radio' } }
+    );
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ service_number: userData.service_number });
-    if (existingUser) {
-      console.log('❌ User with this service number already exists');
-      return;
-    }
-
-    // Create user
-    const newUser = new User(userData);
-    await newUser.save();
-
-    console.log('✅ User added successfully!');
-    console.log('Service Number:', userData.service_number);
-    console.log('Name:', userData.name);
-    console.log('Role:', userData.role);
+    console.log(`✅ Updated ${result.modifiedCount} soldiers with company: 'Radio'`);
 
   } catch (error) {
-    console.error('❌ Error adding user:', error);
+    console.error('❌ Error updating soldiers:', error);
   } finally {
     await mongoose.connection.close();
     console.log('✓ Database connection closed');
@@ -85,4 +65,4 @@ const addUser = async () => {
 };
 
 // Run the script
-addUser();
+updateSoldiersCompany();
