@@ -10,5 +10,6 @@ router.post('/register', authController.register); // Made public for form testi
 
 // Protected routes
 router.get('/verify', authenticateToken, authController.verifyToken);
+router.post('/change-password', authenticateToken, authController.changePassword);
 
 module.exports = router;

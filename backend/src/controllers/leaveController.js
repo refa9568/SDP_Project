@@ -69,11 +69,21 @@ const getLeaveById = async (req, res) => {
 
 const createLeave = async (req, res) => {
   try {
-    const { leave_type_id, start_date, end_date, days, reason, contact_number, address_during_leave } = req.body;
+    const { leave_type, start_date, end_date, days, reason, contact_number, address_during_leave } = req.body;
     const user = req.user;
 
-    if (!leave_type_id || !start_date || !end_date || !days || !reason) {
+    console.log('User ID:', user.user_id);
+    console.log('Leave type:', leave_type);
+
+    if (!leave_type || !start_date || !end_date || !days || !reason) {
       return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Find the leave type by name
+    const LeaveType = mongoose.model('LeaveType');
+    const leaveTypeDoc = await LeaveType.findOne({ type_name: leave_type });
+    if (!leaveTypeDoc) {
+      return res.status(400).json({ error: 'Invalid leave type' });
     }
 
     const start = new Date(start_date);
@@ -94,7 +104,7 @@ const createLeave = async (req, res) => {
 
     const leaveData = {
       user_id: mongoose.Types.ObjectId(user.user_id),
-      leave_type_id: mongoose.Types.ObjectId(leave_type_id),
+      leave_type_id: leaveTypeDoc._id,
       start_date: start,
       end_date: end,
       total_days: totalDays,
@@ -102,6 +112,8 @@ const createLeave = async (req, res) => {
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null
     };
+
+    console.log('Creating leave with data:', leaveData);
 
     const leave_id = await Leave.create(leaveData);
 

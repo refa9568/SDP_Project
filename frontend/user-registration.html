@@ -97,9 +97,19 @@
             animation: spin 1s linear infinite;
             margin-right: 10px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .weak {
+            color: #e74c3c;
+        }
+        .medium {
+            color: #f39c12;
+        }
+        .strong {
+            color: #27ae60;
         }
     </style>
 </head>
@@ -170,6 +180,7 @@
                 <label for="password">Password <span class="required">*</span></label>
                 <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
                 <input type="password" id="password" name="password" required placeholder="Enter password">
+                <div id="passwordStrength" class="password-strength"></div>
             </div>
 
             <button type="submit" id="submitBtn">
@@ -180,11 +191,42 @@
         <div id="message" class="message"></div>
 
         <p style="text-align: center; margin-top: 20px;">
-            Already have an account? <a href="login.html">Login here</a>
+            Already have an account? <a href="/login.html">Login here</a>
         </p>
     </div>
 
     <script>
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            const strengthDiv = document.getElementById('passwordStrength');
+            if (password.length === 0) {
+                strengthDiv.textContent = '';
+                strengthDiv.className = 'password-strength';
+                return;
+            }
+
+            let score = 0;
+            if (password.length >= 6) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+            if (score === 1) {
+                strengthDiv.textContent = 'Weak';
+                strengthDiv.className = 'password-strength weak';
+            } else if (score === 2) {
+                strengthDiv.textContent = 'Medium';
+                strengthDiv.className = 'password-strength medium';
+            } else if (score === 3) {
+                strengthDiv.textContent = 'Strong';
+                strengthDiv.className = 'password-strength strong';
+            }
+        }
+
+        // Add event listener to password input
+        document.getElementById('password').addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 

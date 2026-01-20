@@ -140,9 +140,58 @@ const register = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    // Find the user to get the current password hash
+    const dbUser = await User.findByServiceNumber(user.service_number);
+    if (!dbUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Validate current password
+    const isValidCurrentPassword = await User.validatePassword(currentPassword, dbUser.password_hash);
+    if (!isValidCurrentPassword) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    console.log('Updating password for user:', user.service_number);
+
+    // Update the user's password in the database
+    const updatedUser = await User.findOneAndUpdate(
+      { service_number: user.service_number },
+      { password_hash: hashedPassword },
+      { new: true }
+    );
+
+    console.log('Password updated successfully for user:', user.service_number, updatedUser ? 'yes' : 'no');
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+};
+
 module.exports = {
   login,
   logout,
   verifyToken,
-  register
+  register,
+  changePassword
 };
