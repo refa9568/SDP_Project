@@ -309,23 +309,23 @@
     <section class="stats">
       <div class="stat total">
         <div class="label">Total Strength</div>
-        <div class="num">450</div>
+        <div class="num" id="total-soldiers">450</div>
       </div>
       <div class="stat present">
         <div class="label">Present</div>
-        <div class="num">361</div>
+        <div class="num" id="present-count">361</div>
       </div>
       <div class="stat leave">
         <div class="label">On Leave</div>
-        <div class="num">32</div>
+        <div class="num" id="leave-count">32</div>
       </div>
       <div class="stat duty">
         <div class="label">On Duty</div>
-        <div class="num">55</div>
+        <div class="num" id="duty-count">55</div>
       </div>
       <div class="stat awol">
         <div class="label">AWOL</div>
-        <div class="num">02</div>
+        <div class="num" id="awol-count">02</div>
       </div>
     </section>
 
@@ -412,10 +412,10 @@
               ); box-shadow:0 10px 20px rgba(0,0,0,.25);"></div>
           </div>
           <div style="display:flex; flex-direction:column; gap:6px; font-weight:900;">
-            <div>Present: <span class="tag green">88%</span></div>
-            <div>On Leave: <span class="tag amber">8%</span></div>
-            <div>On Duty: <span class="tag blue">3%</span></div>
-            <div>AWOL: <span class="tag red">1%</span></div>
+            <div>Present: <span class="tag green" id="present-percent">88%</span></div>
+            <div>On Leave: <span class="tag amber" id="leave-percent">8%</span></div>
+            <div>On Duty: <span class="tag blue" id="duty-percent">3%</span></div>
+            <div>AWOL: <span class="tag red" id="awol-percent">1%</span></div>
           </div>
         </div>
       </div>
@@ -679,9 +679,6 @@
         }
       }
 
-      // Load notices on page load
-      window.addEventListener('DOMContentLoaded', loadAdjutantNotices);
-
       function sendCommitmentToCO() {
         const commitment = document.getElementById('nextDayCommitment').value;
         if (commitment.trim() === '') {
@@ -722,6 +719,177 @@
           window.location.href = '../../login.html';
         }
       }
+
+      // Fetch total soldiers from API and update dashboard
+      async function fetchTotalUsers() {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = '../../login.html';
+            return;
+          }
+
+          // Fetch soldiers
+          const userResponse = await fetch(`${API_BASE}/api/users`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!userResponse.ok) {
+            console.error('Failed to fetch users:', userResponse.status);
+            alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+            return;
+          }
+
+          const userData = await userResponse.json();
+          const soldiers = userData.users.filter(user => user.role === 'soldier');
+
+          // Fetch leaves
+          const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          let leaves = [];
+          if (leaveResponse.ok) {
+            const leaveData = await leaveResponse.json();
+            leaves = leaveData.leaves;
+          } else {
+            console.error('Failed to fetch leaves:', leaveResponse.status);
+          }
+
+          // Determine active leaves (current date between start and end)
+          const now = new Date();
+          const activeLeaveUserIds = new Set();
+          leaves.forEach(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            if (now >= start && now <= end) {
+              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            }
+          });
+
+          // Calculate overall statistics
+          const today = new Date().toISOString().split('T')[0];
+          let totalSoldiers = soldiers.length;
+          let present = 0;
+          let onLeave = 0;
+          let awol = 0;
+          let onDuty = 0;
+
+          soldiers.forEach(soldier => {
+            // Check attendance special status
+            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (special === 'AWOL') {
+              awol++;
+            } else if (special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+              onLeave++;
+            } else if (special === 'on_duty') {
+              onDuty++;
+            } else {
+              present++;
+            }
+          });
+
+          // Update statistics display
+          document.getElementById('total-soldiers').textContent = totalSoldiers;
+          document.getElementById('present-count').textContent = present;
+          document.getElementById('leave-count').textContent = onLeave;
+          document.getElementById('duty-count').textContent = onDuty;
+          document.getElementById('awol-count').textContent = awol;
+
+          // Update percentages
+          const presentPercent = totalSoldiers > 0 ? Math.round((present / totalSoldiers) * 100) : 0;
+          const leavePercent = totalSoldiers > 0 ? Math.round((onLeave / totalSoldiers) * 100) : 0;
+          const dutyPercent = totalSoldiers > 0 ? Math.round((onDuty / totalSoldiers) * 100) : 0;
+          const awolPercent = totalSoldiers > 0 ? Math.round((awol / totalSoldiers) * 100) : 0;
+
+          document.getElementById('present-percent').textContent = `${presentPercent}%`;
+          document.getElementById('leave-percent').textContent = `${leavePercent}%`;
+          document.getElementById('duty-percent').textContent = `${dutyPercent}%`;
+          document.getElementById('awol-percent').textContent = `${awolPercent}%`;
+
+          // Update y-axis labels
+          const yAxisLabels = document.querySelectorAll('.y-axis span');
+          if (yAxisLabels.length >= 3) {
+            const maxValue = Math.max(present, onLeave, onDuty, awol);
+            yAxisLabels[0].textContent = maxValue;
+            yAxisLabels[1].textContent = Math.round(maxValue * 0.67);
+            yAxisLabels[2].textContent = Math.round(maxValue * 0.33);
+          }
+
+          // Update attendance chart bars (simplified - using last 5 days)
+          updateAttendanceChart(soldiers, activeLeaveUserIds, today);
+
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+
+      // Update attendance chart with dynamic data
+      function updateAttendanceChart(soldiers, activeLeaveUserIds, today) {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+        const barRows = document.querySelector('.bar-rows');
+        if (!barRows) return;
+
+        // Calculate data for last 5 days
+        const chartData = [];
+        for (let i = 4; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dateStr = date.toISOString().split('T')[0];
+
+          let present = 0;
+          let absent = 0;
+
+          soldiers.forEach(soldier => {
+            const attendanceKey = `attendance_${soldier.service_number}_${dateStr}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (special === 'AWOL' || special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+              absent++;
+            } else {
+              present++;
+            }
+          });
+
+          chartData.push({ present, absent, day: days[4 - i] });
+        }
+
+        // Update bars
+        const groups = barRows.querySelectorAll('.group');
+        chartData.forEach((data, index) => {
+          if (groups[index]) {
+            const presentBar = groups[index].querySelector('.bar-present');
+            const absentBar = groups[index].querySelector('.bar-absent');
+
+            if (presentBar && absentBar) {
+              const total = data.present + data.absent;
+              const presentHeight = total > 0 ? (data.present / total) * 180 + 20 : 20; // min height 20px
+              const absentHeight = total > 0 ? (data.absent / total) * 180 + 20 : 20;
+
+              presentBar.style.height = `${presentHeight}px`;
+              absentBar.style.height = `${absentHeight}px`;
+            }
+          }
+        });
+      }
+
+      // Load notices on page load and fetch data
+      window.addEventListener('DOMContentLoaded', function() {
+        loadAdjutantNotices();
+        fetchTotalUsers();
+
+        // Auto-refresh every 60 seconds
+        setInterval(fetchTotalUsers, 60000);
+      });
     </script>
 
   </div>
