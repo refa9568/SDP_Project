@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   company: {
     type: String,
-    required: true
+    required: false
   },
   role: {
     type: String,
@@ -42,42 +42,27 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-const addUser = async () => {
+const updateSoldiersCompany = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/paradeops_db');
     console.log('✓ Connected to MongoDB');
 
-    // User data - modify these values as needed
-    const userData = {
-      service_number: 'BSM-001', // Change this
-      name: 'Battalion Sergeant Major', // Change this
-      rank: 'Warrant Officer', // Change this
-      role: 'bsm', // Change this
-      company: 'BHQ', // Change this
-      email: 'bsm@example.com', // Optional
-      phone: '1234567890', // Optional
-      password_hash: await bcrypt.hash('1234', 10) // Default password
-    };
+    // Assign soldiers to different companies
+    const soldiers = await User.find({ role: 'soldier' });
+    const companies = ['BHQ', 'Radio', 'Operating', 'HQ', 'RR', 'BSC'];
+    let companyIndex = 0;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ service_number: userData.service_number });
-    if (existingUser) {
-      console.log('❌ User with this service number already exists');
-      return;
+    for (const soldier of soldiers) {
+      const company = companies[companyIndex % companies.length];
+      await User.updateOne({ _id: soldier._id }, { $set: { company: company } });
+      companyIndex++;
     }
 
-    // Create user
-    const newUser = new User(userData);
-    await newUser.save();
-
-    console.log('✅ User added successfully!');
-    console.log('Service Number:', userData.service_number);
-    console.log('Name:', userData.name);
-    console.log('Role:', userData.role);
+    console.log(`✅ Assigned ${soldiers.length} soldiers to companies: BHQ, Radio, Operating, HQ, RR, BSC`);
 
   } catch (error) {
-    console.error('❌ Error adding user:', error);
+    console.error('❌ Error updating soldiers:', error);
   } finally {
     await mongoose.connection.close();
     console.log('✓ Database connection closed');
@@ -85,4 +70,4 @@ const addUser = async () => {
 };
 
 // Run the script
-addUser();
+updateSoldiersCompany();

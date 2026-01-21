@@ -15,14 +15,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  company: {
+    type: String,
+    required: false
+  },
   role: {
     type: String,
     required: true,
     enum: ['soldier', 'coy_comd', 'adjutant', 'bsm', 'commanding_officer']
-  },
-  company: {
-    type: String,
-    required: false
   },
   email: {
     type: String

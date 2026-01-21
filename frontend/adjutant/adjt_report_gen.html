@@ -96,6 +96,7 @@
     .badge.present{ background:#23b35a; }
     .badge.leave{ background:#d6a64f; }
     .badge.awol{ background:#d94a3a; }
+    .badge.duty{ background:#2d6ef7; }
     .badge .small{ display:block; font-size:12px; opacity:.92; }
     .report-table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid rgba(0,0,0,.18); }
     .report-table thead th{ background:#6b774f; color:#fff; padding:10px; text-align:left; border-bottom:2px solid rgba(0,0,0,.18); font-weight:900; }
@@ -221,6 +222,19 @@
         </div>
 
         <div class="section">
+          <h4>Company Filter</h4>
+          <div class="section">
+            <div class="field-label">Select Company</div>
+            <div class="input-row">
+              <select id="companyFilter" class="input" aria-label="Company Filter">
+                <option value="all">All Companies</option>
+                <!-- Companies will be populated dynamically -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
           <h4>Include Column</h4>
           <div class="checks">
             <label><input id="colName" type="checkbox" checked /> Name</label>
@@ -258,6 +272,7 @@
   </div>
 
   <script>
+    const API_BASE = 'http://localhost:5000';
     const preview = document.getElementById('preview');
     const btnPreview = document.getElementById('btnPreview');
     const btnPrint = document.getElementById('btnPrint');
@@ -267,16 +282,116 @@
       return `${d}/${m}/${y}`;
     };
 
-    const sampleRows = [
-      { id:'001', rank:'LCPL', name:'Akib', company:'RR', status:'AWOL', remark:'Not Reported' },
-      { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
-      { id:'003', rank:'CPL', name:'Shawon', company:'HQ', status:'On Duty', remark:'RP Duty' },
-      { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
-      { id:'005', rank:'SGT', name:'Minhaz', company:'RR', status:'Present', remark:'' },
-      { id:'006', rank:'LCPL', name:'Rifat', company:'HQ', status:'Leave', remark:'Medical Leave' },
-      { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
-      { id:'008', rank:'SNK', name:'Shuvo', company:'HQ', status:'Present', remark:'' },
-    ];
+    let soldiersData = []; // Will hold fetched soldier data
+
+    // Fetch soldiers data on page load
+    async function fetchSoldiersData() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '../../login.html';
+          return;
+        }
+
+        // Fetch soldiers
+        const userResponse = await fetch(`${API_BASE}/api/users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!userResponse.ok) {
+          console.error('Failed to fetch users:', userResponse.status);
+          alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+          return;
+        }
+
+        const userData = await userResponse.json();
+        soldiersData = userData.users.filter(user => user.role === 'soldier');
+
+        // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        let allLeaves = [];
+        if (leaveResponse.ok) {
+          const leaveData = await leaveResponse.json();
+          allLeaves = leaveData.leaves;
+        } else {
+          console.error('Failed to fetch leaves:', leaveResponse.status);
+        }
+
+        // Process soldier data with current status
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+
+        soldiersData = soldiersData.map(soldier => {
+          // Check attendance for today
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+
+          let status = 'Present';
+          let remark = '';
+
+          if (special === 'AWOL') {
+            status = 'AWOL';
+            remark = attendance.notes || 'Not Reported';
+          } else if (special === 'Leave') {
+            status = 'Leave';
+            remark = attendance.notes || 'Leave';
+          } else if (special === 'on_duty') {
+            status = 'On Duty';
+            remark = attendance.notes || 'Duty';
+          } else {
+            // Check if on approved leave
+            const activeLeave = allLeaves.find(leave => {
+              const start = new Date(leave.start_date);
+              const end = new Date(leave.end_date);
+              return (leave.user_id._id || leave.user_id) === soldier._id &&
+                     now >= start && now <= end && leave.status === 'approved';
+            });
+            if (activeLeave) {
+              status = 'Leave';
+              remark = activeLeave.reason || 'Approved Leave';
+            }
+          }
+
+          return {
+            id: soldier.service_number,
+            rank: soldier.rank,
+            name: soldier.name,
+            company: soldier.company,
+            status: status,
+            remark: remark
+          };
+        });
+
+        // Populate company filter immediately after data is loaded
+        populateCompanyFilter();
+
+      } catch (error) {
+        console.error('Error fetching soldiers data:', error);
+        alert('Error loading soldier data. Please check your connection.');
+      }
+    }
+
+    // Function to populate company filter dropdown
+    function populateCompanyFilter() {
+      const companyFilter = document.getElementById('companyFilter');
+      const companies = [...new Set(soldiersData.map(s => s.company).filter(c => c))].sort();
+      companyFilter.innerHTML = '<option value="all">All Companies</option>';
+      companies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company;
+        option.textContent = company;
+        companyFilter.appendChild(option);
+      });
+    }
 
     const statusPill = (s) => {
       const map = {
@@ -290,9 +405,22 @@
     };
 
     function buildPreview(){
+      if (soldiersData.length === 0) {
+        preview.innerHTML = '<div class="hint">Loading soldier data...</div>';
+        return;
+      }
+
       const startIso = (document.getElementById('startDate').value || '').trim();
       const endIso = (document.getElementById('endDate').value || '').trim();
       const start = fmt(startIso); const end = fmt(endIso);
+
+      const selectedCompany = document.getElementById('companyFilter').value;
+
+      // Filter soldiers by company if selected
+      let filteredSoldiers = soldiersData;
+      if (selectedCompany !== 'all') {
+        filteredSoldiers = soldiersData.filter(s => s.company === selectedCompany);
+      }
 
       const include = {
         rank: document.getElementById('colRank').checked,
@@ -302,9 +430,14 @@
         remark: document.getElementById('colRemark').checked,
       };
 
-      const counts = sampleRows.reduce((acc, r)=>{
-        acc.total++; if(r.status==='Present') acc.present++; if(r.status==='Leave') acc.leave++; if(r.status==='AWOL') acc.awol++; return acc;
-      }, { total:0, present:0, leave:0, awol:0 });
+      const counts = filteredSoldiers.reduce((acc, r)=>{
+        acc.total++; 
+        if(r.status==='Present') acc.present++; 
+        if(r.status==='Leave') acc.leave++; 
+        if(r.status==='AWOL') acc.awol++; 
+        if(r.status==='On Duty') acc.onDuty++;
+        return acc;
+      }, { total:0, present:0, leave:0, awol:0, onDuty:0 });
 
       const headers = ['ID'];
       if(include.rank) headers.push('Rank');
@@ -313,7 +446,7 @@
       if(include.status) headers.push('Status');
       if(include.remark) headers.push('Remarks');
 
-      const rowsHtml = sampleRows.map(r=>{
+      const rowsHtml = filteredSoldiers.map(r=>{
         const cells = [r.id];
         if(include.rank) cells.push(r.rank);
         if(include.name) cells.push(r.name);
@@ -326,12 +459,13 @@
       const html = `
         <div class="preview-card">
           <div class="report-title">PARADE STATE REPORT</div>
-          <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : '—'}</div>
+          <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : 'Current Status'}${selectedCompany !== 'all' ? ` | Company: ${selectedCompany}` : ''}</div>
           <div class="summary">
             <div class="badge total"><div><span style="font-size:20px">${counts.total}</span><span class="small">Total</span></div></div>
             <div class="badge present"><div><span style="font-size:20px">${counts.present}</span><span class="small">Present</span></div></div>
             <div class="badge leave"><div><span style="font-size:20px">${counts.leave}</span><span class="small">Leave</span></div></div>
             <div class="badge awol"><div><span style="font-size:20px">${counts.awol}</span><span class="small">AWOL</span></div></div>
+            <div class="badge duty"><div><span style="font-size:20px">${counts.onDuty}</span><span class="small">On Duty</span></div></div>
           </div>
           <table class="report-table">
             <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
@@ -344,7 +478,16 @@
 
     // allow manual preview generation
     let previewShown = false;
-    btnPreview.addEventListener('click', ()=>{ previewShown = true; buildPreview(); });
+    btnPreview.addEventListener('click', async ()=>{ 
+      await fetchSoldiersData();
+      previewShown = true; 
+      buildPreview(); 
+    });
+
+    // Load data on page load to populate company filter
+    window.addEventListener('DOMContentLoaded', async () => {
+      await fetchSoldiersData();
+    });
 
     // debounce helper
     function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
@@ -352,7 +495,7 @@
     const debouncedBuild = debounce(()=>{ if(previewShown) buildPreview(); }, 250);
 
     // dynamic update: when filters change, update preview automatically (after initial Generate)
-    ['startDate','endDate','colName','colRank','colCompany','colStatus','colRemark'].forEach(id=>{
+    ['startDate','endDate','companyFilter','colName','colRank','colCompany','colStatus','colRemark'].forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
       el.addEventListener('change', debouncedBuild);

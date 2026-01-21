@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard – Radio Coy Comd</title>
+<title>Dashboard – Coy Comd</title>
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 
 <style>
 :root{
@@ -48,6 +49,358 @@ h2,h3{
   align-items:center;
 }
 
+.title h2{
+  margin:0;
+  font-size:24px;
+}
+
+.header-actions{
+  display:flex;
+  gap:10px;
+}
+
+.logout{
+  background:#2E3D32;
+  color:#C2B280;
+  border:2px solid #556B2F;
+  padding:8px 16px;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+  transition: all 0.3s ease;
+}
+
+.logout:hover{
+  background:#556B2F;
+  border-color:#C2B280;
+}
+
+/* ---------- STATS ---------- */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:15px;
+  margin:20px;
+}
+
+.box{
+  background:#17221b;
+  border:3px solid var(--sand);
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  font-size:14px;
+  cursor:pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.box:hover{
+  background:#4a5f2a;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* Touch support: make boxes respond on touch/active states */
+.box:active{
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+@media (hover: none) {
+  /* on touch devices, apply active-like feedback when tapped */
+  .box:active{
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  }
+}
+
+/* ---------- MAIN SECTION ---------- */
+.main{
+  display:grid;
+  grid-template-columns:2.5fr 1fr;
+  gap:20px;
+  margin:20px;
+}
+
+.panel{
+  background:#17221b; /* dark panel that fits the palette */
+  border:3px solid var(--sand);
+  padding:15px;
+  border-radius:12px;
+}
+
+/* ---------- TABLE ---------- */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th,td{
+  border:1px solid var(--sand);
+  padding:10px;
+  text-align:center;
+  font-size:14px;
+}
+
+th{
+  background:#2E3D32;
+  color:#C2B280;
+  font-weight:600;
+}
+
+td{
+  background:#1a2520;
+}
+
+tr:nth-child(even) td{
+  background:#1f2a24;
+}
+
+tr:hover td{
+  background:#2a352f;
+}
+
+/* ---------- STATUS COLORS ---------- */
+.status-present{ color: #2ecc71; font-weight: bold; }
+.status-leave{ color: #f39c12; font-weight: bold; }
+.status-duty{ color: #3498db; font-weight: bold; }
+.status-awol{ color: #e74c3c; font-weight: bold; }
+.status-course{ color: #9b59b6; font-weight: bold; }
+
+/* ---------- LOADING ---------- */
+.loading{
+  text-align: center;
+  padding: 40px;
+  color: #C2B280;
+  font-size: 16px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px){
+  .stats{
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .main{
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="header-row">
+    <div class="title">
+      <h2 id="dashboardTitle">Dashboard – Coy Comd (Comd's Voice)</h2>
+    </div>
+    <div class="header-actions">
+      <button onclick="changePassword()" class="logout">Change Password</button>
+      <button onclick="logout()" class="logout">Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STATS ===== -->
+<div class="stats">
+  <div class="box">Total Strength<br><b id="totalStrength">Loading...</b></div>
+  <div class="box">On Parade<br><b id="onParade">Loading...</b></div>
+  <div class="box">Off Parade<br><b id="offParade">Loading...</b></div>
+  <div class="box">On Duty<br><b id="onDuty">Loading...</b></div>
+  <div class="box">AWOL<br><b id="awol">Loading...</b></div>
+
+  <!-- CLICKABLE COY EMPLOYMENT -->
+  <div class="box" onclick="window.location.href='daily_employment.html'">Coy Employment ➜</div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- PERSONAL ROSTER -->
+  <div class="panel olive-panel">
+    <h3 id="rosterTitle">Personal Roster - Company</h3>
+    <div id="rosterTable">
+      <div class="loading">Loading soldier data...</div>
+    </div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="panel">
+    <h3>Quick Actions</h3>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+      <button onclick="window.location.href='coy_report.html'" style="padding: 12px; background: #556B2F; color: #C2B280; border: 2px solid #2E3D32; border-radius: 6px; cursor: pointer; font-weight: 600;">Generate Report</button>
+      <button onclick="window.location.href='Leave_approval.html'" style="padding: 12px; background: #556B2F; color: #C2B280; border: 2px solid #2E3D32; border-radius: 6px; cursor: pointer; font-weight: 600;">Leave Approvals</button>
+      <button onclick="window.location.href='daily_employment.html'" style="padding: 12px; background: #556B2F; color: #C2B280; border: 2px solid #2E3D32; border-radius: 6px; cursor: pointer; font-weight: 600;">Daily Employment</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = 'http://localhost:5000';
+
+// Load dashboard data on page load
+window.addEventListener('DOMContentLoaded', loadDashboardData);
+
+async function loadDashboardData() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You are not logged in. Redirecting to login page.');
+      window.location.href = '../../login.html';
+      return;
+    }
+
+    const decoded = jwt_decode(token);
+    const currentCompany = decoded.company;
+
+    // Update titles
+    document.getElementById('dashboardTitle').textContent = `Dashboard – ${currentCompany} Coy Comd (Comd's Voice)`;
+    document.getElementById('rosterTitle').textContent = `Personal Roster - ${currentCompany} Company`;
+
+    // Fetch soldiers from current company
+    const userResponse = await fetch(`${API_BASE}/api/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!userResponse.ok) {
+      console.error('Failed to fetch users:', userResponse.status);
+      alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+      return;
+    }
+
+    const userData = await userResponse.json();
+    const companySoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === currentCompany);
+
+    // Fetch leaves
+    const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    let allLeaves = [];
+    if (leaveResponse.ok) {
+      const leaveData = await leaveResponse.json();
+      allLeaves = leaveData.leaves;
+    } else {
+      console.error('Failed to fetch leaves:', leaveResponse.status);
+    }
+
+    // Process soldier data with current status
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    const processedSoldiers = companySoldiers.map(soldier => {
+      // Check attendance for today
+      const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+      const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+      const special = attendance['special_status'];
+
+      let status = 'On Parade';
+      let statusClass = 'status-present';
+
+      if (special === 'AWOL') {
+        status = 'AWOL';
+        statusClass = 'status-awol';
+      } else if (special === 'Leave') {
+        status = 'On Leave';
+        statusClass = 'status-leave';
+      } else if (special === 'on_duty') {
+        status = 'On Duty';
+        statusClass = 'status-duty';
+      } else {
+        // Check if on approved leave
+        const activeLeave = allLeaves.find(leave => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          return (leave.user_id._id || leave.user_id) === soldier._id &&
+                 now >= start && now <= end && leave.status === 'approved';
+        });
+        if (activeLeave) {
+          status = 'On Leave';
+          statusClass = 'status-leave';
+        } else {
+          // Check for course/training (this would need to be implemented based on your data)
+          status = 'On Parade';
+          statusClass = 'status-present';
+        }
+      }
+
+      return {
+        id: soldier.service_number,
+        name: soldier.name,
+        rank: soldier.rank,
+        company: soldier.company,
+        status: status,
+        statusClass: statusClass,
+        activities: '1st Cycle – Unit Duty<br>2nd Cycle – Radio Training<br>3rd Cycle – Communication Course<br>4th Cycle – Winter Training' // Default activities
+      };
+    });
+
+    // Calculate statistics
+    const totalStrength = processedSoldiers.length;
+    const onParade = processedSoldiers.filter(s => s.status === 'On Parade').length;
+    const offParade = processedSoldiers.filter(s => s.status !== 'On Parade').length;
+    const onDuty = processedSoldiers.filter(s => s.status === 'On Duty').length;
+    const awol = processedSoldiers.filter(s => s.status === 'AWOL').length;
+
+    // Update stats
+    document.getElementById('totalStrength').textContent = totalStrength;
+    document.getElementById('onParade').textContent = onParade;
+    document.getElementById('offParade').textContent = offParade;
+    document.getElementById('onDuty').textContent = onDuty;
+    document.getElementById('awol').textContent = awol;
+
+    // Generate roster table
+    generateRosterTable(processedSoldiers, currentCompany);
+
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    alert('Error loading dashboard data. Please check your connection.');
+  }
+}
+
+function generateRosterTable(soldiers, currentCompany) {
+  const rosterDiv = document.getElementById('rosterTable');
+
+  if (soldiers.length === 0) {
+    rosterDiv.innerHTML = `<div class="loading">No soldiers found in ${currentCompany} company.</div>`;
+    return;
+  }
+
+  let tableHTML = `
+    <table>
+      <tr>
+        <th>Service No</th>
+        <th>Name</th>
+        <th>Rank</th>
+        <th>Company</th>
+        <th>Present State</th>
+        <th>Cycle Activities of Training Year</th>
+      </tr>`;
+
+  soldiers.forEach(soldier => {
+    tableHTML += `
+      <tr>
+        <td>${soldier.id}</td>
+        <td>${soldier.name}</td>
+        <td>${soldier.rank}</td>
+        <td>${soldier.company}</td>
+        <td><span class="${soldier.statusClass}">${soldier.status}</span></td>
+        <td>${soldier.activities}</td>
+      </tr>`;
+  });
+
+  tableHTML += '</table>';
+  rosterDiv.innerHTML = tableHTML;
+}
+</script><style>
 .title h2{
   margin:0;
 }
@@ -192,190 +545,8 @@ a{
 </style>
 </head>
 
-<body>
-
-<!-- ===== HEADER ===== -->
-<div class="header">
-  <div class="header-row">
-    <div class="title">
-      <h2>Dashboard – Radio Coy Comd (Comd's Voice)</h2>
-    </div>
-    <div class="header-actions">
-      <button onclick="changePassword()" class="logout">Change Password</button>
-      <button onclick="logout()" class="logout">Logout</button>
-    </div>
-  </div>
-</div> 
-
-<!-- ===== STATS ===== -->
-<div class="stats">
-  <div class="box">Total Strength<br><b id="totalStrength">95</b></div>
-  <div class="box">On Parade<br><b id="onParade">85</b></div>
-  <div class="box">Off Parade<br><b id="offParade">10</b></div>
-  <div class="box">On Duty<br><b>77</b></div>
-  <div class="box">Off Duty<br><b>08</b></div>
-
-  <!-- CLICKABLE COY EMPLOYMENT -->
-  <div class="box" onclick="window.location.href='daily_employment.html'">Coy Employment ➜</div>
-</div>
-
-<!-- ===== MAIN ===== -->
-<div class="main">
-
-  <!-- PERSONAL ROSTER -->
-  <div class="panel olive-panel">
-    <h3>Personal Roster</h3>
-
-    <table>
-      <tr>
-        <th>Sena No</th>
-        <th>Name</th>
-        <th>Rk</th>
-        <th>Present State</th>
-        <th>Cycle Activities of Trg Year</th>
-      </tr>
-
-      <tr>
-        <td>Army No-1234</td>
-        <td>Hasnat Abdullah</td>
-        <td>Sgt</td>
-        <td>On Leave</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – P/Lve<br>
-          3rd Cycle – Army lvl Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1235</td>
-        <td>Rakib Hossain</td>
-        <td>Cpl</td>
-        <td>On Duty</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – Field Exercise<br>
-          3rd Cycle – Signal Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1236</td>
-        <td>Shahriar Rahman</td>
-        <td>Sgt</td>
-        <td>On Parade</td>
-        <td>
-          1st Cycle – Parade Rehearsal<br>
-          2nd Cycle – Admin Duty<br>
-          3rd Cycle – Army lvl Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1237</td>
-        <td>Imran Kabir</td>
-        <td>L/Cpl</td>
-        <td>On Course</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – Promotion Course<br>
-          3rd Cycle – Trade Training<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1238</td>
-        <td>Mahmudul Hasan</td>
-        <td>Snk</td>
-        <td>On Duty</td>
-        <td>
-          1st Cycle – Guard Duty<br>
-          2nd Cycle – Unit Duty<br>
-          3rd Cycle – Physical Trg<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1239</td>
-        <td>Arif Uddin</td>
-        <td>Cpl</td>
-        <td>On Leave</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – P/Lve<br>
-          3rd Cycle – Communication Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1240</td>
-        <td>Tanvir Ahmed</td>
-        <td>Sgt</td>
-        <td>On Duty</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – Field Trg<br>
-          3rd Cycle – Army lvl Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1241</td>
-        <td>Nazmul Islam</td>
-        <td>Snk</td>
-        <td>On Parade</td>
-        <td>
-          1st Cycle – Parade Duty<br>
-          2nd Cycle – Unit Duty<br>
-          3rd Cycle – Weapon Trg<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1242</td>
-        <td>Saifullah Khan</td>
-        <td>Cpl</td>
-        <td>On Course</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – Leadership Course<br>
-          3rd Cycle – Signal Course<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-      <tr>
-        <td>Army No-1243</td>
-        <td>Mehedi Hasan</td>
-        <td>L/Cpl</td>
-        <td>On Duty</td>
-        <td>
-          1st Cycle – Unit Duty<br>
-          2nd Cycle – Admin Task<br>
-          3rd Cycle – Physical Trg<br>
-          4th Cycle – Winter Trg
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- PENDING LEAVE -->
-  <div class="panel">
-    <h3>Pending Leave</h3>
-    <p id="leaveDetails">
-      <b>CPL Sazidul Islam</b><br>
-      Annual Leave<br>
-      2025-12-15 → 2025-12-20
-    </p>
-    <div id="leaveActions">
-      <button class="btn green" onclick="approveLeave()">Approve</button>
-      <button class="btn red" onclick="rejectLeave()">Reject</button>
-    </div>
-    <p id="leaveMessage" style="display:none; color:var(--sand); font-weight:800; margin-top:12px;"></p>
-  </div>
-
-</div>
-
 <script>
+function approveLeave() {
 function approveLeave() {
   const message = document.getElementById('leaveMessage');
   const actions = document.getElementById('leaveActions');
@@ -583,7 +754,7 @@ function changePassword() {
                 // Immediately logout and redirect for security
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.href = '/login.html';
+                window.location.href = '../../login.html';
             } else {
                 alert(data.error || 'Failed to change password');
             }

@@ -405,7 +405,7 @@
         <div style="display:flex; gap:18px; align-items:center;">
           <div style="flex:0 0 180px; height:180px; position:relative;">
             <!-- simple pie using CSS circles layered -->
-            <div style="position:absolute; inset:0; border-radius:50%; background: conic-gradient(
+            <div id="status-pie-chart" style="position:absolute; inset:0; border-radius:50%; background: conic-gradient(
                 rgba(35,179,90,.95) 0 316deg,
                 rgba(214,166,79,.95) 316deg 344deg,
                 rgba(45,110,247,.95) 344deg 354deg,
@@ -583,7 +583,7 @@
                       // Immediately logout and redirect for security
                       localStorage.clear();
                       sessionStorage.clear();
-                      window.location.href = '/login.html';
+                      window.location.href = '../../login.html';
                   } else {
                       alert(data.error || 'Failed to change password');
                   }
@@ -751,25 +751,24 @@
           window.soldiersData = soldiers;
 
           // Fetch leaves
-          const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
             headers: {
-              'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`
             }
-          });
+        });
 
-          let leaves = [];
-          if (leaveResponse.ok) {
+        let allLeaves = [];
+        if (leaveResponse.ok) {
             const leaveData = await leaveResponse.json();
-            leaves = leaveData.leaves;
-          } else {
+            allLeaves = leaveData.leaves;
+        } else {
             console.error('Failed to fetch leaves:', leaveResponse.status);
-          }
+        }
 
-          // Determine active leaves (current date between start and end)
-          const now = new Date();
-          const activeLeaveUserIds = new Set();
-          leaves.forEach(leave => {
-            const start = new Date(leave.start_date);
+        // Determine active leaves (current date between start and end)
+        const now = new Date();
+        const activeLeaveUserIds = new Set();
+        allLeaves.forEach(leave => {
             const end = new Date(leave.end_date);
             if (now >= start && now <= end) {
               activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
@@ -819,6 +818,9 @@
           document.getElementById('duty-percent').textContent = `${dutyPercent}%`;
           document.getElementById('awol-percent').textContent = `${awolPercent}%`;
 
+          // Update pie chart
+          updatePieChart(presentPercent, leavePercent, dutyPercent, awolPercent);
+
           // Update y-axis labels
           const yAxisLabels = document.querySelectorAll('.y-axis span');
           if (yAxisLabels.length >= 3) {
@@ -829,15 +831,37 @@
           }
 
           // Update attendance chart bars (simplified - using last 5 days)
-          updateAttendanceChart(soldiers, activeLeaveUserIds, today);
+          updateAttendanceChart(soldiers, allLeaves, today);
 
         } catch (error) {
           console.error('Error fetching data:', error);
         }
       }
 
+      // Update pie chart with dynamic percentages
+      function updatePieChart(presentPercent, leavePercent, dutyPercent, awolPercent) {
+        const pieChart = document.getElementById('status-pie-chart');
+        if (!pieChart) return;
+
+        // Calculate angles (360 degrees total)
+        const presentAngle = (presentPercent / 100) * 360;
+        const leaveAngle = presentAngle + (leavePercent / 100) * 360;
+        const dutyAngle = leaveAngle + (dutyPercent / 100) * 360;
+        const awolAngle = dutyAngle + (awolPercent / 100) * 360;
+
+        // Create conic gradient
+        const gradient = `conic-gradient(
+          rgba(35,179,90,.95) 0 ${presentAngle}deg,
+          rgba(214,166,79,.95) ${presentAngle}deg ${leaveAngle}deg,
+          rgba(45,110,247,.95) ${leaveAngle}deg ${dutyAngle}deg,
+          rgba(217,74,58,.95) ${dutyAngle}deg ${awolAngle}deg
+        )`;
+
+        pieChart.style.background = gradient;
+      }
+
       // Update attendance chart with dynamic data
-      function updateAttendanceChart(soldiers, activeLeaveUserIds, today) {
+      function updateAttendanceChart(soldiers, allLeaves, today) {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
         const barRows = document.querySelector('.bar-rows');
         if (!barRows) return;
@@ -849,6 +873,16 @@
           date.setDate(date.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
 
+          // Calculate active leaves for this date
+          const activeLeaveUserIdsForDay = new Set();
+          allLeaves.forEach(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            if (date >= start && date <= end) {
+              activeLeaveUserIdsForDay.add(leave.user_id._id || leave.user_id);
+            }
+          });
+
           let present = 0;
           let absent = 0;
 
@@ -857,8 +891,12 @@
             const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
             const special = attendance['special_status'];
 
-            if (special === 'AWOL' || special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+            if (special === 'AWOL') {
               absent++;
+            } else if (special === 'Leave' || activeLeaveUserIdsForDay.has(soldier._id)) {
+              absent++;
+            } else if (special === 'on_duty') {
+              // on duty not counted as absent
             } else {
               present++;
             }

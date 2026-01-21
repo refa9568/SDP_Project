@@ -146,28 +146,8 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
   <div class="nav-buttons">
     <button class="back-button" id="backBtn" onclick="goBack()" aria-label="Go back">Back</button>
     <button class="next-button" id="nextBtn" onclick="window.location.href='coy_report.html'" aria-label="Go to reports">Next</button>
-  </div>
 </div>
 <script>
-function goBack() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const from = urlParams.get('from');
-  if (from === 'co') {
-    window.location.href = '../CO/CO_dashboard.html';
-  } else {
-    window.location.href = 'coy_dashboard.html';
-  }
-}
-
-// Hide Next button if accessed from CO dashboard
-(function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const from = urlParams.get('from');
-  if (from === 'co') {
-    document.getElementById('nextBtn').style.display = 'none';
-  }
-})();
-</script>
 <div class="employment">
   <div class="panel table-panel">
     <table>
@@ -260,6 +240,42 @@ const rankData = {
   ]
 };
 
+<script>
+// Sample data for each rank
+const rankData = {
+  'Sgt': [
+    { senaNo: 'Army No-1234', name: 'Hasnat Abdullah', status: 'On Duty' },
+    { senaNo: 'Army No-1236', name: 'Shahriar Rahman', status: 'On Parade' },
+    { senaNo: 'Army No-1240', name: 'Tanvir Ahmed', status: 'On Duty' },
+    { senaNo: 'Army No-1237', name: 'Minhaz', status: 'On Duty' }
+  ],
+  'Cpl': [
+    { senaNo: 'Army No-1235', name: 'Rakib Hossain', status: 'On Duty' },
+    { senaNo: 'Army No-1239', name: 'Arif Uddin', status: 'On Leave' },
+    { senaNo: 'Army No-1242', name: 'Saifullah Khan', status: 'On Course' },
+    { senaNo: 'Army No-1244', name: 'Shawon', status: 'On Duty' },
+    { senaNo: 'Army No-1245', name: 'Rifat', status: 'On Duty' }
+  ],
+  'L/Cpl': [
+    { senaNo: 'Army No-1237', name: 'Imran Kabir', status: 'On Course' },
+    { senaNo: 'Army No-1243', name: 'Mehedi Hasan', status: 'On Duty' },
+    { senaNo: 'Army No-1246', name: 'Akib', status: 'On Duty' }
+  ],
+  'Snk': [
+    { senaNo: 'Army No-1238', name: 'Mahmudul Hasan', status: 'On Duty' },
+    { senaNo: 'Army No-1241', name: 'Nazmul Islam', status: 'On Parade' },
+    { senaNo: 'Army No-1247', name: 'Ridoy', status: 'On Duty' },
+    { senaNo: 'Army No-1248', name: 'Shuvo', status: 'On Duty' },
+    { senaNo: 'Army No-1249', name: 'Fahim Ahmed', status: 'On Leave' },
+    { senaNo: 'Army No-1250', name: 'Sabbir Hossain', status: 'On Duty' },
+    { senaNo: 'Army No-1251', name: 'Kamrul Islam', status: 'On Duty' },
+    { senaNo: 'Army No-1252', name: 'Ashraful Alam', status: 'On Parade' },
+    { senaNo: 'Army No-1253', name: 'Rubel Miah', status: 'On Duty' },
+    { senaNo: 'Army No-1254', name: 'Sajjad Hossain', status: 'On Duty' }
+    // ... and 25 more (showing 10 for brevity)
+  ]
+};
+
 function showRankDetails(rank) {
   const modal = document.getElementById('rankModal');
   const modalTitle = document.getElementById('modalTitle');
@@ -270,13 +286,13 @@ function showRankDetails(rank) {
   // Clear previous data
   modalTableBody.innerHTML = '';
   
-  // Populate table with rank data
-  const personnel = rankData[rank] || [];
+  // Use dynamic data if available, otherwise fallback to static
+  const personnel = (window.rankData && window.rankData[rank]) ? window.rankData[rank] : (rankData[rank] || []);
   personnel.forEach(person => {
     const row = document.createElement('tr');
     const statusClass = person.status === 'On Leave' ? 'status-leave' : '';
     row.innerHTML = `
-      <td>${person.senaNo}</td>
+      <td>${person.id || person.senaNo || person.service_number}</td>
       <td>${person.name}</td>
       <td class="${statusClass}">${person.status}</td>
     `;
@@ -305,6 +321,138 @@ document.addEventListener('keydown', function(event) {
     closeModal();
   }
 });
+
+// Dynamic rank data loading
+const API_BASE = 'http://localhost:5000';
+
+// Load rank data on page load
+window.addEventListener('DOMContentLoaded', loadRankData);
+
+async function loadRankData() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You are not logged in. Redirecting to login page.');
+      window.location.href = '../../login.html';
+      return;
+    }
+
+    // Fetch soldiers from Radio company
+    const userResponse = await fetch(`${API_BASE}/api/users`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!userResponse.ok) {
+      console.error('Failed to fetch users:', userResponse.status);
+      alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+      return;
+    }
+
+    const userData = await userResponse.json();
+    const radioSoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === 'Radio');
+
+    // Fetch leaves
+    const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    let allLeaves = [];
+    if (leaveResponse.ok) {
+      const leaveData = await leaveResponse.json();
+      allLeaves = leaveData.leaves;
+    } else {
+      console.error('Failed to fetch leaves:', leaveResponse.status);
+    }
+
+    // Process soldier data with current status
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    const processedSoldiers = radioSoldiers.map(soldier => {
+      // Check attendance for today
+      const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+      const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+      const special = attendance['special_status'];
+
+      let status = 'On Parade';
+      if (special === 'AWOL') {
+        status = 'AWOL';
+      } else if (special === 'Leave') {
+        status = 'On Leave';
+      } else if (special === 'on_duty') {
+        status = 'On Duty';
+      } else {
+        // Check if on approved leave
+        const activeLeave = allLeaves.find(leave => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          return (leave.user_id._id || leave.user_id) === soldier._id &&
+                 now >= start && now <= end && leave.status === 'approved';
+        });
+        if (activeLeave) {
+          status = 'On Leave';
+        } else {
+          status = 'On Parade';
+        }
+      }
+
+      return {
+        id: soldier.service_number,
+        name: soldier.name,
+        rank: soldier.rank,
+        status: status
+      };
+    });
+
+    // Group soldiers by rank and filter out those on leave
+    const rankGroups = {};
+    processedSoldiers.forEach(soldier => {
+      if (soldier.status !== 'On Leave') { // Only count those not on leave
+        if (!rankGroups[soldier.rank]) {
+          rankGroups[soldier.rank] = [];
+        }
+        rankGroups[soldier.rank].push(soldier);
+      }
+    });
+
+    // Update the rank list with dynamic counts
+    const rankList = document.querySelector('.rank-list');
+    if (rankList) {
+      rankList.innerHTML = '';
+
+      // Define rank order and mapping
+      const rankOrder = ['Sergeant', 'Corporal', 'Lance Corporal', 'Soldier'];
+      const rankDisplay = {
+        'Sergeant': 'Sgt',
+        'Corporal': 'Cpl',
+        'Lance Corporal': 'L/Cpl',
+        'Soldier': 'Snk'
+      };
+
+      rankOrder.forEach(rank => {
+        if (rankGroups[rank]) {
+          const count = rankGroups[rank].length;
+          const displayName = rankDisplay[rank] || rank;
+          const li = document.createElement('li');
+          li.onclick = () => showRankDetails(rank);
+          li.textContent = `${count}×${displayName}`;
+          rankList.appendChild(li);
+        }
+      });
+    }
+
+    // Update global rankData for modal
+    window.rankData = rankGroups;
+
+  } catch (error) {
+    console.error('Error loading rank data:', error);
+    alert('Error loading rank data. Please check your connection.');
+  }
+}
 </script>
 </body>
 </html>
