@@ -17,14 +17,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  company: {
+    type: String,
+    required: false
+  },
   role: {
     type: String,
     required: true,
     enum: ['soldier', 'coy_comd', 'adjutant', 'bsm', 'commanding_officer']
-  },
-  company: {
-    type: String,
-    required: false
   },
   email: {
     type: String
@@ -48,13 +48,18 @@ const updateSoldiersCompany = async () => {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/paradeops_db');
     console.log('✓ Connected to MongoDB');
 
-    // Update all soldiers to have company: 'Radio'
-    const result = await User.updateMany(
-      { role: 'soldier' },
-      { $set: { company: 'Radio' } }
-    );
+    // Assign soldiers to different companies
+    const soldiers = await User.find({ role: 'soldier' });
+    const companies = ['BHQ', 'Radio', 'Operating', 'HQ', 'RR', 'BSC'];
+    let companyIndex = 0;
 
-    console.log(`✅ Updated ${result.modifiedCount} soldiers with company: 'Radio'`);
+    for (const soldier of soldiers) {
+      const company = companies[companyIndex % companies.length];
+      await User.updateOne({ _id: soldier._id }, { $set: { company: company } });
+      companyIndex++;
+    }
+
+    console.log(`✅ Assigned ${soldiers.length} soldiers to companies: BHQ, Radio, Operating, HQ, RR, BSC`);
 
   } catch (error) {
     console.error('❌ Error updating soldiers:', error);
