@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard – Radio Coy Comd</title>
+<title>Dashboard – Coy Comd</title>
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 
 <style>
 :root{
@@ -194,7 +195,7 @@ tr:hover td{
 <div class="header">
   <div class="header-row">
     <div class="title">
-      <h2>Dashboard – Radio Coy Comd (Comd's Voice)</h2>
+      <h2 id="dashboardTitle">Dashboard – Coy Comd (Comd's Voice)</h2>
     </div>
     <div class="header-actions">
       <button onclick="changePassword()" class="logout">Change Password</button>
@@ -220,7 +221,7 @@ tr:hover td{
 
   <!-- PERSONAL ROSTER -->
   <div class="panel olive-panel">
-    <h3>Personal Roster - Radio Company</h3>
+    <h3 id="rosterTitle">Personal Roster - Company</h3>
     <div id="rosterTable">
       <div class="loading">Loading soldier data...</div>
     </div>
@@ -253,7 +254,14 @@ async function loadDashboardData() {
       return;
     }
 
-    // Fetch soldiers from Radio company
+    const decoded = jwt_decode(token);
+    const currentCompany = decoded.company;
+
+    // Update titles
+    document.getElementById('dashboardTitle').textContent = `Dashboard – ${currentCompany} Coy Comd (Comd's Voice)`;
+    document.getElementById('rosterTitle').textContent = `Personal Roster - ${currentCompany} Company`;
+
+    // Fetch soldiers from current company
     const userResponse = await fetch(`${API_BASE}/api/users`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -267,7 +275,7 @@ async function loadDashboardData() {
     }
 
     const userData = await userResponse.json();
-    const radioSoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === 'Radio');
+    const companySoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === currentCompany);
 
     // Fetch leaves
     const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
@@ -288,7 +296,7 @@ async function loadDashboardData() {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
 
-    const processedSoldiers = radioSoldiers.map(soldier => {
+    const processedSoldiers = companySoldiers.map(soldier => {
       // Check attendance for today
       const attendanceKey = `attendance_${soldier.service_number}_${today}`;
       const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
@@ -328,6 +336,7 @@ async function loadDashboardData() {
         id: soldier.service_number,
         name: soldier.name,
         rank: soldier.rank,
+        company: soldier.company,
         status: status,
         statusClass: statusClass,
         activities: '1st Cycle – Unit Duty<br>2nd Cycle – Radio Training<br>3rd Cycle – Communication Course<br>4th Cycle – Winter Training' // Default activities
@@ -349,7 +358,7 @@ async function loadDashboardData() {
     document.getElementById('awol').textContent = awol;
 
     // Generate roster table
-    generateRosterTable(processedSoldiers);
+    generateRosterTable(processedSoldiers, currentCompany);
 
   } catch (error) {
     console.error('Error loading dashboard data:', error);
@@ -357,11 +366,11 @@ async function loadDashboardData() {
   }
 }
 
-function generateRosterTable(soldiers) {
+function generateRosterTable(soldiers, currentCompany) {
   const rosterDiv = document.getElementById('rosterTable');
 
   if (soldiers.length === 0) {
-    rosterDiv.innerHTML = '<div class="loading">No soldiers found in Radio company.</div>';
+    rosterDiv.innerHTML = `<div class="loading">No soldiers found in ${currentCompany} company.</div>`;
     return;
   }
 
@@ -371,6 +380,7 @@ function generateRosterTable(soldiers) {
         <th>Service No</th>
         <th>Name</th>
         <th>Rank</th>
+        <th>Company</th>
         <th>Present State</th>
         <th>Cycle Activities of Training Year</th>
       </tr>`;
@@ -381,6 +391,7 @@ function generateRosterTable(soldiers) {
         <td>${soldier.id}</td>
         <td>${soldier.name}</td>
         <td>${soldier.rank}</td>
+        <td>${soldier.company}</td>
         <td><span class="${soldier.statusClass}">${soldier.status}</span></td>
         <td>${soldier.activities}</td>
       </tr>`;

@@ -557,6 +557,16 @@ window.addEventListener('DOMContentLoaded', function() {
         checkLeaveStatus(user);
         loadLeaveBalance();
         loadAttendance(user);
+        
+        // Listen for localStorage changes to update attendance in real-time
+        window.addEventListener('storage', function(e) {
+            if (e.key && e.key.startsWith('attendance_') && e.key.includes(user.service_number)) {
+                loadAttendance(user);
+            }
+        });
+        
+        // Also check for updates every 1 second in case of same-tab changes
+        setInterval(() => loadAttendance(user), 1000);
     }
 });
 </script>
