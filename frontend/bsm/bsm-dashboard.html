@@ -622,9 +622,11 @@
             const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
             const special = attendance['special_status'];
 
-            if (special === 'AWOL') {
+            if (activeLeaveUserIds.has(soldier._id)) {
+              companyGroups[company].onLeave++;
+            } else if (special === 'AWOL') {
               companyGroups[company].awol++;
-            } else if (special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+            } else if (special === 'Leave') {
               companyGroups[company].onLeave++;
             } else if (special === 'on_duty') {
               companyGroups[company].duty++;

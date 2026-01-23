@@ -173,13 +173,16 @@ const changePassword = async (req, res) => {
     console.log('Updating password for user:', user.service_number);
 
     // Update the user's password in the database
-    const updatedUser = await User.findOneAndUpdate(
+    const updateResult = await User.updateOne(
       { service_number: user.service_number },
-      { password_hash: hashedPassword },
-      { new: true }
+      { password_hash: hashedPassword }
     );
 
-    console.log('Password updated successfully for user:', user.service_number, updatedUser ? 'yes' : 'no');
+    console.log('Password update result:', updateResult);
+
+    if (updateResult.modifiedCount === 0) {
+      return res.status(400).json({ error: 'Password update failed' });
+    }
 
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {

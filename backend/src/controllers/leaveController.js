@@ -112,10 +112,6 @@ const createLeave = async (req, res) => {
       contact_number: contact_number || null,
       address_during_leave: address_during_leave || null
     };
-      reason,
-      contact_number: contact_number || null,
-      address_during_leave: address_during_leave || null
-    };
 
     console.log('Creating leave with data:', leaveData);
 

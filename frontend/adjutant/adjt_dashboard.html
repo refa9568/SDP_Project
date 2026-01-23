@@ -339,51 +339,17 @@
               <rect x="4" y="6" width="16" height="12" rx="2" stroke="rgba(233,239,214,.9)" stroke-width="2" fill="none"/>
             </svg>
           </div>
-          <span>Daily Attendance Distribution</span>
+          <span>Company-wise Daily Attendance Report</span>
         </div>
         <div class="chart">
           <div class="chart-inner">
             <div class="y-axis">
-              <span>450</span>
-              <span>300</span>
-              <span>150</span>
+              <span>100%</span>
+              <span>50%</span>
+              <span>0%</span>
             </div>
             <div class="bar-rows">
-              <div class="group">
-                <div class="bars">
-                  <div class="bar-present" style="height:180px"></div>
-                  <div class="bar-absent" style="height:50px"></div>
-                </div>
-                <div class="bar-x">Sun</div>
-              </div>
-              <div class="group">
-                <div class="bars">
-                  <div class="bar-present" style="height:160px"></div>
-                  <div class="bar-absent" style="height:60px"></div>
-                </div>
-                <div class="bar-x">Mon</div>
-              </div>
-              <div class="group">
-                <div class="bars">
-                  <div class="bar-present" style="height:180px"></div>
-                  <div class="bar-absent" style="height:48px"></div>
-                </div>
-                <div class="bar-x">Tue</div>
-              </div>
-              <div class="group">
-                <div class="bars">
-                  <div class="bar-present" style="height:165px"></div>
-                  <div class="bar-absent" style="height:46px"></div>
-                </div>
-                <div class="bar-x">Wed</div>
-              </div>
-              <div class="group">
-                <div class="bars">
-                  <div class="bar-present" style="height:175px"></div>
-                  <div class="bar-absent" style="height:54px"></div>
-                </div>
-                <div class="bar-x">Thu</div>
-              </div>
+              <!-- Bars will be generated dynamically -->
             </div>
           </div>
           <div class="legend" style="justify-content:center; gap:28px;">
@@ -769,6 +735,7 @@
         const now = new Date();
         const activeLeaveUserIds = new Set();
         allLeaves.forEach(leave => {
+            const start = new Date(leave.start_date);
             const end = new Date(leave.end_date);
             if (now >= start && now <= end) {
               activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
@@ -789,9 +756,11 @@
             const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
             const special = attendance['special_status'];
 
-            if (special === 'AWOL') {
+            if (activeLeaveUserIds.has(soldier._id)) {
+              onLeave++;
+            } else if (special === 'AWOL') {
               awol++;
-            } else if (special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+            } else if (special === 'Leave') {
               onLeave++;
             } else if (special === 'on_duty') {
               onDuty++;
@@ -860,67 +829,85 @@
         pieChart.style.background = gradient;
       }
 
-      // Update attendance chart with dynamic data
+      // Update attendance chart with company-wise data for today
       function updateAttendanceChart(soldiers, allLeaves, today) {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
         const barRows = document.querySelector('.bar-rows');
         if (!barRows) return;
 
-        // Calculate data for last 5 days
-        const chartData = [];
-        for (let i = 4; i >= 0; i--) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          const dateStr = date.toISOString().split('T')[0];
+        // Group soldiers by company
+        const companyData = {};
+        soldiers.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyData[company]) {
+            companyData[company] = { total: 0, present: 0, absent: 0 };
+          }
+          companyData[company].total++;
+        });
 
-          // Calculate active leaves for this date
-          const activeLeaveUserIdsForDay = new Set();
-          allLeaves.forEach(leave => {
-            const start = new Date(leave.start_date);
-            const end = new Date(leave.end_date);
-            if (date >= start && date <= end) {
-              activeLeaveUserIdsForDay.add(leave.user_id._id || leave.user_id);
-            }
-          });
+        // Calculate active leaves for today
+        const activeLeaveUserIdsForDay = new Set();
+        allLeaves.forEach(leave => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          const todayDate = new Date(today);
+          if (todayDate >= start && todayDate <= end) {
+            activeLeaveUserIdsForDay.add(leave.user_id._id || leave.user_id);
+          }
+        });
 
-          let present = 0;
-          let absent = 0;
+        // Calculate present/absent per company
+        soldiers.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
 
-          soldiers.forEach(soldier => {
-            const attendanceKey = `attendance_${soldier.service_number}_${dateStr}`;
-            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
-            const special = attendance['special_status'];
+          if (special === 'AWOL') {
+            companyData[company].absent++;
+          } else if (special === 'Leave' || activeLeaveUserIdsForDay.has(soldier._id)) {
+            companyData[company].absent++;
+          } else if (special === 'on_duty') {
+            // on duty not counted as absent, but not present? Wait, perhaps count as present or separate.
+            // For simplicity, treat as present.
+            companyData[company].present++;
+          } else {
+            companyData[company].present++;
+          }
+        });
 
-            if (special === 'AWOL') {
-              absent++;
-            } else if (special === 'Leave' || activeLeaveUserIdsForDay.has(soldier._id)) {
-              absent++;
-            } else if (special === 'on_duty') {
-              // on duty not counted as absent
-            } else {
-              present++;
-            }
-          });
+        // Clear existing bars
+        barRows.innerHTML = '';
 
-          chartData.push({ present, absent, day: days[4 - i] });
+        // Find max total for scaling
+        const maxTotal = Math.max(...Object.values(companyData).map(d => d.total));
+
+        // Update y-axis labels
+        const yAxis = document.querySelector('.y-axis');
+        if (yAxis) {
+          const spans = yAxis.querySelectorAll('span');
+          if (spans.length >= 3) {
+            spans[0].textContent = maxTotal;
+            spans[1].textContent = Math.round(maxTotal / 2);
+            spans[2].textContent = '0';
+          }
         }
 
-        // Update bars
-        const groups = barRows.querySelectorAll('.group');
-        chartData.forEach((data, index) => {
-          if (groups[index]) {
-            const presentBar = groups[index].querySelector('.bar-present');
-            const absentBar = groups[index].querySelector('.bar-absent');
+        // Generate bars for each company
+        Object.keys(companyData).sort().forEach(company => {
+          const data = companyData[company];
+          const presentHeight = data.total > 0 ? (data.present / maxTotal) * 180 : 0;
+          const absentHeight = data.total > 0 ? (data.absent / maxTotal) * 180 : 0;
 
-            if (presentBar && absentBar) {
-              const total = data.present + data.absent;
-              const presentHeight = total > 0 ? (data.present / total) * 180 + 20 : 20; // min height 20px
-              const absentHeight = total > 0 ? (data.absent / total) * 180 + 20 : 20;
-
-              presentBar.style.height = `${presentHeight}px`;
-              absentBar.style.height = `${absentHeight}px`;
-            }
-          }
+          const group = document.createElement('div');
+          group.className = 'group';
+          group.innerHTML = `
+            <div class="bars">
+              <div class="bar-present" style="height:${presentHeight}px" title="Present: ${data.present}"></div>
+              <div class="bar-absent" style="height:${absentHeight}px" title="Absent: ${data.absent}"></div>
+            </div>
+            <div class="bar-x">${company}</div>
+          `;
+          barRows.appendChild(group);
         });
       }
 
