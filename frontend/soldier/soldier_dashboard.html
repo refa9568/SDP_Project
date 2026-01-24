@@ -97,6 +97,8 @@ body{
     border-radius:6px;
     padding:16px;
     text-align:center;
+    position: relative;
+    min-height: 150px;
 }
 .balance-card h3{
     margin:0;
@@ -104,10 +106,20 @@ body{
     color:#e6e6c6;
 }
 .balance-card .count{
-    margin-top:28px;
     font-size:34px;
     font-weight:bold;
     color:#e33b2f;
+    text-align: center;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.annual-count, .casual-count {
+    bottom: 20px;
+}
+.recreational-count {
+    bottom: 40px;
 }
 
 /* ===== APPLY LEAVE ===== */
@@ -153,6 +165,24 @@ body{
 }
 .absent{
     background:#d13b2f;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.not-given{
+    background:#3b82f6;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.leave{
+    background:#f59e0b;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.awol{
+    background:#ef4444;
     color:#ffffff;
     padding:4px 16px;
     border-radius:4px;
@@ -213,15 +243,15 @@ body{
         <div class="balance">
             <div class="balance-card">
                 <h3>Annual Leave</h3>
-                <div class="count">45</div>
+                <div class="count annual-count">60</div>
             </div>
             <div class="balance-card">
                 <h3>Recreational Leave</h3>
-                <div class="count">30</div>
+                <div class="count recreational-count">15</div>
             </div>
             <div class="balance-card">
                 <h3>Casual Leave</h3>
-                <div class="count">10</div>
+                <div class="count casual-count">30</div>
             </div>
         </div>
     </div>
@@ -244,22 +274,22 @@ body{
 
         <div class="attendance-row">
             <span>Morning PT</span>
-            <span id="morning-pt-status" class="present">Present</span>
+            <span id="morning-pt-status" class="not-given">Not given yet</span>
         </div>
 
         <div class="attendance-row">
             <span>Office</span>
-            <span id="office-status" class="present">Present</span>
+            <span id="office-status" class="not-given">Not given yet</span>
         </div>
 
         <div class="attendance-row">
             <span>Afternoon Games</span>
-            <span id="games-status" class="absent">Absent</span>
+            <span id="games-status" class="not-given">Not given yet</span>
         </div>
 
         <div class="attendance-row">
             <span>Roll Call</span>
-            <span id="roll-call-status" class="present">Present</span>
+            <span id="roll-call-status" class="not-given">Not given yet</span>
         </div>
     </div>
 
@@ -335,19 +365,34 @@ function loadAttendance(user) {
     ];
 
     activities.forEach(activity => {
-        const status = attendance[activity.key] || 'present'; // Default to present if not marked
+        const status = attendance[activity.key] || 'not-given'; // Default to not-given if not marked
         const statusElement = document.getElementById(activity.id);
-        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        statusElement.className = status;
-    });
-
-    // If special status is AWOL or Leave, override all to Absent
-    const special = attendance['special_status'];
-    if (special === 'AWOL' || special === 'Leave') {
-        activities.forEach(activity => {
-            const statusElement = document.getElementById(activity.id);
+        
+        if (status === 'present') {
+            statusElement.textContent = 'Present';
+            statusElement.className = 'present';
+        } else if (status === 'absent') {
             statusElement.textContent = 'Absent';
             statusElement.className = 'absent';
+        } else {
+            statusElement.textContent = 'Not given yet';
+            statusElement.className = 'not-given';
+        }
+    });
+
+    // If special status is AWOL or Leave, override all to show Leave or AWOL
+    const special = attendance['special_status'];
+    if (special === 'AWOL') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'AWOL';
+            statusElement.className = 'awol';
+        });
+    } else if (special === 'Leave') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'Leave';
+            statusElement.className = 'leave';
         });
     }
 }

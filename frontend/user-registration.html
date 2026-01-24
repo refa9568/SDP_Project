@@ -299,6 +299,21 @@
                 companySelect.value = 'BHQ'; // Default for company commanders
             }
         });
+
+        // Auto-set role based on service number
+        document.getElementById('service_number').addEventListener('input', function() {
+            const serviceNumber = this.value.trim();
+            const roleSelect = document.getElementById('role');
+            const serviceNum = parseInt(serviceNumber);
+
+            if (!isNaN(serviceNum) && serviceNum >= 1111005) {
+                roleSelect.value = 'soldier';
+                roleSelect.disabled = true;
+            } else {
+                roleSelect.disabled = false;
+                // Don't auto-set for officers, let admin choose
+            }
+        });
     </script>
 </body>
 </html>

@@ -104,8 +104,17 @@ const register = async (req, res) => {
     }
 
     // Validate required fields (password not required since we use default "1234")
-    if (!service_number || !name || !rank || !role) {
-      return res.status(400).json({ error: 'Service number, name, rank, and role are required' });
+    if (!service_number || !name || !rank) {
+      return res.status(400).json({ error: 'Service number, name, and rank are required' });
+    }
+
+    // Determine role based on service number
+    let userRole = role;
+    const serviceNum = parseInt(service_number);
+    if (!isNaN(serviceNum) && serviceNum >= 1111005) {
+      userRole = 'soldier';
+    } else if (!role) {
+      return res.status(400).json({ error: 'Role is required for service numbers below 1111005' });
     }
 
     // Check if user already exists
@@ -122,7 +131,7 @@ const register = async (req, res) => {
       service_number,
       name,
       rank,
-      role,
+      role: userRole,
       company: company || null,
       email: email || null,
       phone: phone || null,

@@ -777,10 +777,10 @@
           document.getElementById('awol-count').textContent = awol;
 
           // Update percentages
-          const presentPercent = totalSoldiers > 0 ? Math.round((present / totalSoldiers) * 100) : 0;
-          const leavePercent = totalSoldiers > 0 ? Math.round((onLeave / totalSoldiers) * 100) : 0;
-          const dutyPercent = totalSoldiers > 0 ? Math.round((onDuty / totalSoldiers) * 100) : 0;
-          const awolPercent = totalSoldiers > 0 ? Math.round((awol / totalSoldiers) * 100) : 0;
+          const presentPercent = totalSoldiers > 0 ? ((present / totalSoldiers) * 100).toFixed(2) : 0;
+          const leavePercent = totalSoldiers > 0 ? ((onLeave / totalSoldiers) * 100).toFixed(2) : 0;
+          const dutyPercent = totalSoldiers > 0 ? ((onDuty / totalSoldiers) * 100).toFixed(2) : 0;
+          const awolPercent = totalSoldiers > 0 ? ((awol / totalSoldiers) * 100).toFixed(2) : 0;
 
           document.getElementById('present-percent').textContent = `${presentPercent}%`;
           document.getElementById('leave-percent').textContent = `${leavePercent}%`;
