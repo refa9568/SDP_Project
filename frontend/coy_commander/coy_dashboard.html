@@ -357,6 +357,14 @@ async function loadDashboardData() {
     document.getElementById('onDuty').textContent = onDuty;
     document.getElementById('awol').textContent = awol;
 
+    // Sort soldiers by rank hierarchy before generating table
+    const rankOrder = { 'SWO': 1, 'WO': 2, 'Sgt': 3, 'Cpl': 4, 'L/Cpl': 5, 'Snk': 6 };
+    processedSoldiers.sort((a, b) => {
+      const rankA = rankOrder[a.rank] || 99;
+      const rankB = rankOrder[b.rank] || 99;
+      return rankA - rankB;
+    });
+
     // Generate roster table
     generateRosterTable(processedSoldiers, currentCompany);
 

@@ -1,0 +1,100 @@
+2026-01-15T00:52:18: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T00:52:18: Database connected successfully
+2026-01-15T00:52:42: 2026-01-14T18:52:42.009Z - GET /health
+2026-01-15T00:54:20: 2026-01-14T18:54:20.680Z - POST /api/auth/login
+2026-01-15T00:55:37: 2026-01-14T18:55:37.960Z - POST /api/auth/login
+2026-01-15T00:55:55: 2026-01-14T18:55:55.607Z - POST /api/auth/login
+2026-01-15T01:02:21: 2026-01-14T19:02:21.068Z - GET /api/users
+2026-01-15T01:04:24: 2026-01-14T19:04:24.802Z - POST /api/users
+2026-01-15T01:04:37: 2026-01-14T19:04:37.586Z - POST /api/users
+2026-01-15T01:06:02: 2026-01-14T19:06:02.871Z - GET /api/users
+2026-01-15T01:07:40: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T01:07:40: Database connected successfully
+2026-01-15T01:10:28: 2026-01-14T19:10:28.068Z - POST /api/auth/login
+2026-01-15T01:13:22: 2026-01-14T19:13:22.621Z - POST /api/auth/login
+2026-01-15T01:13:47: 2026-01-14T19:13:47.739Z - POST /api/auth/login
+2026-01-15T01:13:53: 2026-01-14T19:13:53.987Z - GET /api/users
+2026-01-15T01:15:11: 2026-01-14T19:15:11.928Z - POST /api/auth/login
+2026-01-15T01:16:38: 2026-01-14T19:16:38.056Z - GET /api/users
+2026-01-15T01:27:45: 2026-01-14T19:27:45.208Z - POST /api/auth/login
+2026-01-15T01:27:48: 2026-01-14T19:27:48.916Z - GET /api/users
+2026-01-15T01:28:41: 2026-01-14T19:28:41.060Z - POST /api/users
+2026-01-15T01:31:47: 2026-01-14T19:31:47.687Z - POST /api/auth/login
+2026-01-15T01:31:50: 2026-01-14T19:31:50.710Z - GET /api/users
+2026-01-15T01:31:59: 2026-01-14T19:31:59.329Z - POST /api/users
+2026-01-15T01:31:59: 2026-01-14T19:31:59.467Z - GET /api/users
+2026-01-15T01:32:15: 2026-01-14T19:32:15.917Z - GET /api/users
+2026-01-15T01:32:17: 2026-01-14T19:32:17.033Z - GET /api/users
+2026-01-15T01:33:14: 2026-01-14T19:33:14.349Z - GET /api/users
+2026-01-15T01:33:45: 2026-01-14T19:33:45.929Z - POST /api/users
+2026-01-15T01:33:46: 2026-01-14T19:33:46.073Z - GET /api/users
+2026-01-15T01:33:50: 2026-01-14T19:33:50.614Z - DELETE /api/users/undefined
+2026-01-15T01:33:53: 2026-01-14T19:33:53.291Z - GET /api/users
+2026-01-15T01:33:56: 2026-01-14T19:33:56.885Z - DELETE /api/users/undefined
+2026-01-15T01:34:42: 2026-01-14T19:34:42.747Z - POST /api/users
+2026-01-15T01:34:42: 2026-01-14T19:34:42.881Z - GET /api/users
+2026-01-15T01:34:48: 2026-01-14T19:34:48.282Z - DELETE /api/users/undefined
+2026-01-15T01:35:51: 2026-01-14T19:35:51.545Z - GET /api/users
+2026-01-15T01:37:28: 2026-01-14T19:37:28.067Z - GET /api/users
+2026-01-15T01:38:05: 2026-01-14T19:38:05.491Z - POST /api/users
+2026-01-15T01:38:05: 2026-01-14T19:38:05.625Z - GET /api/users
+2026-01-15T01:39:26: 2026-01-14T19:39:26.785Z - POST /api/users
+2026-01-15T01:39:26: 2026-01-14T19:39:26.922Z - GET /api/users
+2026-01-15T01:39:53: 2026-01-14T19:39:53.420Z - POST /api/users
+2026-01-15T01:39:53: 2026-01-14T19:39:53.551Z - GET /api/users
+2026-01-15T01:40:07: 2026-01-14T19:40:07.650Z - POST /api/auth/login
+2026-01-15T01:40:10: 2026-01-14T19:40:10.285Z - GET /api/leaves/balance
+2026-01-15T01:40:10: 2026-01-14T19:40:10.300Z - GET /api/leaves/types
+2026-01-15T01:40:10: 2026-01-14T19:40:10.311Z - GET /api/leaves
+2026-01-15T01:52:38: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T01:52:38: Database connected successfully
+2026-01-15T01:53:46: 2026-01-14T19:53:46.808Z - GET /api/leaves/balance
+2026-01-15T01:53:46: 2026-01-14T19:53:46.833Z - GET /api/leaves/types
+2026-01-15T01:53:46: 2026-01-14T19:53:46.846Z - GET /api/leaves
+2026-01-15T01:53:46: 2026-01-14T19:53:46.859Z - GET /api/reports/leave-history
+2026-01-15T02:04:58: 2026-01-14T20:04:58.295Z - GET /api/leaves/balance
+2026-01-15T02:04:58: 2026-01-14T20:04:58.305Z - GET /api/leaves/types
+2026-01-15T02:04:58: 2026-01-14T20:04:58.315Z - GET /api/leaves
+2026-01-15T02:04:58: 2026-01-14T20:04:58.322Z - GET /api/reports/leave-history
