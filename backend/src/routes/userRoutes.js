@@ -9,6 +9,8 @@ router.use(authenticateToken);
 // User routes
 router.get('/', userController.getAllUsers);
 router.get('/me', userController.getCurrentUser);
+router.get('/roster/personal', userController.getPersonalRoster);
+router.get('/employment/daily', userController.getDailyEmployment);
 router.get('/:id', userController.getUserById);
 router.put('/:id', userController.updateUser);
 

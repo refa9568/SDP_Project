@@ -322,13 +322,13 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-// Dynamic rank data loading
+// Dynamic data loading from backend
 const API_BASE = 'http://localhost:5000';
 
-// Load rank data on page load
-window.addEventListener('DOMContentLoaded', loadRankData);
+// Load data on page load
+window.addEventListener('DOMContentLoaded', loadDailyEmployment);
 
-async function loadRankData() {
+async function loadDailyEmployment() {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -337,121 +337,113 @@ async function loadRankData() {
       return;
     }
 
-    // Fetch soldiers from Radio company
-    const userResponse = await fetch(`${API_BASE}/api/users`, {
+    // Fetch daily employment data
+    const response = await fetch(`${API_BASE}/api/users/employment/daily?company=Radio`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
 
-    if (!userResponse.ok) {
-      console.error('Failed to fetch users:', userResponse.status);
-      alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+    if (!response.ok) {
+      console.error('Failed to fetch daily employment:', response.status);
+      alert(`Failed to load daily employment data. Status: ${response.status}`);
       return;
     }
 
-    const userData = await userResponse.json();
-    const radioSoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === 'Radio');
+    const data = await response.json();
 
-    // Fetch leaves
-    const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    let allLeaves = [];
-    if (leaveResponse.ok) {
-      const leaveData = await leaveResponse.json();
-      allLeaves = leaveData.leaves;
-    } else {
-      console.error('Failed to fetch leaves:', leaveResponse.status);
+    // Populate table with daily employment data
+    const tbody = document.querySelector('table tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      data.daily_employment.forEach((day, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${day.date}.01.2026</td>
+          <td>${day.events}</td>
+          <td>${day.employment}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    // Process soldier data with current status
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    const processedSoldiers = radioSoldiers.map(soldier => {
-      // Check attendance for today
-      const attendanceKey = `attendance_${soldier.service_number}_${today}`;
-      const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
-      const special = attendance['special_status'];
-
-      let status = 'On Parade';
-      if (special === 'AWOL') {
-        status = 'AWOL';
-      } else if (special === 'Leave') {
-        status = 'On Leave';
-      } else if (special === 'on_duty') {
-        status = 'On Duty';
-      } else {
-        // Check if on approved leave
-        const activeLeave = allLeaves.find(leave => {
-          const start = new Date(leave.start_date);
-          const end = new Date(leave.end_date);
-          return (leave.user_id._id || leave.user_id) === soldier._id &&
-                 now >= start && now <= end && leave.status === 'approved';
-        });
-        if (activeLeave) {
-          status = 'On Leave';
-        } else {
-          status = 'On Parade';
-        }
-      }
-
-      return {
-        id: soldier.service_number,
-        name: soldier.name,
-        rank: soldier.rank,
-        status: status
-      };
-    });
-
-    // Group soldiers by rank and filter out those on leave
-    const rankGroups = {};
-    processedSoldiers.forEach(soldier => {
-      if (soldier.status !== 'On Leave') { // Only count those not on leave
-        if (!rankGroups[soldier.rank]) {
-          rankGroups[soldier.rank] = [];
-        }
-        rankGroups[soldier.rank].push(soldier);
-      }
-    });
-
-    // Update the rank list with dynamic counts
+    // Update rank-wise state
     const rankList = document.querySelector('.rank-list');
     if (rankList) {
       rankList.innerHTML = '';
 
-      // Define rank order and mapping
-      const rankOrder = ['Sergeant', 'Corporal', 'Lance Corporal', 'Soldier'];
-      const rankDisplay = {
-        'Sergeant': 'Sgt',
-        'Corporal': 'Cpl',
-        'Lance Corporal': 'L/Cpl',
-        'Soldier': 'Snk'
-      };
+      const rankOrder = ['SWO', 'WO', 'Sgt', 'Cpl', 'L/Cpl', 'Snk'];
+      const rankGroups = data.rank_wise_state;
 
       rankOrder.forEach(rank => {
         if (rankGroups[rank]) {
           const count = rankGroups[rank].length;
-          const displayName = rankDisplay[rank] || rank;
           const li = document.createElement('li');
           li.onclick = () => showRankDetails(rank);
-          li.textContent = `${count}×${displayName}`;
+          li.textContent = `${count}×${rank}`;
           rankList.appendChild(li);
         }
       });
+
+      // Update global rankData for modal
+      window.rankData = rankGroups;
     }
 
-    // Update global rankData for modal
-    window.rankData = rankGroups;
-
   } catch (error) {
-    console.error('Error loading rank data:', error);
-    alert('Error loading rank data. Please check your connection.');
+    console.error('Error loading daily employment:', error);
+    alert('Error loading daily employment. Please check your connection.');
   }
+}
+
+// Show rank details in modal
+function showRankDetails(rank) {
+  const modal = document.getElementById('rankModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalTableBody');
+  
+  if (!window.rankData || !window.rankData[rank]) {
+    alert('No soldiers found for this rank');
+    return;
+  }
+
+  modalTitle.textContent = `${rank} Details`;
+  modalBody.innerHTML = '';
+
+  window.rankData[rank].forEach(soldier => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${soldier.service_number}</td>
+      <td>${soldier.name}</td>
+      <td>Available</td>
+    `;
+    modalBody.appendChild(tr);
+  });
+
+  modal.style.display = 'block';
+}
+
+function closeModal() {
+  const modal = document.getElementById('rankModal');
+  modal.style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+  const modal = document.getElementById('rankModal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeModal();
+  }
+});
+
+function goBack() {
+  window.history.back();
 }
 </script>
 </body>

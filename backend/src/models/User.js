@@ -47,6 +47,20 @@ userSchema.virtual('user_id').get(function() {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
+// Pre-save hook to hash password
+userSchema.pre('save', async function(next) {
+  if (this.password && !this.password_hash) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password_hash = await bcrypt.hash(this.password, salt);
+      delete this.password;
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
+});
+
 // Static methods
 userSchema.statics.findByServiceNumber = function(service_number) {
   return this.findOne({ service_number: new RegExp('^' + service_number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
