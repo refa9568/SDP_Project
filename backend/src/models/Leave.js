@@ -88,8 +88,8 @@ leaveSchema.statics.findAll = function(filters = {}) {
     .sort({ createdAt: -1 });
 };
 
-leaveSchema.statics.findById = function(leave_id) {
-  return this.findById(leave_id)
+leaveSchema.statics.findLeaveById = function(leave_id) {
+  return this.findOne({ _id: leave_id })
     .populate('user_id', 'name service_number rank company')
     .populate('leave_type_id', 'type_name')
     .populate('approved_by', 'name');
@@ -130,11 +130,25 @@ leaveSchema.statics.getLeaveTypes = function() {
 leaveSchema.statics.getLeaveBalance = async function(user_id) {
   const leaveTypes = await this.model('LeaveType').find();
 
+  // Safely convert to ObjectId
+  let oid;
+  try {
+    oid = new mongoose.Types.ObjectId(user_id);
+  } catch (e) {
+    console.error('Invalid user_id for leave balance:', user_id);
+    return leaveTypes.map(type => ({
+      type_name: type.type_name,
+      max_days: type.max_days,
+      used_days: 0,
+      remaining_days: type.max_days
+    }));
+  }
+
   const balances = await Promise.all(leaveTypes.map(async (type) => {
     const usedDays = await this.aggregate([
       {
         $match: {
-          user_id: new mongoose.Types.ObjectId(user_id),
+          user_id: oid,
           leave_type_id: type._id,
           status: 'approved'
         }

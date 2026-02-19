@@ -14,6 +14,7 @@ router.get('/:id', leaveController.getLeaveById);
 router.post('/', leaveController.createLeave);
 router.put('/:id/approve', leaveController.approveLeave);
 router.put('/:id/reject', leaveController.rejectLeave);
+router.delete('/', leaveController.clearAllLeaves);
 router.delete('/:id', leaveController.deleteLeave);
 
 module.exports = router;

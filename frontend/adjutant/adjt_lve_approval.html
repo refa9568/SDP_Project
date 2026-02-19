@@ -54,8 +54,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
   <div class="main">
     <div class="panel">
       <div class="tabs">
-        <a class="tab inactive" href="lve_mgt.html">Apply for Leave</a>
-        <div class="tab">Approve Request</div>
+        <div class="tab">Leave Approval</div>
         <a class="tab inactive" href="adjt_lve_hist.html">Leave History</a>
       </div>
 
@@ -91,10 +90,22 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
 
   <script>
     const API_BASE = 'http://localhost:5000';
+    // Session helper: sessionStorage per tab, localStorage as fallback
+    const _ss = k => sessionStorage.getItem(k) || localStorage.getItem(k);
 
-    // Get token from localStorage
+    // Verify user is logged in as adjutant
+    (function checkRole() {
+      const user = JSON.parse(_ss('user') || '{}');
+      if (user.role !== 'adjutant') {
+        alert('You must be logged in as Adjutant to access this page.');
+        window.location.href = '../../login.html';
+        return;
+      }
+    })();
+
+    // Get token
     function getToken() {
-      const token = localStorage.getItem('token');
+      const token = _ss('token');
       if (!token) {
         alert('Session expired. Please login again.');
         window.location.href = '../../login.html';
@@ -136,7 +147,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
 
         pendingRequests.forEach(req => {
           const row = document.createElement('tr');
-          row.setAttribute('data-id', req.leave_id);
+          const leaveId = String(req.leave_id);
+          row.setAttribute('data-id', leaveId);
           
           // Format dates
           const startDate = new Date(req.start_date).toLocaleDateString('en-GB');
@@ -149,7 +161,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
             <td>${startDate} - ${endDate}</td>
             <td>${req.days} days</td>
             <td class="actions">
-              <button class="view-details" onclick="viewDetails(${req.leave_id})">Details</button>
+              <button class="view-details" onclick="viewDetails('${leaveId}')">Details</button>
             </td>
           `;
           tbody.appendChild(row);
@@ -158,7 +170,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
         // Store leaves data globally for details view
         window.leavesData = pendingRequests;
 
-        attachEventListeners();
       } catch (error) {
         console.error('Error:', error);
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#ff6b6b;">Connection error. Please check server.</td></tr>';
@@ -167,7 +178,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
 
     // View leave details in modal
     function viewDetails(leaveId) {
-      const leave = window.leavesData.find(l => l.leave_id === leaveId);
+      const leave = window.leavesData.find(l => String(l.leave_id) === String(leaveId));
       if (!leave) return;
 
       const startDate = new Date(leave.start_date).toLocaleDateString('en-GB');
@@ -233,49 +244,44 @@ tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-we
       }
     });
 
-    // Attach approve/reject event listeners
-    function attachEventListeners() {
-      document.querySelectorAll('.approve').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          updateRequestStatus(id, 'approved');
-        });
-      });
-
-      document.querySelectorAll('.reject').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const id = this.getAttribute('data-id');
-          updateRequestStatus(id, 'rejected');
-        });
-      });
-    }
-
     // Update request status via API
     async function updateRequestStatus(id, status) {
       const token = getToken();
       if (!token) return;
 
+      const endpoint = status === 'approved'
+        ? `${API_BASE}/api/leaves/${id}/approve`
+        : `${API_BASE}/api/leaves/${id}/reject`;
+
       try {
-        const response = await fetch(`${API_BASE}/api/leaves/${id}/status`, {
+        const response = await fetch(endpoint, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ status: status })
+          body: JSON.stringify(status === 'rejected' ? { rejection_reason: 'Rejected by Adjutant' } : {})
         });
+
+        if (response.status === 401 || response.status === 403) {
+          alert('Session expired. Please login again.');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '../../login.html';
+          return;
+        }
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
+        if (response.ok) {
           alert(`Leave request ${status} successfully!`);
           loadRequests(); // Reload the table
         } else {
-          alert(data.message || `Failed to ${status} request`);
+          alert(data.error || data.message || `Failed to ${status} request`);
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Connection error. Please try again.');
+        alert('Connection error. Check if server is running on port 5000.');
       }
     }
 

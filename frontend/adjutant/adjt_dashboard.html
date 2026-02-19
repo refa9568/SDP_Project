@@ -394,7 +394,7 @@
         <h3 class="panel-title">Quick Action</h3>
         <button class="list-btn" onclick="window.location.href='adjt_report_gen.html'">Generate Parade State Report</button>
         <button class="list-btn" onclick="showSoldiersList()">View Company States</button>
-        <a class="list-btn" href="lve_mgt.html">Leave Management</a>
+        <a class="list-btn" href="adjt_lve_approval.html">Leave Management</a>
       </div>
     </section>
 
@@ -421,9 +421,20 @@
         </div>
       </div>
       <div class="panel">
-        <h3 class="panel-title">Reports</h3>
+        <h3 class="panel-title">Reports & Actions</h3>
         <button class="list-btn black" onclick="window.location.href='daily_parade_state.html'">Daily Parade State</button>
-        <button class="list-btn black" onclick="window.location.href='weekly_summary.html'">Weekly Summary</button>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.12);">
+          <div style="font-weight: 800; font-size: 13px; color: rgba(233,239,214,.72); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Critical Action for CO</div>
+          <textarea 
+            id="criticalActionText" 
+            placeholder="Enter critical action or urgent matter for CO attention..."
+            style="width: 100%; min-height: 70px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.10); border-radius: 8px; padding: 12px; color: #e9efd6; font-family: inherit; font-size: 14px; resize: vertical; box-sizing: border-box;"
+          ></textarea>
+          <button 
+            onclick="sendCriticalActionSimple()" 
+            style="width: 100%; margin-top: 10px; padding: 10px 16px; background: #d94a3a; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px;"
+          >Send to CO</button>
+        </div>
       </div>
     </section>
 
@@ -676,6 +687,42 @@
         
         // Clear the textarea after sending
         document.getElementById('nextDayCommitment').value = '';
+      }
+
+      // Simple Critical Action for CO
+      function sendCriticalActionSimple() {
+        const content = document.getElementById('criticalActionText').value.trim();
+        
+        if (!content) {
+          alert('Please enter the critical action details before sending.');
+          return;
+        }
+
+        // Save critical action with timestamp for CO
+        const criticalData = {
+          content: content,
+          sender: 'Adjutant',
+          date: new Date().toISOString(),
+          type: 'Critical Action',
+          priority: 'urgent',
+          subject: content.substring(0, 50) + (content.length > 50 ? '...' : '')
+        };
+
+        // Get existing CO notices or create new array
+        let coNotices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+        coNotices.unshift(criticalData); // Add to beginning (most recent first)
+
+        // Keep only last 20 notices
+        if (coNotices.length > 20) {
+          coNotices = coNotices.slice(0, 20);
+        }
+
+        localStorage.setItem('CO_notices', JSON.stringify(coNotices));
+
+        alert('Critical Action sent to CO successfully!');
+
+        // Clear the textarea after sending
+        document.getElementById('criticalActionText').value = '';
       }
 
       // Logout function

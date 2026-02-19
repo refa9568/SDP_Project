@@ -251,7 +251,7 @@ body{
             </div>
             <div class="balance-card">
                 <h3>Casual Leave</h3>
-                <div class="count casual-count">30</div>
+                <div class="count casual-count">10</div>
             </div>
         </div>
     </div>
@@ -298,12 +298,73 @@ body{
 
 <script>
 const API_BASE = 'http://localhost:5000';
-// Load user data from localStorage
-function loadUserData() {
-    const user = JSON.parse(localStorage.getItem('user'));
+// Session helper: sessionStorage per tab, localStorage as fallback
+const _ss = k => sessionStorage.getItem(k) || localStorage.getItem(k);
+
+// Load user data from API
+async function loadUserData() {
+    const token = _ss('token');
+    if (!token) {
+        window.location.href = '../../login.html';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/users/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+
+            // Role guard — if token belongs to a different role (e.g. adjutant logged in same browser)
+            if (user.role !== 'soldier') {
+                alert('Session mismatch. Please log in as Soldier.');
+                sessionStorage.clear();
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '../../login.html';
+                return;
+            }
+            
+            // Populate personal info
+            document.getElementById('user-name').textContent = `Name     : ${user.name}`;
+            document.getElementById('user-id').textContent = `ID         : ${user.service_number}`;
+            document.getElementById('user-rank').textContent = `Rank     : ${user.rank}`;
+            document.getElementById('user-company').textContent = `Company : ${user.company}`;
+            
+            // Update session with fresh data
+            sessionStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            return user;
+        } else if (response.status === 401 || response.status === 403) {
+            // Token invalid or expired — force re-login
+            console.warn('Session expired or invalid token, redirecting to login');
+            sessionStorage.clear();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../../login.html';
+            return;
+        } else {
+            // 404 or other error: fallback to cached data (do NOT force logout)
+            console.warn('API error (' + response.status + '), using cached user data');
+            return loadUserDataFromCache();
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        // Fallback to localStorage
+        return loadUserDataFromCache();
+    }
+}
+
+// Fallback function to load from cache
+function loadUserDataFromCache() {
+    const user = JSON.parse(_ss('user'));
     
     if (!user) {
-        // No user logged in, redirect to login
         window.location.href = '../../login.html';
         return;
     }
@@ -319,7 +380,7 @@ function loadUserData() {
 
 // Load leave balance from API
 async function loadLeaveBalance() {
-    const token = localStorage.getItem('token');
+    const token = _ss('token');
     if (!token) return;
     
     try {
@@ -329,21 +390,24 @@ async function loadLeaveBalance() {
             }
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.balance && Array.isArray(data.balance)) {
-                // Map leave types to the dashboard cards
-                const balanceMap = {};
-                data.balance.forEach(item => {
-                    const type = item.type_name.toLowerCase();
-                    balanceMap[type] = item.remaining_days;
-                });
-                
-                // Update the counts
-                document.querySelector('.balance-card:nth-child(1) .count').textContent = balanceMap['annual leave'] || balanceMap['annual'] || 0;
-                document.querySelector('.balance-card:nth-child(2) .count').textContent = balanceMap['recreational leave'] || balanceMap['recreational'] || 0;
-                document.querySelector('.balance-card:nth-child(3) .count').textContent = balanceMap['casual leave'] || balanceMap['casual'] || 0;
-            }
+        const data = await response.json();
+        console.log('Leave balance API response:', data);
+        
+        if (response.ok && data.balance && Array.isArray(data.balance)) {
+            // Map leave types to the dashboard cards using type_name
+            data.balance.forEach(item => {
+                const type = (item.type_name || '').toLowerCase();
+                const remaining = item.remaining_days;
+                if (type === 'annual') {
+                    document.querySelector('.annual-count').textContent = remaining;
+                } else if (type === 'casual') {
+                    document.querySelector('.casual-count').textContent = remaining;
+                } else if (type === 'recreational') {
+                    document.querySelector('.recreational-count').textContent = remaining;
+                }
+            });
+        } else {
+            console.error('Leave balance error:', data);
         }
     } catch (error) {
         console.error('Error loading leave balance:', error);
@@ -397,53 +461,57 @@ function loadAttendance(user) {
     }
 }
 
-// Check leave status and display notification
-function checkLeaveStatus(user) {
-    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
-    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+// Check leave status via API and display notification
+async function checkLeaveStatus(user) {
+    const token = _ss('token');
+    if (!token) return;
+
     const notification = document.getElementById('leaveNotification');
-    
-    // Filter requests for current soldier
-    const myRequests = requests.filter(req => req.soldier === user.name);
-    
-    if (myRequests.length === 0) {
-        notification.style.display = 'none';
-        return;
+    const seenNotifications = JSON.parse(localStorage.getItem('seenLeaveNotifications') || '[]');
+
+    try {
+        const response = await fetch(`${API_BASE}/api/leaves`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const myLeaves = (data.leaves || []).filter(l =>
+            l.status === 'approved' || l.status === 'rejected'
+        );
+
+        if (myLeaves.length === 0) {
+            notification.className = 'notification-box';
+            return;
+        }
+
+        // Most recent processed leave
+        myLeaves.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const latest = myLeaves[0];
+        const notifKey = String(latest.leave_id) + '_' + latest.status;
+
+        if (seenNotifications.includes(notifKey)) {
+            notification.className = 'notification-box';
+            return;
+        }
+
+        if (latest.status === 'approved') {
+            notification.className = 'notification-box approved';
+            notification.textContent = 'Your leave request has been APPROVED';
+        } else {
+            notification.className = 'notification-box rejected';
+            notification.textContent = 'Your leave request has been REJECTED';
+        }
+
+        // Dismiss on click
+        notification.onclick = () => {
+            seenNotifications.push(notifKey);
+            localStorage.setItem('seenLeaveNotifications', JSON.stringify(seenNotifications));
+            notification.className = 'notification-box';
+        };
+    } catch (err) {
+        console.error('Leave status check error:', err);
     }
-    
-    // Sort by ID (most recent first) and find the latest non-pending leave
-    myRequests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-    const latestProcessedLeave = myRequests.find(req => 
-        req.status === 'Approved by CO' || 
-        req.status === 'Rejected by CO' ||
-        req.status === 'Approved' || 
-        req.status === 'Rejected'
-    );
-    
-    if (!latestProcessedLeave) {
-        notification.style.display = 'none';
-        return;
-    }
-    
-    // Check if this notification has already been seen
-    if (seenNotifications.includes(latestProcessedLeave.id)) {
-        notification.style.display = 'none';
-        return;
-    }
-    
-    // Show notification and mark as seen
-    // Only show approved/rejected if it's from CO (final decision)
-    if (latestProcessedLeave.status === 'Approved by CO' || latestProcessedLeave.status === 'Approved') {
-        notification.className = 'notification-box approved';
-        notification.textContent = '✓ Your leave is approved';
-    } else if (latestProcessedLeave.status === 'Rejected by CO' || latestProcessedLeave.status === 'Rejected') {
-        notification.className = 'notification-box rejected';
-        notification.textContent = '✗ Your leave is rejected';
-    }
-    
-    // Mark this notification as seen
-    seenNotifications.push(latestProcessedLeave.id);
-    localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
 }
 
 // Redirect to leave application page with pre-filled data
@@ -545,7 +613,7 @@ function changePassword() {
             return;
         }
 
-        const token = localStorage.getItem('token');
+        const token = _ss('token');
         if (!token) {
             alert('You are not logged in!');
             document.body.removeChild(modal);
@@ -596,8 +664,8 @@ function logout() {
 }
 
 // Initialize page
-window.addEventListener('DOMContentLoaded', function() {
-    const user = loadUserData();
+window.addEventListener('DOMContentLoaded', async function() {
+    const user = await loadUserData();
     if (user) {
         checkLeaveStatus(user);
         loadLeaveBalance();
@@ -612,6 +680,12 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Also check for updates every 1 second in case of same-tab changes
         setInterval(() => loadAttendance(user), 1000);
+        
+        // Update leave balance every 30 seconds
+        setInterval(() => loadLeaveBalance(), 30000);
+
+        // Poll for leave status updates every 30 seconds
+        setInterval(() => checkLeaveStatus(user), 30000);
     }
 });
 </script>

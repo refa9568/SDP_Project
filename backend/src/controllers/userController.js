@@ -27,7 +27,7 @@ const getUserById = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const user = await User.findById(id);
+    const user = await User.findUserById(id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -70,7 +70,7 @@ const updateUser = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.user_id);
+    const user = await User.findUserById(req.user.user_id);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

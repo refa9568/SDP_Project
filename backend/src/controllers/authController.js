@@ -32,7 +32,7 @@ const login = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       {
-        user_id: user.user_id,
+        user_id: user._id.toString(),
         service_number: user.service_number,
         name: user.name,
         rank: user.rank,
@@ -40,7 +40,7 @@ const login = async (req, res) => {
         company: user.company
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '8h' }
     );
 
     // Add to active sessions
@@ -96,6 +96,7 @@ const verifyToken = async (req, res) => {
 
 const register = async (req, res) => {
   try {
+    console.log('Register request received:', req.body);
     const { service_number, name, rank, role, company, email, phone, password } = req.body;
     const requestingUser = req.user; // May be undefined if no token
 
@@ -221,10 +222,54 @@ const changePassword = async (req, res) => {
   }
 };
 
+const setPassword = async (req, res) => {
+  try {
+    const { service_number, newPassword } = req.body;
+    const requestingUser = req.user;
+
+    // Only allow admins to set passwords
+    if (!requestingUser || !['adjutant', 'commanding_officer'].includes(requestingUser.role)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    if (!service_number || !newPassword) {
+      return res.status(400).json({ error: 'Service number and new password are required' });
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.' });
+    }
+
+    // Find the user
+    const dbUser = await User.findByServiceNumber(service_number);
+    if (!dbUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password in the database
+    const updatedUser = await User.updateUser(dbUser._id, { password_hash: hashedPassword });
+
+    if (!updatedUser) {
+      return res.status(400).json({ error: 'Password update failed' });
+    }
+
+    res.json({ success: true, message: 'Password set successfully' });
+  } catch (error) {
+    console.error('Set password error:', error);
+    res.status(500).json({ error: 'Failed to set password' });
+  }
+};
+
 module.exports = {
   login,
   logout,
   verifyToken,
   register,
-  changePassword
+  changePassword,
+  setPassword
 };

@@ -11,7 +11,12 @@ const getAllLeaves = async (req, res) => {
     // Role-based filtering
     if (user.role === 'soldier') {
       // Soldiers see only their own leaves
-      filters.user_id = user.user_id;
+      if (mongoose.Types.ObjectId.isValid(user.user_id)) {
+        filters.user_id = new mongoose.Types.ObjectId(user.user_id);
+      } else {
+        // Can't identify user — return empty safely
+        return res.json({ count: 0, leaves: [] });
+      }
     } else if (user.role === 'coy_comd') {
       // Company Commander sees leaves from their company
       filters.unit = user.company;
@@ -30,9 +35,34 @@ const getAllLeaves = async (req, res) => {
 
     const leaves = await Leave.findAll(filters);
 
+    // Flatten populated fields so frontend can access name, service_number etc. directly
+    const formatted = leaves.map(l => {
+      const obj = l.toObject ? l.toObject() : l;
+      const user = obj.user_id || {};
+      const leaveType = obj.leave_type_id || {};
+      return {
+        leave_id:             obj._id.toString(),
+        name:                 user.name            || 'Unknown',
+        service_number:       user.service_number  || 'N/A',
+        rank:                 user.rank            || '',
+        company:              user.company         || 'N/A',
+        type_name:            leaveType.type_name  || obj.leave_type || 'N/A',
+        days:                 obj.total_days,
+        start_date:           obj.start_date,
+        end_date:             obj.end_date,
+        reason:               obj.reason,
+        contact_number:       obj.contact_number,
+        address_during_leave: obj.address_during_leave,
+        status:               obj.status,
+        rejection_reason:     obj.rejection_reason,
+        created_at:           obj.createdAt,
+        approved_by:          obj.approved_by ? (obj.approved_by.name || obj.approved_by) : null
+      };
+    });
+
     res.json({
-      count: leaves.length,
-      leaves
+      count: formatted.length,
+      leaves: formatted
     });
   } catch (error) {
     console.error('Get leaves error:', error);
@@ -45,18 +75,18 @@ const getLeaveById = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    const leave = await Leave.findById(id);
+    const leave = await Leave.findLeaveById(id);
 
     if (!leave) {
       return res.status(404).json({ error: 'Leave not found' });
     }
 
     // Check permissions
-    if (user.role === 'soldier' && leave.user_id !== user.user_id) {
+    if (user.role === 'soldier' && String(leave.user_id?._id) !== String(user.user_id)) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    if (user.role === 'coy_comd' && leave.company !== user.company) {
+    if (user.role === 'coy_comd' && leave.user_id?.company !== user.company) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -77,6 +107,10 @@ const createLeave = async (req, res) => {
 
     if (!leave_type || !start_date || !end_date || !days || !reason) {
       return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(user.user_id)) {
+      return res.status(401).json({ error: 'Invalid session. Please log out and log back in.' });
     }
 
     // Find the leave type by name
@@ -133,36 +167,47 @@ const approveLeave = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    // Check if user has permission to approve
-    if (!['adjutant', 'coy_comd', 'bsm', 'commanding_officer'].includes(user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions to approve leaves' });
+    console.log(`[approveLeave] user.role = "${user.role}", leave id = ${id}`);
+
+    // Validate leave ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid leave ID format' });
     }
 
-    const leave = await Leave.findById(id);
+    // Check if user has permission to approve
+    const allowedRoles = ['adjutant', 'coy_comd', 'bsm', 'commanding_officer'];
+    if (!allowedRoles.includes((user.role || '').toLowerCase())) {
+      return res.status(403).json({ error: `Insufficient permissions (role: ${user.role})` });
+    }
+
+    const leave = await Leave.findLeaveById(id);
 
     if (!leave) {
       return res.status(404).json({ error: 'Leave not found' });
     }
 
     if (leave.status !== 'pending') {
-      return res.status(400).json({ error: `Leave is already ${leave.status}` });
+      return res.status(400).json({ error: `This leave is already ${leave.status}` });
     }
 
     // Company Commander can only approve leaves from their unit
-    if (user.role === 'coy_comd' && leave.unit !== user.unit) {
+    if (user.role === 'coy_comd' && leave.user_id?.company !== user.company) {
       return res.status(403).json({ error: 'Can only approve leaves from your unit' });
     }
 
-    const success = await Leave.approve(id, user.user_id);
+    // Safe approved_by: use valid ObjectId string, or null if missing
+    const approvedBy = mongoose.Types.ObjectId.isValid(user.user_id) ? user.user_id : null;
 
-    if (!success) {
-      return res.status(400).json({ error: 'Failed to approve leave' });
-    }
+    await mongoose.model('Leave').findByIdAndUpdate(
+      new mongoose.Types.ObjectId(id),
+      { $set: { status: 'approved', ...(approvedBy ? { approved_by: approvedBy } : {}) } },
+      { new: true, runValidators: false }
+    );
 
     res.json({ message: 'Leave approved successfully' });
   } catch (error) {
     console.error('Approve leave error:', error);
-    res.status(500).json({ error: 'Failed to approve leave' });
+    res.status(500).json({ error: error.message || 'Failed to approve leave' });
   }
 };
 
@@ -172,36 +217,47 @@ const rejectLeave = async (req, res) => {
     const { rejection_reason } = req.body;
     const user = req.user;
 
-    // Check if user has permission to reject
-    if (!['adjutant', 'coy_comd', 'bsm', 'commanding_officer'].includes(user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions to reject leaves' });
+    console.log(`[rejectLeave] user.role = "${user.role}", leave id = ${id}`);
+
+    // Validate leave ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid leave ID format' });
     }
 
-    const leave = await Leave.findById(id);
+    // Check if user has permission to reject
+    const allowedRoles = ['adjutant', 'coy_comd', 'bsm', 'commanding_officer'];
+    if (!allowedRoles.includes((user.role || '').toLowerCase())) {
+      return res.status(403).json({ error: `Insufficient permissions (role: ${user.role})` });
+    }
+
+    const leave = await Leave.findLeaveById(id);
 
     if (!leave) {
       return res.status(404).json({ error: 'Leave not found' });
     }
 
     if (leave.status !== 'pending') {
-      return res.status(400).json({ error: `Leave is already ${leave.status}` });
+      return res.status(400).json({ error: `This leave is already ${leave.status}` });
     }
 
     // Company Commander can only reject leaves from their unit
-    if (user.role === 'coy_comd' && leave.unit !== user.unit) {
+    if (user.role === 'coy_comd' && leave.user_id?.company !== user.company) {
       return res.status(403).json({ error: 'Can only reject leaves from your unit' });
     }
 
-    const success = await Leave.reject(id, user.user_id, rejection_reason);
+    // Safe approved_by: use valid ObjectId string, or null if missing
+    const approvedBy = mongoose.Types.ObjectId.isValid(user.user_id) ? user.user_id : null;
 
-    if (!success) {
-      return res.status(400).json({ error: 'Failed to reject leave' });
-    }
+    await mongoose.model('Leave').findByIdAndUpdate(
+      new mongoose.Types.ObjectId(id),
+      { $set: { status: 'rejected', rejection_reason: rejection_reason || '', ...(approvedBy ? { approved_by: approvedBy } : {}) } },
+      { new: true, runValidators: false }
+    );
 
     res.json({ message: 'Leave rejected successfully' });
   } catch (error) {
     console.error('Reject leave error:', error);
-    res.status(500).json({ error: 'Failed to reject leave' });
+    res.status(500).json({ error: error.message || 'Failed to reject leave' });
   }
 };
 
@@ -210,14 +266,14 @@ const deleteLeave = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    const leave = await Leave.findById(id);
+    const leave = await Leave.findLeaveById(id);
 
     if (!leave) {
       return res.status(404).json({ error: 'Leave not found' });
     }
 
     // Only the leave owner can delete their own pending leaves
-    if (leave.user_id !== user.user_id && user.role !== 'adjutant') {
+    if (String(leave.user_id?._id) !== String(user.user_id) && user.role !== 'adjutant') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -235,6 +291,22 @@ const deleteLeave = async (req, res) => {
   } catch (error) {
     console.error('Delete leave error:', error);
     res.status(500).json({ error: 'Failed to delete leave' });
+  }
+};
+
+const clearAllLeaves = async (req, res) => {
+  try {
+    const user = req.user;
+    const allowedRoles = ['adjutant', 'commanding_officer'];
+    if (!allowedRoles.includes((user.role || '').toLowerCase())) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    const Leave = mongoose.model('Leave');
+    const result = await Leave.deleteMany({});
+    res.json({ message: `Cleared ${result.deletedCount} leave record(s) successfully` });
+  } catch (error) {
+    console.error('Clear all leaves error:', error);
+    res.status(500).json({ error: 'Failed to clear leave history' });
   }
 };
 
@@ -272,6 +344,7 @@ module.exports = {
   approveLeave,
   rejectLeave,
   deleteLeave,
+  clearAllLeaves,
   getLeaveTypes,
   getLeaveBalance
 };

@@ -12,11 +12,33 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(async () => {
+  // Seed / fix default leave types
+  try {
+    const mongoose = require('mongoose');
+    const LeaveType = mongoose.model('LeaveType');
+    const defaults = [
+      { type_name: 'Annual',       max_days: 60  },
+      { type_name: 'Casual',       max_days: 10  },
+      { type_name: 'Recreational', max_days: 15  },
+      { type_name: 'Medical',      max_days: 30  }
+    ];
+    for (const lt of defaults) {
+      await LeaveType.findOneAndUpdate(
+        { type_name: lt.type_name },
+        { $set: { max_days: lt.max_days } },
+        { upsert: true, new: true }
+      );
+    }
+    console.log('Leave types seeded/updated successfully');
+  } catch (e) {
+    console.error('Leave type seeding error:', e.message);
+  }
+});
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
+  origin: '*',
   credentials: true
 }));
 app.use(express.json());

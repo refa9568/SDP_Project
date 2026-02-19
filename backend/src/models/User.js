@@ -52,12 +52,12 @@ userSchema.statics.findByServiceNumber = function(service_number) {
   return this.findOne({ service_number: new RegExp('^' + service_number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
 };
 
-userSchema.statics.findById = function(user_id) {
-  return this.findById(user_id).select('service_number name rank role company');
+userSchema.statics.findUserById = function(user_id) {
+  return this.findById(user_id).select('service_number name rank role company email phone');
 };
 
 userSchema.statics.getAllUsers = function() {
-  return this.find({}).select('service_number name rank role company').sort('name');
+  return this.find({}).select('service_number name rank role company email phone').sort('name');
 };
 
 userSchema.statics.updateUser = function(user_id, updates) {

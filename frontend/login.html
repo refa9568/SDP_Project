@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/login.html">
     <title>ParadeOps - Secure Login</title>
     <style>
         * {
@@ -169,7 +168,7 @@
         <form id="loginForm">
             <div class="input-group">
                 <label for="role">Role</label>
-                <select id="role" required>
+                <select id="role">
                     <option value="">Select a role</option>
                     <option value="commanding_officer">Commanding Officer</option>
                     <option value="coy_comd">Coy Comd</option>
@@ -181,7 +180,7 @@
 
             <div class="input-group">
                 <label for="username">Service Number</label>
-                <input type="text" id="username" name="username" placeholder="enter your service number" required autocomplete="off">
+                <input type="text" id="username" name="username" placeholder="Enter your service number" required autocomplete="off">
             </div>
 
             <div class="input-group">
@@ -217,14 +216,8 @@
     document.getElementById('loginForm').addEventListener('submit', async function(event) {
         event.preventDefault();
 
-        const role = document.getElementById('role').value;
         const service_number = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
-
-        if (!role) {
-            alert('Please select a role');
-            return;
-        }
 
         if (!service_number || !password) {
             alert('Please enter both service number and password');
@@ -246,21 +239,21 @@
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Check if selected role matches user's actual role
-                if (data.user.role !== role) {
-                    alert(`Role mismatch! You selected "${role}" but your account role is "${data.user.role}". Please select the correct role.`);
-                    return;
-                }
-
-                // Save token and user info
+                // Save token and user info (sessionStorage = per-tab, localStorage = fallback)
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
+                sessionStorage.setItem('token', data.token);
+                sessionStorage.setItem('user', JSON.stringify(data.user));
 
-                // Redirect to appropriate dashboard
-                const dashboard = dashboardRoutes[data.user.role] || dashboardRoutes.soldier;
+                // Redirect to appropriate dashboard based on actual DB role
+                const dashboard = dashboardRoutes[data.user.role];
+                if (!dashboard) {
+                    alert('Unknown role: ' + data.user.role + '. Please contact administrator.');
+                    return;
+                }
                 window.location.href = dashboard;
             } else {
-                alert(data.message || 'Invalid credentials. Please try again.');
+                alert(data.error || data.message || 'Invalid credentials. Please try again.');
             }
         } catch (error) {
             console.error('Login error:', error);

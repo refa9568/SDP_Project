@@ -311,24 +311,24 @@
         <div class="summary-overview">
             <div class="overview-card total">
                 <h3>Total Strength</h3>
-                <p class="value">207</p>
+                <p class="value" id="totalStrength">--</p>
             </div>
             <div class="overview-card present">
                 <h3>Average Present</h3>
-                <p class="value">173</p>
+                <p class="value" id="avgPresent">--</p>
             </div>
             <div class="overview-card leave">
                 <h3>Average On Leave</h3>
-                <p class="value">26</p>
+                <p class="value" id="avgOnLeave">--</p>
             </div>
             <div class="overview-card absent">
                 <h3>Average Absent</h3>
-                <p class="value">8</p>
+                <p class="value" id="avgAbsent">--</p>
             </div>
         </div>
 
         <div class="chart-section">
-            <h2>� Weekly Coy State Summary</h2>
+            <h2>📈 Weekly Coy State Summary</h2>
             
             <table class="comparison-table">
                 <thead>
@@ -337,52 +337,17 @@
                         <th>Total Strength</th>
                         <th>Present</th>
                         <th>On Leave</th>
-                        <th>Absent</th>
+                        <th>Absent/AWOL</th>
                         <th>Readiness %</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="companySummaryBody">
                     <tr>
-                        <td><strong>Radio Coy</strong></td>
-                        <td>55</td>
-                        <td>45</td>
-                        <td>8</td>
-                        <td>2</td>
-                        <td><strong>82%</strong></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Op Coy</strong></td>
-                        <td>54</td>
-                        <td>48</td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td><strong>89%</strong></td>
-                    </tr>
-                    <tr>
-                        <td><strong>HQ Coy</strong></td>
-                        <td>51</td>
-                        <td>42</td>
-                        <td>6</td>
-                        <td>3</td>
-                        <td><strong>82%</strong></td>
-                    </tr>
-                    <tr>
-                        <td><strong>RR Coy</strong></td>
-                        <td>47</td>
-                        <td>38</td>
-                        <td>7</td>
-                        <td>2</td>
-                        <td><strong>81%</strong></td>
-                    </tr>
-                    <tr style="background: rgba(255,255,255,.05); font-weight: 900;">
-                        <td><strong>Total</strong></td>
-                        <td><strong>207</strong></td>
-                        <td><strong>173</strong></td>
-                        <td><strong>26</strong></td>
-                        <td><strong>8</strong></td>
-                        <td><strong>84%</strong></td>
+                        <td colspan="6" style="text-align: center; padding: 30px;">Loading data...</td>
                     </tr>
                 </tbody>
+                <tfoot id="companySummaryFooter">
+                </tfoot>
             </table>
         </div>
 
@@ -393,6 +358,8 @@
     </div>
 
     <script>
+        const API_BASE = 'http://localhost:5000';
+
         // Set current date and week range
         function updateDateTime() {
             const now = new Date();
@@ -412,6 +379,158 @@
                             endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             
             document.getElementById('weekRange').textContent = weekRange;
+        }
+
+        // Fetch weekly summary data from API
+        async function fetchWeeklySummary() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You are not logged in. Redirecting to login page.');
+                window.location.href = '../login.html';
+                return;
+            }
+
+            try {
+                console.log('Fetching weekly summary data...');
+                
+                // Fetch all soldiers
+                const userResponse = await fetch(`${API_BASE}/api/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                console.log('User response status:', userResponse.status);
+
+                if (!userResponse.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+
+                const userData = await userResponse.json();
+                console.log('User data received:', userData);
+                const soldiers = userData.users.filter(user => user.role === 'soldier');
+                console.log('Soldiers count:', soldiers.length);
+
+                // Fetch approved leaves
+                const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                let leaves = [];
+                if (leaveResponse.ok) {
+                    const leaveData = await leaveResponse.json();
+                    leaves = leaveData.leaves || [];
+                }
+
+                // Fetch attendance records for past 7 days
+                const today = new Date();
+                const dates = [];
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+                    dates.push(d.toISOString().split('T')[0]);
+                }
+
+                // Group soldiers by company
+                const companyStats = {};
+                soldiers.forEach(soldier => {
+                    const company = soldier.company || 'Unknown';
+                    if (!companyStats[company]) {
+                        companyStats[company] = {
+                            total: 0,
+                            present: 0,
+                            onLeave: 0,
+                            absent: 0
+                        };
+                    }
+                    companyStats[company].total++;
+
+                    // Check if soldier is on leave
+                    const now = new Date();
+                    const isOnLeave = leaves.some(leave => {
+                        const userId = leave.user_id?._id || leave.user_id;
+                        const start = new Date(leave.start_date);
+                        const end = new Date(leave.end_date);
+                        return userId === soldier._id && now >= start && now <= end;
+                    });
+
+                    if (isOnLeave) {
+                        companyStats[company].onLeave++;
+                    } else {
+                        // Check localStorage attendance
+                        const todayStr = today.toISOString().split('T')[0];
+                        const attendanceKey = `attendance_${soldier.service_number}_${todayStr}`;
+                        const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+                        const special = attendance['special_status'];
+
+                        if (special === 'AWOL') {
+                            companyStats[company].absent++;
+                        } else if (special === 'Leave') {
+                            companyStats[company].onLeave++;
+                        } else {
+                            companyStats[company].present++;
+                        }
+                    }
+                });
+
+                // Calculate totals
+                let totalStrength = 0, totalPresent = 0, totalOnLeave = 0, totalAbsent = 0;
+
+                Object.values(companyStats).forEach(stats => {
+                    totalStrength += stats.total;
+                    totalPresent += stats.present;
+                    totalOnLeave += stats.onLeave;
+                    totalAbsent += stats.absent;
+                });
+
+                // Update overview cards
+                document.getElementById('totalStrength').textContent = totalStrength;
+                document.getElementById('avgPresent').textContent = totalPresent;
+                document.getElementById('avgOnLeave').textContent = totalOnLeave;
+                document.getElementById('avgAbsent').textContent = totalAbsent;
+
+                // Populate table
+                const tbody = document.getElementById('companySummaryBody');
+                tbody.innerHTML = '';
+
+                if (Object.keys(companyStats).length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;">No soldier data available</td></tr>';
+                    return;
+                }
+
+                Object.keys(companyStats).sort().forEach(company => {
+                    const stats = companyStats[company];
+                    const readiness = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${company}</strong></td>
+                        <td>${stats.total}</td>
+                        <td style="color: var(--green);">${stats.present}</td>
+                        <td style="color: var(--amber);">${stats.onLeave}</td>
+                        <td style="color: var(--red);">${stats.absent}</td>
+                        <td><strong>${readiness}%</strong></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Add footer total row
+                const tfoot = document.getElementById('companySummaryFooter');
+                const overallReadiness = totalStrength > 0 ? Math.round((totalPresent / totalStrength) * 100) : 0;
+                tfoot.innerHTML = `
+                    <tr style="background: rgba(255,255,255,.05); font-weight: 900;">
+                        <td><strong>Total</strong></td>
+                        <td><strong>${totalStrength}</strong></td>
+                        <td style="color: var(--green);"><strong>${totalPresent}</strong></td>
+                        <td style="color: var(--amber);"><strong>${totalOnLeave}</strong></td>
+                        <td style="color: var(--red);"><strong>${totalAbsent}</strong></td>
+                        <td><strong>${overallReadiness}%</strong></td>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error fetching weekly summary:', error);
+                const tbody = document.getElementById('companySummaryBody');
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--red);">Error loading data: ${error.message}</td></tr>`;
+            }
         }
 
         // Send Report to CO
@@ -437,6 +556,10 @@
 
         // Initialize on page load
         updateDateTime();
+        fetchWeeklySummary();
+
+        // Auto-refresh every 30 seconds
+        setInterval(fetchWeeklySummary, 30000);
     </script>
 </body>
 </html>

@@ -186,13 +186,18 @@ tbody tr:not(:last-child){
 
         <!-- TABS -->
         <div class="tabs">
-            <a class="tab" href="lve_mgt.html">Apply for Leave</a>
-            <a class="tab" href="adjt_lve_approval.html">Approve Request</a>
+            <a class="tab" href="adjt_lve_approval.html">Leave Approval</a>
             <a class="tab active" href="adjt_lve_hist.html">Leave History</a>
         </div>
 
-        <div style="margin-bottom:14px;text-align:right;">
-            <button onclick="clearHistory()" style="padding:8px 16px;background:#d13b2f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Clear All History</button>
+        <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <select id="statusFilter" onchange="loadHistory()" style="padding:8px 12px;background:#2f3b32;border:1px solid #8f9960;color:#e6e6c6;border-radius:6px;font-size:14px;">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+            <button onclick="clearHistory()" style="padding:8px 18px;background:#c2342a;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:14px;">Clear All History</button>
         </div>
 
         <!-- TABLE -->
@@ -217,43 +222,85 @@ tbody tr:not(:last-child){
 </div>
 
 <script>
-// Load leave history from localStorage
-function loadHistory() {
-    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
-    const tbody = document.getElementById('historyTable');
-    tbody.innerHTML = '';
-    
-    if (requests.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6" style="text-align:center;padding:30px;color:#dde2b5;">No leave requests found</td>';
-        tbody.appendChild(row);
-        return;
+const API_BASE = 'http://localhost:5000';
+// Session helper: sessionStorage per tab, localStorage as fallback
+const _ss = k => sessionStorage.getItem(k) || localStorage.getItem(k);
+
+// Verify adjutant role
+(function checkRole() {
+    const user = JSON.parse(_ss('user') || '{}');
+    if (user.role !== 'adjutant') {
+        alert('You must be logged in as Adjutant.');
+        window.location.href = '../../login.html';
     }
-    
-    // Sort by most recent first
-    requests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-    
-    requests.forEach(req => {
-        const row = document.createElement('tr');
-        const statusClass = req.status.toLowerCase();
-        row.innerHTML = `
-            <td>${req.soldier}</td>
-            <td>${req.rank}</td>
-            <td>${req.company}</td>
-            <td>${req.type}</td>
-            <td>${req.date}</td>
-            <td><span class="status ${statusClass}">${req.status}</span></td>
-        `;
-        tbody.appendChild(row);
-    });
+})();
+
+async function loadHistory() {
+    const token = _ss('token');
+    if (!token) return;
+
+    const tbody = document.getElementById('historyTable');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#dde2b5;">Loading...</td></tr>';
+
+    const statusFilter = document.getElementById('statusFilter').value;
+    const url = statusFilter
+        ? `${API_BASE}/api/leaves?status=${statusFilter}`
+        : `${API_BASE}/api/leaves`;
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const leaves = data.leaves || [];
+
+        tbody.innerHTML = '';
+
+        if (leaves.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#dde2b5;">No leave records found</td></tr>';
+            return;
+        }
+
+        leaves.forEach(req => {
+            const startDate = new Date(req.start_date).toLocaleDateString('en-GB');
+            const endDate = new Date(req.end_date).toLocaleDateString('en-GB');
+            const statusClass = req.status.toLowerCase();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${req.rank || ''} ${req.name}</td>
+                <td>${req.rank || 'N/A'}</td>
+                <td>${req.company || 'N/A'}</td>
+                <td>${req.type_name}</td>
+                <td>${startDate} - ${endDate}</td>
+                <td><span class="status ${statusClass}">${req.status.charAt(0).toUpperCase() + req.status.slice(1)}</span></td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (err) {
+        console.error('History load error:', err);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#ff6b6b;">Connection error</td></tr>';
+    }
 }
 
-// Clear all history
-function clearHistory() {
-    if (confirm('Are you sure you want to clear all leave history? This cannot be undone.')) {
-        localStorage.removeItem('leaveRequests');
-        loadHistory();
-        alert('All leave history has been cleared.');
+async function clearHistory() {
+    if (!confirm('Are you sure you want to delete ALL leave records? This cannot be undone.')) return;
+    const token = _ss('token');
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_BASE}/api/leaves`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (response.ok) {
+            alert(data.message);
+            loadHistory();
+        } else {
+            alert(data.error || 'Failed to clear history');
+        }
+    } catch (err) {
+        console.error('Clear history error:', err);
+        alert('Connection error.');
     }
 }
 

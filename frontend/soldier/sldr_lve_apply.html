@@ -226,6 +226,8 @@ textarea{
 
 <script>
 const API_BASE = 'http://localhost:5000';
+// Session helper: sessionStorage per tab, localStorage as fallback
+const _ss = k => sessionStorage.getItem(k) || localStorage.getItem(k);
 
 // Get form elements
 const startDateInput = document.getElementById('startDate');
@@ -237,25 +239,61 @@ const contactNumberInput = document.getElementById('contactNumber');
 const addressInput = document.getElementById('address');
 const form = document.getElementById('leaveForm');
 
-// Auto-select leave type from URL parameter
-const urlParams = new URLSearchParams(window.location.search);
-const leaveTypeParam = urlParams.get('type');
-if (leaveTypeParam) {
-    // Map URL param to select value
-    const typeMapping = {
-        'Annual Leave': 'Annual',
-        'Casual Leave': 'Casual',
-        'Medical Leave': 'Medical',
-        'Recreational Leave': 'Recreational'
-    };
-    const selectValue = typeMapping[leaveTypeParam] || leaveTypeParam;
-    leaveTypeInput.value = selectValue;
-}
-
 // Set minimum date to today
 const today = new Date().toISOString().split('T')[0];
 startDateInput.min = today;
 endDateInput.min = today;
+
+// ---- Auto-select leave type from URL immediately (DOM is ready since script is below form) ----
+(function applyURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type') || params.get('leaveType');
+    const start = params.get('start') || params.get('startDate');
+    const end   = params.get('end')   || params.get('endDate');
+    const reasonParam = params.get('reason');
+
+    if (type) {
+        const typeMap = {
+            'Annual Leave':       'Annual',
+            'Casual Leave':       'Casual',
+            'Medical Leave':      'Medical',
+            'Recreational Leave': 'Recreational',
+            'Recreation Leave':   'Recreational'
+        };
+        const mappedType = typeMap[type] || type;
+        leaveTypeInput.value = mappedType;
+        if (leaveTypeInput.value !== mappedType) {
+            // Try once more after slight delay (safety net)
+            setTimeout(() => { leaveTypeInput.value = mappedType; }, 50);
+        }
+        leaveTypeInput.style.cursor  = 'not-allowed';
+        leaveTypeInput.style.opacity = '0.8';
+        leaveTypeInput.addEventListener('mousedown', e => e.preventDefault());
+    }
+    if (start) startDateInput.value = start;
+    if (end)   endDateInput.value   = end;
+    if (reasonParam) reasonInput.value = reasonParam;
+    if (start && end) calculateDays();
+})();
+
+// ---- Fetch user profile and auto-fill contact number ----
+(async function fetchUserProfile() {
+    const token = _ss('token');
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_BASE}/api/users/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const user = await response.json();
+            if (user.phone && !contactNumberInput.value) {
+                contactNumberInput.value = user.phone;
+            }
+        }
+    } catch (err) {
+        console.error('Profile fetch error:', err);
+    }
+})();
 
 // Calculate number of days
 function calculateDays() {
@@ -287,37 +325,12 @@ startDateInput.addEventListener('change', function() {
 
 endDateInput.addEventListener('change', calculateDays);
 
-// Check for pre-filled data from URL parameters
-window.addEventListener('DOMContentLoaded', function() {
-    const params = new URLSearchParams(window.location.search);
-    const type = params.get('type') || params.get('leaveType');
-    const start = params.get('start') || params.get('startDate');
-    const end = params.get('end') || params.get('endDate');
-    const reasonParam = params.get('reason');
-    
-    if (type) {
-        leaveTypeInput.value = type;
-        leaveTypeInput.disabled = true;
-        leaveTypeInput.style.cursor = 'not-allowed';
-        leaveTypeInput.style.opacity = '0.7';
-    }
-    if (start) {
-        startDateInput.value = start;
-    }
-    if (end) {
-        endDateInput.value = end;
-    }
-    if (reasonParam) {
-        reasonInput.value = reasonParam;
-    }
-    
-    if (start && end) {
-        calculateDays();
-    }
-});
-
 // Leave type mapping to database names
 const dbLeaveTypeMap = {
+    'Annual': 'Annual',
+    'Casual': 'Casual',
+    'Medical': 'Medical',
+    'Recreational': 'Recreational',
     'Annual Leave': 'Annual',
     'Casual Leave': 'Casual',
     'Medical Leave': 'Medical',
@@ -346,8 +359,8 @@ form.addEventListener('submit', async function(e) {
         return;
     }
     
-    // Get token from localStorage
-    const token = localStorage.getItem('token');
+    // Get token
+    const token = _ss('token');
     if (!token) {
         alert('Session expired. Please login again.');
         window.location.href = '../../login.html';
@@ -403,6 +416,7 @@ function goHome() {
 
 function doLogout() {
     if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.clear();
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '../../login.html';
