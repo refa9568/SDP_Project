@@ -1,0 +1,1455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Battalion Sergeant Major Dashboard</title>
+  <style>
+    :root{
+      --bg: #2f3b2f;
+      --panel: #556634;
+      --panel-2: #4e5f2e;
+      --panel-3: #3b4a36;
+      --line: rgba(255,255,255,.14);
+
+      --text: #e9efd6;
+      --muted: rgba(233,239,214,.72);
+
+      --card: #2f3f34;
+      --cardTop: rgba(0,0,0,.12);
+
+      --accent-green: #23b35a;
+      --accent-blue: #2d6ef7;
+      --accent-orange: #d6a64f;
+      --accent-red: #d94a3a;
+
+      --btn: #cbbd7c;
+      --btnText: #223017;
+      --btnDark: #2e3b32;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 600px at 30% -10%, rgba(255,255,255,.08), transparent 50%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(0,0,0,.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 26px auto 38px;
+      padding: 0 18px;
+    }
+
+    /* top header */
+    .topbar{
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 18px 18px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .topbar-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .title{
+      line-height:1.1;
+    }
+    .title h1{
+      margin:0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .home-ico{
+      width: 40px; height: 40px;
+      display:grid; place-items:center;
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .home-ico svg{ opacity:.95 }
+    .logout{
+      padding: 10px 18px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.16);
+      color: var(--text);
+      font-weight: 800;
+      letter-spacing:.2px;
+      cursor:pointer;
+    }
+
+    /* section panel */
+    .panel{
+      margin-top: 16px;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .panel-head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 6px 6px 12px;
+      font-weight: 900;
+      letter-spacing:.15px;
+    }
+    .panel-head .icon{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display:grid;
+      place-items:center;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .panel-head .label{
+      font-size: 18px;
+    }
+
+    /* stat cards */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(140px, 1fr));
+      gap: 14px;
+      padding: 2px 6px 8px;
+    }
+    .stat{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.06)),
+                  var(--card);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 14px 12px;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat{ transition: transform .18s ease, box-shadow .18s ease, outline-color .18s ease, background-color .18s ease; }
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset: 0 0 auto 0;
+      height: 14px;
+      background: var(--cardTop);
+    }
+    .stat .num{
+      font-size: 22px;
+      font-weight: 900;
+      margin: 2px 0 6px;
+      color: var(--text);
+    }
+    .stat .txt{
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing:.15px;
+    }
+
+    /* colored outline like screenshot */
+    .stat.total{ border-color: rgba(255,255,255,.18); }
+    .stat.present{ outline: 2px solid rgba(35,179,90,.55); }
+    .stat.leave{ outline: 2px solid rgba(214,166,79,.55); }
+    .stat.duty{ outline: 2px solid rgba(45,110,247,.55); }
+    .stat.awol{ outline: 2px solid rgba(217,74,58,.55); }
+
+    /* add hover distinction for present and on-duty boxes */
+    .stat.present:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(35,179,90,.10); outline-color: rgba(35,179,90,.9); background: linear-gradient(180deg, rgba(35,179,90,.03), rgba(0,0,0,.06)); }
+    .stat.present:hover .num{ color: var(--text); }
+
+    .stat.duty:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(45,110,247,.10); outline-color: rgba(45,110,247,.9); background: linear-gradient(180deg, rgba(45,110,247,.03), rgba(0,0,0,.06)); }
+    .stat.duty:hover .num{ color: var(--text); }
+
+    /* match hover distinction for Total, Leave, and AWOL */
+    .stat.total:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(255,255,255,.06); border-color: rgba(255,255,255,.28); background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.06)); }
+    .stat.total:hover .num{ color: var(--text); }
+
+    .stat.leave:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(214,166,79,.10); outline-color: rgba(214,166,79,.9); background: linear-gradient(180deg, rgba(214,166,79,.03), rgba(0,0,0,.06)); }
+    .stat.leave:hover .num{ color: var(--text); }
+
+    .stat.awol:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(217,74,58,.10); outline-color: rgba(217,74,58,.9); background: linear-gradient(180deg, rgba(217,74,58,.03), rgba(0,0,0,.06)); }
+    .stat.awol:hover .num{ color: var(--text); }
+
+    /* table section */
+    .table-panel{
+      margin-top: 16px;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+    }
+
+    .table-title{
+      font-size: 18px;
+      font-weight: 900;
+      margin: 4px 6px 12px;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 10px;
+      background: rgba(0,0,0,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    thead th{
+      text-align:left;
+      font-size: 13px;
+      color: rgba(233,239,214,.75);
+      font-weight: 900;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      letter-spacing:.2px;
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: middle;
+      font-weight: 700;
+      color: rgba(233,239,214,.88);
+    }
+
+    tbody tr:hover{
+      background: rgba(255,255,255,.05);
+    }
+
+    /* first col company pill */
+    .company-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 70px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 900;
+    }
+
+    /* colored numbers like screenshot */
+    .c-present{ color: var(--text); font-weight: 900; }
+    .c-leave{ color: var(--text); font-weight: 900; }
+    .c-duty{ color: var(--text); font-weight: 900; }
+    .c-awol{ color: var(--text); font-weight: 900; }
+
+    .status{
+      font-weight: 900;
+    }
+    .status.submitted{ color: var(--accent-green); }
+    .status.pending{ color: rgba(233,239,214,.60); }
+
+    .action-btn{
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: #fff;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    .action-btn.approved{
+      background: rgba(35,179,90,.92);
+      border-color: rgba(35,179,90,.95);
+    }
+    .action-btn.approve{
+      background: rgba(203,189,124,.30);
+      border-color: rgba(203,189,124,.50);
+      color: rgba(255,255,255,.92);
+    }
+
+    /* total row */
+    tfoot td{
+      padding: 12px 12px;
+      font-weight: 900;
+      border-top: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+    }
+
+    /* bottom actions */
+    .bottom-actions{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    /* special status panels */
+    .status-panel{
+      background: var(--panel-3);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .status-list{
+      font-size: 14px;
+      color: var(--muted);
+      min-height: 40px;
+    }
+    .status-list div{
+      margin-bottom: 4px;
+      padding: 4px 8px;
+      background: var(--panel);
+      border-radius: 4px;
+      border-left: 3px solid var(--accent-red);
+    }
+    #leave-list .status-list div{ border-left-color: var(--accent-orange); }
+    #duty-list .status-list div{ border-left-color: var(--accent-blue); }
+    .big-btn{
+      height: 56px;
+      border-radius: 10px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      border: 1px solid rgba(255,255,255,.14);
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+    }
+    .big-btn.light{
+      background: var(--btn);
+      color: var(--btnText);
+    }
+    .big-btn.dark{
+      background: var(--btnDark);
+      color: rgba(233,239,214,.85);
+    }
+
+    /* back button */
+    .footer-row{
+      display:flex;
+      justify-content:flex-end;
+      margin-top: 14px;
+    }
+    .back{
+      padding: 10px 18px;
+      border-radius: 8px;
+      background: rgba(203,189,124,.28);
+      border: 1px solid rgba(203,189,124,.45);
+      color: rgba(233,239,214,.85);
+      font-weight: 900;
+      cursor:pointer;
+    }
+
+    /* responsive */
+    @media (max-width: 1050px){
+      .stats{ grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 720px){
+      .topbar-row{ flex-direction: column; align-items: flex-start; }
+      .top-actions{ width: 100%; justify-content: space-between; }
+      .stats{ grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .bottom-actions{ grid-template-columns: 1fr; }
+      table{ display:block; overflow:auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title">
+          <h1>Battalion Sergeant Major Dashboard</h1>
+          <p>Battalion Consolidated Parade State</p>
+        </div>
+
+        <div class="top-actions">
+          <button class="logout" onclick="refreshData()">Refresh Data</button>
+          <button class="logout" onclick="changePassword()">Change Password</button>
+          <button class="logout" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Strength Summary -->
+    <section class="panel">
+      <div class="panel-head">
+        <div class="icon" aria-hidden="true">
+          <!-- user icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M20 21a8 8 0 0 0-16 0" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="label">Battalion Strength Summary</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat total">
+          <div class="num" id="summary-total" onclick="showSoldiersList()" style="cursor: pointer;">450</div>
+          <div class="txt">Total Strength</div>
+        </div>
+        <div class="stat present">
+          <div class="num" id="summary-present">415</div>
+          <div class="txt">Present</div>
+        </div>
+        <div class="stat leave">
+          <div class="num" id="summary-leave" onclick="showSpecialStatusModal('Leave')" style="cursor: pointer;">35</div>
+          <div class="txt">Leave</div>
+        </div>
+        <div class="stat duty">
+          <div class="num" id="summary-duty" onclick="showSpecialStatusModal('on_duty')" style="cursor: pointer;">16</div>
+          <div class="txt">On Duty</div>
+        </div>
+        <div class="stat awol">
+          <div class="num" id="summary-awol" onclick="showSpecialStatusModal('AWOL')" style="cursor: pointer;">03</div>
+          <div class="txt">AWOL</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submissions Table -->
+    <section class="table-panel">
+      <div class="table-title">Company Parade State Submissions</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 120px;">Company</th>
+            <th>Total</th>
+            <th>Present</th>
+            <th>Leave</th>
+            <th>On Duty</th>
+            <th>AWOL</th>
+          </tr>
+        </thead>
+
+        <tbody id="company-tbody">
+          <!-- Dynamic content will be inserted here -->
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td id="footer-total">450</td>
+            <td id="footer-present">415</td>
+            <td id="footer-leave">35</td>
+            <td id="footer-duty">16</td>
+            <td id="footer-awol">03</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="bottom-actions">
+        <button class="big-btn light" onclick="forwardToCO()">Forward to CO</button>
+        <button class="big-btn dark" onclick="window.location.href='report.html'">Generate Battalion Report</button>
+      </div>
+    </section>
+
+    <!-- Next Day Commitments Section -->
+    <section class="panel" style="margin-top: 16px;">
+      <div class="panel-head">
+        <div class="icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M9 11l3 3L22 4" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="rgba(233,239,214,.9)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="label">Important Notice</div>
+      </div>
+      <div style="background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 16px; margin: 6px;">
+        <textarea 
+          id="nextDayCommitment" 
+          placeholder="Enter tomorrow's commitments, tasks, or important notes..."
+          style="width: 100%; min-height: 100px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.10); border-radius: 8px; padding: 12px; color: #e9efd6; font-family: inherit; font-size: 14px; font-weight: 600; resize: vertical;"
+        ></textarea>
+        <div style="display: flex; gap: 12px; margin-top: 12px;">
+          <button 
+            onclick="sendCommitment('CO')" 
+            style="flex: 1; padding: 12px 16px; background: #2d6ef7; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#1e5dd6'" 
+            onmouseout="this.style.background='#2d6ef7'"
+          >Send to CO</button>
+          <button 
+            onclick="sendCommitment('Adjutant')" 
+            style="flex: 1; padding: 12px 16px; background: #23b35a; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#1a8f47'" 
+            onmouseout="this.style.background='#23b35a'"
+          >Send to Adjutant</button>
+          <button 
+            onclick="sendCommitment('Both')" 
+            style="flex: 1; padding: 12px 16px; background: #d6a64f; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; transition: background 0.2s ease;"
+            onmouseover="this.style.background='#c89540'" 
+            onmouseout="this.style.background='#d6a64f'"
+          >Send to Both</button>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const API_BASE = 'http://localhost:5000';
+      function sendCommitment(recipient) {
+        const commitment = document.getElementById('nextDayCommitment').value;
+        if (commitment.trim() === '') {
+          alert('⚠️ Please enter a commitment before sending.');
+          return;
+        }
+        
+        // Create commitment data
+        const commitmentData = {
+          content: commitment,
+          sender: 'BSM',
+          date: new Date().toISOString(),
+          type: 'Next Day Commitment'
+        };
+        
+        if (recipient === 'CO' || recipient === 'Both') {
+          // Send to CO's notice board
+          let coNotices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+          coNotices.unshift(commitmentData);
+          
+          if (coNotices.length > 10) {
+            coNotices = coNotices.slice(0, 10);
+          }
+          
+          localStorage.setItem('CO_notices', JSON.stringify(coNotices));
+        }
+        
+        if (recipient === 'Adjutant' || recipient === 'Both') {
+          // Send to Adjutant's notice board
+          let adjutantNotices = JSON.parse(localStorage.getItem('Adjutant_notices') || '[]');
+          adjutantNotices.unshift(commitmentData);
+          
+          if (adjutantNotices.length > 10) {
+            adjutantNotices = adjutantNotices.slice(0, 10);
+          }
+          
+          localStorage.setItem('Adjutant_notices', JSON.stringify(adjutantNotices));
+        }
+        
+        if (recipient === 'Both') {
+          alert('📤 Next day commitment sent to CO and Adjutant successfully!\n\nThe commitment will appear on both Notice Boards.');
+        } else if (recipient === 'CO') {
+          alert('📤 Next day commitment sent to CO successfully!\n\nThe commitment will appear on the CO\'s Notice Board.');
+        } else if (recipient === 'Adjutant') {
+          alert('📤 Next day commitment sent to Adjutant successfully!\n\nThe commitment will appear on the Adjutant\'s Notice Board.');
+        }
+        
+        // Clear the textarea
+        document.getElementById('nextDayCommitment').value = '';
+      }
+
+      // Fetch total soldiers from API and populate table
+      async function fetchTotalUsers() {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = '../../login.html';
+            return;
+          }
+
+          // Fetch soldiers
+          const userResponse = await fetch(`${API_BASE}/api/users`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!userResponse.ok) {
+            console.error('Failed to fetch users:', userResponse.status);
+            alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+            return;
+          }
+
+          const userData = await userResponse.json();
+          const soldiers = userData.users.filter(user => user.role === 'soldier');
+
+          // Fetch leaves
+          const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          let leaves = [];
+          if (leaveResponse.ok) {
+            const leaveData = await leaveResponse.json();
+            leaves = leaveData.leaves;
+          } else {
+            console.error('Failed to fetch leaves:', leaveResponse.status);
+          }
+
+          // Determine active leaves (current date between start and end)
+          const now = new Date();
+          const activeLeaveUserIds = new Set();
+          leaves.forEach(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            if (now >= start && now <= end) {
+              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            }
+          });
+
+          // Group soldiers by company and calculate statuses
+          const companyGroups = {};
+          const today = new Date().toISOString().split('T')[0];
+          soldiers.forEach(soldier => {
+            const company = soldier.company || 'Unknown';
+            if (!companyGroups[company]) {
+              companyGroups[company] = { total: 0, onLeave: 0, awol: 0, duty: 0 };
+            }
+            companyGroups[company].total++;
+
+            // Check attendance special status
+            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (activeLeaveUserIds.has(soldier._id)) {
+              companyGroups[company].onLeave++;
+            } else if (special === 'AWOL') {
+              companyGroups[company].awol++;
+            } else if (special === 'Leave') {
+              companyGroups[company].onLeave++;
+            } else if (special === 'on_duty') {
+              companyGroups[company].duty++;
+            }
+          });
+
+          // Populate table
+          const tbody = document.getElementById('company-tbody');
+          tbody.innerHTML = '';
+
+          Object.keys(companyGroups).forEach(company => {
+            const { total, onLeave, awol, duty } = companyGroups[company];
+            const present = total - onLeave - awol - duty;
+            const leave = onLeave;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><span class="company-badge">${company}</span></td>
+              <td class="total-val">${total}</td>
+              <td class="present-val">${present}</td>
+              <td class="leave-val">${leave}</td>
+              <td class="duty-val">${duty}</td>
+              <td class="awol-val">${awol}</td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          document.getElementById('summary-total').textContent = soldiers.length;
+          // Store soldiers data for later use
+          window.soldiersData = soldiers;
+
+          // Update summary after populating table
+          updateBattalionSummary();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+
+      // Show soldiers list modal
+      function showSoldiersList() {
+        if (!window.soldiersData || window.soldiersData.length === 0) {
+          alert('No soldier records found in the database. Please ensure soldiers are registered with role "soldier".');
+          return;
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 30px; border-radius: 12px; width: 600px; max-width: 90%;
+          max-height: 80%; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        let soldiersList = '<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-green); padding-bottom: 10px;">Soldiers List</h3>';
+        soldiersList += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total Soldiers: ' + window.soldiersData.length + '</div>';
+
+        // Get unique companies
+        const companies = [...new Set(window.soldiersData.map(s => s.company || 'Unknown'))].sort();
+
+        // Add company filter
+        soldiersList += '<div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Filter by Company:</label>';
+        soldiersList += '<select id="companyFilter" onchange="filterSoldiers()" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">';
+        soldiersList += '<option value="all">All Companies</option>';
+        companies.forEach(company => {
+          soldiersList += `<option value="${company}">${company}</option>`;
+        });
+        soldiersList += '</select>';
+        soldiersList += '</div>';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Search:</label>';
+        soldiersList += '<input type="text" id="soldierSearch" oninput="filterSoldiers()" placeholder="Name or Service Number" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px; width: 200px;">';
+        soldiersList += '</div>';
+        soldiersList += '</div>';
+
+        // Group soldiers by company
+        const companyGroups = {};
+        window.soldiersData.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyGroups[company]) {
+            companyGroups[company] = [];
+          }
+          companyGroups[company].push(soldier);
+        });
+
+        soldiersList += '<div id="soldiersContainer">';
+
+        // Display all initially
+        Object.keys(companyGroups).forEach(company => {
+          soldiersList += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Company: ${company}</h4>`;
+          soldiersList += '<div style="display: grid; gap: 10px;">';
+          companyGroups[company].forEach(soldier => {
+            soldiersList += `
+              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-weight: bold; color: var(--text); margin-bottom: 5px; cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">${soldier.name}</div>
+                <div style="color: var(--muted); font-size: 14px;">
+                  Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                </div>
+              </div>
+            `;
+          });
+          soldiersList += '</div>';
+        });
+
+        soldiersList += '</div>';
+        soldiersList += '<button onclick="this.closest(\'.modal-overlay\').remove()" style="margin-top: 20px; padding: 10px 20px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Close</button>';
+
+        modalContent.innerHTML = soldiersList;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+      }
+
+      // Filter soldiers by company and search
+      function filterSoldiers() {
+        const selectedCompany = document.getElementById('companyFilter').value;
+        const searchTerm = document.getElementById('soldierSearch').value.toLowerCase();
+        const container = document.getElementById('soldiersContainer');
+
+        // Group soldiers by company
+        const companyGroups = {};
+        window.soldiersData.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyGroups[company]) {
+            companyGroups[company] = [];
+          }
+          companyGroups[company].push(soldier);
+        });
+
+        let html = '';
+        const companiesToShow = selectedCompany === 'all' ? Object.keys(companyGroups) : [selectedCompany];
+
+        companiesToShow.forEach(company => {
+          if (companyGroups[company]) {
+            // Filter soldiers by search term
+            const filteredSoldiers = companyGroups[company].filter(soldier =>
+              soldier.name.toLowerCase().includes(searchTerm) ||
+              soldier.service_number.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredSoldiers.length > 0) {
+              html += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Company: ${company}</h4>`;
+              html += '<div style="display: grid; gap: 10px;">';
+              filteredSoldiers.forEach(soldier => {
+                html += `
+                  <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-weight: bold; color: var(--text); margin-bottom: 5px; cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">${soldier.name}</div>
+                    <div style="color: var(--muted); font-size: 14px;">
+                      Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                    </div>
+                  </div>
+                `;
+              });
+              html += '</div>';
+            }
+          }
+        });
+
+        container.innerHTML = html;
+      }
+
+      // Show attendance modal for a soldier
+      async function showAttendanceModal(soldier) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Load existing attendance from MongoDB
+        let existingAttendance = {};
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`http://localhost:5000/api/attendance/${soldier.service_number}?date=${today}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.success && data.record) {
+            const r = data.record;
+            if (r.morning_pt) existingAttendance['morning_pt_attendance'] = r.morning_pt;
+            if (r.office)     existingAttendance['office_attendance']     = r.office;
+            if (r.games)      existingAttendance['games_attendance']      = r.games;
+            if (r.roll_call)  existingAttendance['roll_call_attendance']  = r.roll_call;
+            if (r.leave === 'yes') existingAttendance['special_status']   = 'Leave';
+            else if (r.awol === 'yes') existingAttendance['special_status'] = 'AWOL';
+          }
+        } catch (e) {
+          console.error('Could not load attendance from MongoDB, using localStorage fallback', e);
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          existingAttendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        const activities = ['Morning PT', 'Office', 'Games', 'Roll Call'];
+
+        let formHtml = `<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px;">Mark Attendance</h3>`;
+        formHtml += `<div style="margin-bottom: 20px; color: var(--text);"><strong>${soldier.name}</strong> (${soldier.service_number})</div>`;
+        formHtml += `<div style="margin-bottom: 20px; color: var(--muted);">Date: ${today}</div>`;
+
+        // Attendance section for each activity
+        formHtml += `<div style="margin-bottom: 20px;">
+          <h4 style="margin: 0 0 10px 0; color: var(--text); font-size: 14px;">Daily Attendance</h4>`;
+        activities.forEach(activity => {
+          const key = activity.toLowerCase().replace(' ', '_');
+          const attendanceStatus = existingAttendance[key + '_attendance'] || '';
+          formHtml += `
+            <div style="margin-bottom: 10px; padding: 8px; background: var(--panel-3); border-radius: 6px;">
+              <label style="display: block; margin-bottom: 5px; color: var(--text); font-weight: bold; font-size: 12px;">${activity}</label>
+              <div style="display: flex; gap: 15px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="radio" name="${key}_attendance" value="present" ${attendanceStatus === 'present' ? 'checked' : ''} style="margin-right: 5px;">
+                  Present
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="radio" name="${key}_attendance" value="absent" ${attendanceStatus === 'absent' ? 'checked' : ''} style="margin-right: 5px;">
+                  Absent
+                </label>
+              </div>
+            </div>
+          `;
+        });
+        formHtml += `</div>`;
+
+        // Special status section (once for the whole day)
+        const specialStatus = existingAttendance['special_status'] || 'none';
+        formHtml += `<div style="margin-bottom: 20px;">
+          <h4 style="margin: 0 0 10px 0; color: var(--text); font-size: 14px;">Special Status (Whole Day)</h4>
+          <div style="padding: 12px; background: var(--panel-3); border-radius: 6px;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="radio" name="special_status" value="none" ${specialStatus === 'none' ? 'checked' : ''} style="margin-right: 5px;">
+                None
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="radio" name="special_status" value="AWOL" ${specialStatus === 'AWOL' ? 'checked' : ''} style="margin-right: 5px;">
+                AWOL
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="radio" name="special_status" value="Leave" ${specialStatus === 'Leave' ? 'checked' : ''} style="margin-right: 5px;">
+                Leave
+              </label>
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="radio" name="special_status" value="on_duty" ${specialStatus === 'on_duty' ? 'checked' : ''} style="margin-right: 5px;">
+                On Duty
+              </label>
+            </div>
+          </div>
+        </div>`;
+
+        formHtml += `
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="const m=this.closest('.modal-overlay'); this.disabled=true; this.textContent='Saving...'; saveAttendance('${soldier.service_number}', '${today}', m).then(()=>m.remove()).catch(()=>{this.disabled=false;this.textContent='Save';})" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            <button onclick="this.closest('.modal-overlay').remove()" style="flex: 1; padding: 10px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+          </div>
+        `;
+
+        modalContent.innerHTML = formHtml;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Add logic for attendance dependencies
+        setupAttendanceLogic();
+
+        // Apply initial logic based on loaded data
+        applyInitialLogic();
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+
+        function setupAttendanceLogic() {
+          const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+          
+          // Handle attendance changes
+          activities.forEach(activity => {
+            const attendanceRadios = document.querySelectorAll(`input[name="${activity}_attendance"]`);
+            attendanceRadios.forEach(radio => {
+              radio.addEventListener('change', function() {
+                if (this.value === 'present') {
+                  // If any activity is Present, set special status to None
+                  document.querySelector(`input[name="special_status"][value="none"]`).checked = true;
+                  // Disable AWOL and Leave
+                  document.querySelector(`input[name="special_status"][value="AWOL"]`).disabled = true;
+                  document.querySelector(`input[name="special_status"][value="Leave"]`).disabled = true;
+                  // Enable all attendance radios
+                  activities.forEach(act => {
+                    document.querySelectorAll(`input[name="${act}_attendance"]`).forEach(r => r.disabled = false);
+                  });
+                } else {
+                  // If changed to Absent, enable all special options
+                  document.querySelector(`input[name="special_status"][value="AWOL"]`).disabled = false;
+                  document.querySelector(`input[name="special_status"][value="Leave"]`).disabled = false;
+                }
+              });
+            });
+          });
+          
+          // Handle special status changes
+          const specialRadios = document.querySelectorAll(`input[name="special_status"]`);
+          specialRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+              if (this.value === 'AWOL' || this.value === 'Leave') {
+                // Set all attendance to Absent
+                activities.forEach(activity => {
+                  document.querySelector(`input[name="${activity}_attendance"][value="absent"]`).checked = true;
+                });
+                // Disable all attendance radios
+                activities.forEach(activity => {
+                  document.querySelectorAll(`input[name="${activity}_attendance"]`).forEach(radio => radio.disabled = true);
+                });
+              } else {
+                // Enable all attendance radios
+                activities.forEach(activity => {
+                  document.querySelectorAll(`input[name="${activity}_attendance"]`).forEach(radio => radio.disabled = false);
+                });
+              }
+            });
+          });
+        }
+
+        function applyInitialLogic() {
+          const specialStatus = document.querySelector(`input[name="special_status"]:checked`);
+          const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+          if (specialStatus && (specialStatus.value === 'AWOL' || specialStatus.value === 'Leave')) {
+            // Ensure all attendance is Absent
+            activities.forEach(activity => {
+              document.querySelector(`input[name="${activity}_attendance"][value="absent"]`).checked = true;
+            });
+            // Disable all attendance radios
+            activities.forEach(activity => {
+              document.querySelectorAll(`input[name="${activity}_attendance"]`).forEach(radio => radio.disabled = true);
+            });
+          }
+          
+          // Check if any attendance is Present, disable AWOL/Leave
+          let hasPresent = false;
+          activities.forEach(activity => {
+            const presentRadio = document.querySelector(`input[name="${activity}_attendance"][value="present"]`);
+            if (presentRadio && presentRadio.checked) {
+              hasPresent = true;
+            }
+          });
+          if (hasPresent) {
+            document.querySelector(`input[name="special_status"][value="AWOL"]`).disabled = true;
+            document.querySelector(`input[name="special_status"][value="Leave"]`).disabled = true;
+          }
+        }
+      }
+
+      // Save attendance to MongoDB and localStorage
+      async function saveAttendance(serviceNumber, date, modalEl) {
+        const attendance = {};
+        const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+        const scope = modalEl || document; // query WITHIN modal only
+        
+        // Collect attendance values — works on disabled radios too (AWOL/Leave case)
+        activities.forEach(key => {
+          const checked = scope.querySelector(`input[name="${key}_attendance"]:checked`);
+          if (checked) {
+            attendance[key + '_attendance'] = checked.value;
+          }
+        });
+        
+        // Save special status
+        const specialChecked = scope.querySelector(`input[name="special_status"]:checked`);
+        if (specialChecked) {
+          attendance['special_status'] = specialChecked.value;
+        }
+        
+        console.log('Attendance from modal:', JSON.stringify(attendance));
+        
+        // Keep localStorage for dashboard display
+        localStorage.setItem(`attendance_${serviceNumber}_${date}`, JSON.stringify(attendance));
+        
+        // Build MongoDB payload
+        const mongoPayload = {
+          service_number: serviceNumber,
+          date: date,
+          morning_pt: attendance['morning_pt_attendance'] || '',
+          office: attendance['office_attendance'] || '',
+          games: attendance['games_attendance'] || '',
+          roll_call: attendance['roll_call_attendance'] || '',
+          leave: attendance['special_status'] === 'Leave' ? 'yes' : '',
+          awol: attendance['special_status'] === 'AWOL' ? 'yes' : ''
+        };
+        
+        console.log('MongoDB payload:', JSON.stringify(mongoPayload));
+        
+        // Save to MongoDB
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            alert('Session expired. Please log in again.');
+            window.location.href = '/frontend/login.html';
+            return;
+          }
+          const response = await fetch('http://localhost:5000/api/attendance/mark', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(mongoPayload)
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            console.log('Saved to MongoDB:', data.record.morning_pt, data.record.office, data.record.games, data.record.roll_call);
+          } else {
+            console.error('MongoDB save failed:', data);
+            alert('Error saving: ' + (data.error || data.message || 'Unknown'));
+          }
+        } catch (error) {
+          console.error('MongoDB save error:', error);
+          alert('Cannot connect to server. Backend running?');
+        }
+        
+        // Refresh dashboard
+        fetchTotalUsers();
+      }
+
+// Remove soldier from special status
+      async function removeFromSpecialStatus(serviceNumber, statusType) {
+        if (!confirm(`Remove this soldier from ${statusType.replace('_', ' ').toUpperCase()} status? They will be marked as Present.`)) {
+          return;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceKey = `attendance_${serviceNumber}_${today}`;
+        const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+
+        // Set special status to none
+        attendance['special_status'] = 'none';
+
+        // Set all attendance to present
+        const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+        activities.forEach(activity => {
+          attendance[activity + '_attendance'] = 'present';
+        });
+
+        localStorage.setItem(attendanceKey, JSON.stringify(attendance));
+
+        // Save to MongoDB
+        try {
+          const token = localStorage.getItem('token');
+          await fetch('http://localhost:5000/api/attendance/mark', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              service_number: serviceNumber,
+              morning_pt: 'present',
+              office: 'present',
+              games: 'present',
+              roll_call: 'present',
+              leave: '',
+              awol: ''
+            })
+          });
+        } catch (error) {
+          console.error('MongoDB update error:', error);
+        }
+
+        // Refresh table
+        fetchTotalUsers();
+
+        alert('Soldier removed from special status and marked as Present.');
+      }
+
+      // Refresh data with loading indicator
+      async function refreshData() {
+        const btn = document.querySelector('button[onclick="refreshData()"]');
+        const originalText = btn.textContent;
+        btn.textContent = 'Refreshing...';
+        btn.disabled = true;
+
+        try {
+          await fetchTotalUsers();
+          alert('Data refreshed successfully!');
+        } catch (error) {
+          console.error('Refresh failed:', error);
+          alert('Failed to refresh data. Please check your connection.');
+        } finally {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      // Show modal with special status soldiers
+      function showSpecialStatusModal(statusType) {
+        const today = new Date().toISOString().split('T')[0];
+        const soldiers = [];
+        window.soldiersData.forEach(soldier => {
+          const key = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(key) || '{}');
+          const special = attendance['special_status'];
+          if (special === statusType) {
+            soldiers.push(soldier);
+          }
+        });
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        let html = `<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-red); padding-bottom: 10px;">${statusType} Soldiers</h3>`;
+        if (soldiers.length === 0) {
+          html += '<p style="color: var(--muted);">No soldiers in this status.</p>';
+        } else {
+          html += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total: ' + soldiers.length + '</div>';
+          html += '<div style="display: grid; gap: 10px;">';
+          soldiers.forEach(soldier => {
+            html += `
+              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="removeFromSpecialStatus('${soldier.service_number}', '${statusType === 'AWOL' ? 'awol' : statusType === 'Leave' ? 'leave' : 'duty'}')">
+                <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
+                <div style="color: var(--muted); font-size: 14px;">
+                  Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                </div>
+                <div style="color: var(--accent-red); font-size: 12px; margin-top: 5px;">Click to remove from ${statusType}</div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        if (statusType === 'AWOL') {
+          html += `<div style="margin-top: 20px; text-align: center;">
+            <button onclick="clearAWOL(); this.closest('.modal-overlay').remove();" style="padding: 10px 20px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer;">Clear All AWOL</button>
+          </div>`;
+        }
+
+        html += `<div style="margin-top: 20px; text-align: center;">
+          <button onclick="this.closest('.modal-overlay').remove()" style="padding: 10px 20px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+        </div>`;
+
+        modalContent.innerHTML = html;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+      }
+
+      // Auto-update Battalion Strength Summary from table
+      function updateBattalionSummary() {
+        let totalSum = 0, presentSum = 0, leaveSum = 0, dutySum = 0, awolSum = 0;
+        
+        document.querySelectorAll('tbody tr').forEach(row => {
+          const total = parseInt(row.querySelector('.total-val')?.textContent || 0);
+          const present = parseInt(row.querySelector('.present-val')?.textContent || 0);
+          const leave = parseInt(row.querySelector('.leave-val')?.textContent || 0);
+          const duty = parseInt(row.querySelector('.duty-val')?.textContent || 0);
+          const awol = parseInt(row.querySelector('.awol-val')?.textContent || 0);
+          
+          totalSum += total;
+          presentSum += present;
+          leaveSum += leave;
+          dutySum += duty;
+          awolSum += awol;
+        });
+        
+        // Update summary cards
+        document.getElementById('summary-total').textContent = totalSum;
+        document.getElementById('summary-present').textContent = presentSum;
+        document.getElementById('summary-leave').textContent = leaveSum;
+        document.getElementById('summary-duty').textContent = dutySum;
+        document.getElementById('summary-awol').textContent = awolSum < 10 ? '0' + awolSum : awolSum;
+        
+        // Update footer
+        document.getElementById('footer-total').textContent = totalSum;
+        document.getElementById('footer-present').textContent = presentSum;
+        document.getElementById('footer-leave').textContent = leaveSum;
+        document.getElementById('footer-duty').textContent = dutySum;
+        document.getElementById('footer-awol').textContent = awolSum < 10 ? '0' + awolSum : awolSum;
+      }
+      
+      // Run on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        fetchTotalUsers();
+        // Auto-init today's attendance records for all soldiers
+        initTodayAttendance();
+        // Auto-refresh data every 60 seconds
+        setInterval(fetchTotalUsers, 60000);
+      });
+
+      async function initTodayAttendance() {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const today = new Date().toISOString().split('T')[0];
+          const res = await fetch('http://localhost:5000/api/attendance/init-date', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ date: today })
+          });
+          const data = await res.json();
+          console.log(`Attendance init for ${today}: ${data.created} created, ${data.existed} existed`);
+        } catch (err) {
+          console.error('initTodayAttendance error:', err);
+        }
+      }
+      
+      // Forward report to CO
+      function forwardToCO() {
+        const companies = [];
+        document.querySelectorAll('tbody tr').forEach(row => {
+          const company = {
+            name: row.querySelector('.company-badge')?.textContent || '',
+            total: parseInt(row.querySelector('.total-val')?.textContent || 0),
+            present: parseInt(row.querySelector('.present-val')?.textContent || 0),
+            leave: parseInt(row.querySelector('.leave-val')?.textContent || 0),
+            duty: parseInt(row.querySelector('.duty-val')?.textContent || 0),
+            awol: parseInt(row.querySelector('.awol-val')?.textContent || 0)
+          };
+          companies.push(company);
+        });
+        
+        const reportData = {
+          summary: {
+            total: document.getElementById('summary-total').textContent,
+            present: document.getElementById('summary-present').textContent,
+            leave: document.getElementById('summary-leave').textContent,
+            duty: document.getElementById('summary-duty').textContent,
+            awol: document.getElementById('summary-awol').textContent
+          },
+          companies: companies,
+          timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem('battalion_strength_report', JSON.stringify(reportData));
+        alert('✅ Battalion Strength Report forwarded to CO successfully!');
+      }
+
+      // Logout function
+
+      // Change password function
+      function changePassword() {
+          // Create modal
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+              position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+              background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+              z-index: 1000;
+          `;
+
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+              background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          `;
+
+          modalContent.innerHTML = `
+              <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+              <form id="changePasswordForm">
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
+                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                  </div>
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
+                      <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
+                  </div>
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
+                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                  </div>
+                  <div style="display: flex; gap: 10px;">
+                      <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                  </div>
+              </form>
+          `;
+
+          modal.appendChild(modalContent);
+          document.body.appendChild(modal);
+
+          // Password strength checker
+          function checkPasswordStrength(password) {
+              const strengthDiv = document.getElementById('passwordStrength');
+              if (password.length === 0) {
+                  strengthDiv.textContent = '';
+                  strengthDiv.style.color = '';
+                  return;
+              }
+
+              let score = 0;
+              if (password.length >= 6) score++;
+              if (/[A-Z]/.test(password)) score++;
+              if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+              if (score === 1) {
+                  strengthDiv.textContent = 'Weak';
+                  strengthDiv.style.color = '#e74c3c';
+              } else if (score === 2) {
+                  strengthDiv.textContent = 'Medium';
+                  strengthDiv.style.color = '#f39c12';
+              } else if (score === 3) {
+                  strengthDiv.textContent = 'Strong';
+                  strengthDiv.style.color = '#27ae60';
+              }
+          }
+
+          // Add event listener to new password input
+          document.getElementById('newPassword').addEventListener('input', function() {
+              checkPasswordStrength(this.value);
+          });
+
+          // Form submit
+          document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+              e.preventDefault();
+
+              const currentPassword = document.getElementById('currentPassword').value;
+              const newPassword = document.getElementById('newPassword').value;
+              const confirmPassword = document.getElementById('confirmPassword').value;
+
+              if (newPassword !== confirmPassword) {
+                  alert('Passwords do not match!');
+                  return;
+              }
+
+              // Password validation
+              const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+              if (!passwordRegex.test(newPassword)) {
+                  alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
+                  return;
+              }
+
+              const token = localStorage.getItem('token');
+              if (!token) {
+                  alert('You are not logged in!');
+                  document.body.removeChild(modal);
+                  return;
+              }
+
+              try {
+                  const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ currentPassword, newPassword })
+                  });
+
+                  const data = await response.json();
+                  console.log('Password change response:', data);
+
+                  if (data.success) {
+                      console.log('Redirecting to login...');
+                      // Immediately logout and redirect for security
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      window.location.href = '../../login.html';
+                  } else {
+                      alert(data.error || 'Failed to change password');
+                  }
+              } catch (error) {
+                  console.error('Error:', error);
+                  alert('Connection error. Please try again.');
+              }
+          });
+
+          // Cancel button
+          document.getElementById('cancelBtn').addEventListener('click', function() {
+              document.body.removeChild(modal);
+          });
+      }
+
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+        }
+      }
+    </script>
+
+  </div>
+</body>
+</html>

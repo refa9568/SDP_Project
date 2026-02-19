@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adjutant Dashboard</title>
+  <style>
+    :root{
+      --bg: #2f3b2f;
+      --panel: #556634;
+      --panelAlt: #3b4a36;
+      --card: #2f3f34;
+      --stroke: rgba(255,255,255,.14);
+      --text: #e9efd6;
+      --muted: rgba(233,239,214,.72);
+      --btn: #cbbd7c;
+      --btnText: #223017;
+      --btnDark: #2e3b32;
+      --green: #23b35a;
+      --amber: #d6a64f;
+      --blue: #2d6ef7;
+      --red: #d94a3a;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                  radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap{
+      max-width: 1180px;
+      margin: 22px auto 40px;
+      padding: 0 18px;
+    }
+
+    /* header */
+    .topbar{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 18px 18px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .topbar-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .title h1{
+      margin:0;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 900;
+      cursor:pointer;
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+      transition: transform .20s ease, box-shadow .20s ease, background-color .18s ease;
+    }
+    .btn.light{ background: var(--btn); color: var(--btnText); border-color: rgba(0,0,0,.25); }
+    .btn.dark{ background: var(--btnDark); color: rgba(233,239,214,.88); }
+    .btn:hover, .btn:focus{ transform: translateY(-3px); box-shadow:0 18px 30px rgba(0,0,0,.28); }
+
+    /* stat cards */
+    .stats{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 14px;
+    }
+    .stat{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.18);
+      position:relative;
+      overflow:hidden;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset: 0 0 auto 0;
+      height: 12px;
+      background: rgba(0,0,0,.16);
+    }
+    .stat:hover{ transform: translateY(-6px); box-shadow: 0 22px 40px rgba(0,0,0,.30); border-color: rgba(255,255,255,.20); }
+    .stat .label{ font-weight: 900; color: var(--muted); letter-spacing:.15px; }
+    .stat .num{ font-size: 26px; font-weight: 900; }
+    .stat.present{ outline: 2px solid rgba(35,179,90,.55); }
+    .stat.leave{ outline: 2px solid rgba(214,166,79,.55); }
+    .stat.duty{ outline: 2px solid rgba(45,110,247,.55); }
+    .stat.awol{ outline: 2px solid rgba(217,74,58,.55); }
+
+    /* panels */
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+    }
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 12px 22px rgba(0,0,0,.22);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      min-height: 280px;
+      position:relative;
+    }
+    .panel:hover{ transform: translateY(-6px); box-shadow: 0 24px 50px rgba(0,0,0,.34); border-color: rgba(255,255,255,.18); }
+    .panel-head{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      letter-spacing:.15px;
+    }
+    .panel-head .mini{
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display:grid; place-items:center;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    /* table */
+    table{
+      width:100%;
+      border-collapse: collapse;
+      background: rgba(0,0,0,.12);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      overflow:hidden;
+    }
+    thead th{
+      text-align:left;
+      padding: 10px 12px;
+      font-weight: 900;
+      font-size: 13px;
+      color: rgba(233,239,214,.76);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    tbody td{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-weight: 700;
+      color: rgba(233,239,214,.90);
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.04); }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 900;
+    }
+    .tag{ font-weight: 900; }
+    .tag.green{ color: var(--green); }
+    .tag.amber{ color: var(--amber); }
+    .tag.blue{ color: var(--blue); }
+    .tag.red{ color: var(--red); }
+
+    /* tasks list */
+    .tasks{ display:flex; flex-direction:column; gap: 10px; }
+    .task{
+      padding: 12px;
+      border-radius: 10px;
+      background: var(--panelAlt);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 8px 16px rgba(0,0,0,.18);
+    }
+    .task .title{ font-weight: 900; margin: 0 0 4px; }
+    .task .meta{ color: rgba(233,239,214,.70); font-weight: 700; }
+
+    /* bottom panels */
+    .quick-action-section{
+      margin-top: 16px;
+    }
+    .grid-bottom{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .grid-notice{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .panel-title{
+      font-weight: 900;
+      margin: 0 0 10px;
+      letter-spacing:.15px;
+    }
+    .list-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      width:100%;
+      height:54px;
+      margin-bottom:12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.26);
+      color: var(--text);
+      font-weight: 900;
+      letter-spacing:.18px;
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+    }
+    .list-btn.black{
+      background: #0f120f;
+      color: var(--text);
+      border-color: rgba(255,255,255,.20);
+    }
+    .legend{ display:flex; gap:14px; align-items:center; margin-top:10px; font-weight:900; }
+    .legend .swatch{ width:14px; height:14px; border-radius:4px; display:inline-block; margin-right:6px; }
+    .swatch.present{ background: var(--green); }
+    .swatch.absent{ background: var(--red); }
+    /* attendance chart */
+    .chart{ margin-top: 6px; }
+    .chart-inner{
+      position:relative;
+      height: 240px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.08) 0 1px, transparent 1px 60px),
+        repeating-linear-gradient(to right, rgba(255,255,255,.06) 0 1px, transparent 1px 64px),
+        rgba(0,0,0,.12);
+      overflow:hidden;
+      box-shadow: inset 0 6px 12px rgba(0,0,0,.18);
+      padding: 16px 18px 12px 56px; /* left space for y-axis labels */
+    }
+    .y-axis{ position:absolute; left:12px; top:12px; display:flex; flex-direction:column; justify-content:space-between; height: 216px; }
+    .y-axis span{ color: rgba(233,239,214,.70); font-weight:900; font-size:13px; }
+    .bar-rows{ display:flex; align-items:flex-end; gap: 22px; height:100%; }
+    .group{ width:70px; }
+    .bars{ height:100%; display:flex; align-items:flex-end; gap:8px; }
+    .bar-present, .bar-absent{ width:28px; border-radius:8px; border:1px solid rgba(255,255,255,.12); box-shadow: 0 8px 14px rgba(0,0,0,.20); }
+    .bar-present{ background: rgba(35,179,90,.90); }
+    .bar-absent{ background: rgba(217,74,58,.90); }
+    .bar-x{ text-align:center; margin-top:6px; font-weight:900; color: var(--muted); }
+
+    /* responsive */
+    @media (max-width: 1100px){
+      .stats{ grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+      .grid{ grid-template-columns: 1fr; }
+      .grid-bottom{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title">
+          <h1>Adjutant Dashboard</h1>
+          <p>Real-Time Manpower Readiness Overview</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn light" onclick="refreshData()">Refresh Data</button>
+          <button class="btn light" onclick="changePassword()">Change Password</button>
+          <button class="btn dark" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Strength cards -->
+    <section class="stats">
+      <div class="stat total">
+        <div class="label">Total Strength</div>
+        <div class="num" id="total-soldiers">450</div>
+      </div>
+      <div class="stat present">
+        <div class="label">Present</div>
+        <div class="num" id="present-count">361</div>
+      </div>
+      <div class="stat leave">
+        <div class="label">On Leave</div>
+        <div class="num" id="leave-count">32</div>
+      </div>
+      <div class="stat duty">
+        <div class="label">On Duty</div>
+        <div class="num" id="duty-count">55</div>
+      </div>
+      <div class="stat awol">
+        <div class="label">AWOL</div>
+        <div class="num" id="awol-count">02</div>
+      </div>
+    </section>
+
+    <!-- Panels -->
+    <section class="grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="mini" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="6" width="16" height="12" rx="2" stroke="rgba(233,239,214,.9)" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <span>Company-wise Daily Attendance Report</span>
+        </div>
+        <div class="chart">
+          <div class="chart-inner">
+            <div class="y-axis">
+              <span>100%</span>
+              <span>50%</span>
+              <span>0%</span>
+            </div>
+            <div class="bar-rows">
+              <!-- Bars will be generated dynamically -->
+            </div>
+          </div>
+          <div class="legend" style="justify-content:center; gap:28px;">
+            <span><span class="swatch present"></span> Present</span>
+            <span><span class="swatch absent"></span> Absent</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="mini" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="rgba(233,239,214,.9)" stroke-width="2"/>
+            </svg>
+          </div>
+          <span>Current Status Distribution</span>
+        </div>
+        <div style="display:flex; gap:18px; align-items:center;">
+          <div style="flex:0 0 180px; height:180px; position:relative;">
+            <!-- simple pie using CSS circles layered -->
+            <div id="status-pie-chart" style="position:absolute; inset:0; border-radius:50%; background: conic-gradient(
+                rgba(35,179,90,.95) 0 316deg,
+                rgba(214,166,79,.95) 316deg 344deg,
+                rgba(45,110,247,.95) 344deg 354deg,
+                rgba(217,74,58,.95) 354deg 360deg
+              ); box-shadow:0 10px 20px rgba(0,0,0,.25);"></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; font-weight:900;">
+            <div>Present: <span class="tag green" id="present-percent">88%</span></div>
+            <div>On Leave: <span class="tag amber" id="leave-percent">8%</span></div>
+            <div>On Duty: <span class="tag blue" id="duty-percent">3%</span></div>
+            <div>AWOL: <span class="tag red" id="awol-percent">1%</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Action Section -->
+    <section class="quick-action-section">
+      <div class="panel">
+        <h3 class="panel-title">Quick Action</h3>
+        <button class="list-btn" onclick="window.location.href='adjt_report_gen.html'">Generate Parade State Report</button>
+        <button class="list-btn" onclick="showSoldiersList()">View Company States</button>
+        <a class="list-btn" href="lve_mgt.html">Leave Management</a>
+      </div>
+    </section>
+
+    <!-- Bottom Panels -->
+    <section class="grid-bottom">
+      <div class="panel">
+        <h3 class="panel-title">Unit Notice Board</h3>
+        <div id="adjutantNoticeBoard" style="min-height: 180px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,.18); border: 2px dashed rgba(255,255,255,.16); border-radius: 10px; padding: 20px; margin-bottom: 12px;">
+          <!-- Notices from CO and BSM will be loaded here -->
+        </div>
+      </div>
+      <div class="panel">
+        <h3 class="panel-title">Important Notice</h3>
+        <div style="background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 16px; margin-bottom: 12px; min-height: 100px;">
+          <textarea 
+            id="nextDayCommitment" 
+            placeholder="Enter tomorrow's commitments, tasks, or important notes..."
+            style="width: 100%; min-height: 80px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.10); border-radius: 8px; padding: 12px; color: #e9efd6; font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+          <button 
+            onclick="sendCommitmentToCO()" 
+            style="width: 100%; margin-top: 10px; padding: 10px 16px; background: #2d6ef7; color: white; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px;"
+          >Send to CO</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 class="panel-title">Reports</h3>
+        <button class="list-btn black" onclick="window.location.href='daily_parade_state.html'">Daily Parade State</button>
+        <button class="list-btn black" onclick="window.location.href='weekly_summary.html'">Weekly Summary</button>
+      </div>
+    </section>
+
+    <script>
+      const API_BASE = 'http://localhost:5000';
+
+      // Change password function
+      function changePassword() {
+          // Create modal
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+              position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+              background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+              z-index: 1000;
+          `;
+
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+              background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          `;
+
+          modalContent.innerHTML = `
+              <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+              <form id="changePasswordForm">
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
+                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                  </div>
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
+                      <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
+                  </div>
+                  <div style="margin-bottom: 20px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
+                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                  </div>
+                  <div style="display: flex; gap: 10px;">
+                      <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                  </div>
+              </form>
+          `;
+
+          modal.appendChild(modalContent);
+          document.body.appendChild(modal);
+
+          // Password strength checker
+          function checkPasswordStrength(password) {
+              const strengthDiv = document.getElementById('passwordStrength');
+              if (password.length === 0) {
+                  strengthDiv.textContent = '';
+                  strengthDiv.style.color = '';
+                  return;
+              }
+
+              let score = 0;
+              if (password.length >= 6) score++;
+              if (/[A-Z]/.test(password)) score++;
+              if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+              if (score === 1) {
+                  strengthDiv.textContent = 'Weak';
+                  strengthDiv.style.color = '#e74c3c';
+              } else if (score === 2) {
+                  strengthDiv.textContent = 'Medium';
+                  strengthDiv.style.color = '#f39c12';
+              } else if (score === 3) {
+                  strengthDiv.textContent = 'Strong';
+                  strengthDiv.style.color = '#27ae60';
+              }
+          }
+
+          // Add event listener to new password input
+          document.getElementById('newPassword').addEventListener('input', function() {
+              checkPasswordStrength(this.value);
+          });
+
+          // Form submit
+          document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+              e.preventDefault();
+
+              const currentPassword = document.getElementById('currentPassword').value;
+              const newPassword = document.getElementById('newPassword').value;
+              const confirmPassword = document.getElementById('confirmPassword').value;
+
+              if (newPassword !== confirmPassword) {
+                  alert('Passwords do not match!');
+                  return;
+              }
+
+              // Password validation
+              const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+              if (!passwordRegex.test(newPassword)) {
+                  alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
+                  return;
+              }
+
+              const token = localStorage.getItem('token');
+              if (!token) {
+                  alert('You are not logged in!');
+                  document.body.removeChild(modal);
+                  return;
+              }
+
+              try {
+                  const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ currentPassword, newPassword })
+                  });
+
+                  const data = await response.json();
+                  console.log('Password change response:', data);
+
+                  if (data.success) {
+                      console.log('Redirecting to login...');
+                      // Immediately logout and redirect for security
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      window.location.href = '../../login.html';
+                  } else {
+                      alert(data.error || 'Failed to change password');
+                  }
+              } catch (error) {
+                  console.error('Error:', error);
+                  alert('Connection error. Please try again.');
+              }
+          });
+
+          // Cancel button
+          document.getElementById('cancelBtn').addEventListener('click', function() {
+              document.body.removeChild(modal);
+          });
+      }
+
+      // Load notices for Adjutant from localStorage
+      function loadAdjutantNotices() {
+        const noticeBoard = document.getElementById('adjutantNoticeBoard');
+        const notices = JSON.parse(localStorage.getItem('Adjutant_notices') || '[]');
+        
+        if (notices.length === 0) {
+          noticeBoard.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
+              <div style="color: rgba(233,239,214,.50); font-weight: 700; text-align: center;">
+                No new notices or messages<br>
+                <span style="font-size: 13px; opacity: 0.7;">Awaiting updates from CO or BSM</span>
+              </div>
+            </div>
+          `;
+        } else {
+          let noticesHTML = '';
+          notices.forEach((notice, index) => {
+            const date = new Date(notice.date);
+            const dateStr = date.toLocaleString('en-GB', { 
+              day: '2-digit', 
+              month: 'short', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            
+            noticesHTML += `
+              <div 
+                id="adjutant-notice-${index}" 
+                style="background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 12px; margin-bottom: 10px; transition: all 0.2s ease;"
+                onmouseover="this.style.background='rgba(0,0,0,.35)'; this.style.borderColor='rgba(255,255,255,.18)'"
+                onmouseout="this.style.background='rgba(0,0,0,.25)'; this.style.borderColor='rgba(255,255,255,.12)'"
+              >
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-weight: 900; color: #23b35a; cursor: pointer;" onclick="toggleAdjutantNotice(${index})">
+                    ${notice.type || 'Notice'} from ${notice.sender || 'Unknown'}
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="font-size: 11px; color: rgba(233,239,214,.50);">${dateStr}</div>
+                    <button 
+                      onclick="deleteAdjutantNotice(${index}); event.stopPropagation();" 
+                      style="background: #d94a3a; border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 11px;"
+                      onmouseover="this.style.background='#c2332a'" 
+                      onmouseout="this.style.background='#d94a3a'"
+                    >Delete</button>
+                  </div>
+                </div>
+                <div 
+                  id="adjutant-notice-content-${index}" 
+                  style="display: none; color: rgba(233,239,214,.90); font-weight: 600; white-space: pre-wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08); cursor: pointer;"
+                  onclick="toggleAdjutantNotice(${index})"
+                >
+                  ${notice.content}
+                </div>
+                <div style="color: rgba(233,239,214,.50); font-size: 12px; font-weight: 700; margin-top: 6px; cursor: pointer;" onclick="toggleAdjutantNotice(${index})">
+                  Click to open
+                </div>
+              </div>
+            `;
+          });
+          noticeBoard.innerHTML = noticesHTML;
+        }
+      }
+
+      function toggleAdjutantNotice(index) {
+        const content = document.getElementById(`adjutant-notice-content-${index}`);
+        if (content.style.display === 'none') {
+          content.style.display = 'block';
+        } else {
+          content.style.display = 'none';
+        }
+      }
+
+      function deleteAdjutantNotice(index) {
+        if (confirm('Are you sure you want to delete this notice?')) {
+          let notices = JSON.parse(localStorage.getItem('Adjutant_notices') || '[]');
+          notices.splice(index, 1);
+          localStorage.setItem('Adjutant_notices', JSON.stringify(notices));
+          loadAdjutantNotices();
+        }
+      }
+
+      function sendCommitmentToCO() {
+        const commitment = document.getElementById('nextDayCommitment').value;
+        if (commitment.trim() === '') {
+          alert('⚠️ Please enter a commitment before sending to CO.');
+          return;
+        }
+        
+        // Save commitment with timestamp for CO
+        const commitmentData = {
+          content: commitment,
+          sender: 'Adjutant',
+          date: new Date().toISOString(),
+          type: 'Next Day Commitment'
+        };
+        
+        // Get existing CO notices or create new array
+        let coNotices = JSON.parse(localStorage.getItem('CO_notices') || '[]');
+        coNotices.unshift(commitmentData); // Add to beginning
+        
+        // Keep only last 10 notices
+        if (coNotices.length > 10) {
+          coNotices = coNotices.slice(0, 10);
+        }
+        
+        localStorage.setItem('CO_notices', JSON.stringify(coNotices));
+        
+        alert('📤 Next day commitment sent to CO successfully!\n\nThe commitment will appear on the CO\'s Notice Board.');
+        
+        // Clear the textarea after sending
+        document.getElementById('nextDayCommitment').value = '';
+      }
+
+      // Logout function
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+        }
+      }
+
+      // Fetch total soldiers from API and update dashboard
+      async function fetchTotalUsers() {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = '../../login.html';
+            return;
+          }
+
+          // Fetch soldiers
+          const userResponse = await fetch(`${API_BASE}/api/users`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!userResponse.ok) {
+            console.error('Failed to fetch users:', userResponse.status);
+            alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+            return;
+          }
+
+          const userData = await userResponse.json();
+          const soldiers = userData.users.filter(user => user.role === 'soldier');
+
+          // Store soldiers data for later use
+          window.soldiersData = soldiers;
+
+          // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        let allLeaves = [];
+        if (leaveResponse.ok) {
+            const leaveData = await leaveResponse.json();
+            allLeaves = leaveData.leaves;
+        } else {
+            console.error('Failed to fetch leaves:', leaveResponse.status);
+        }
+
+        // Determine active leaves (current date between start and end)
+        const now = new Date();
+        const activeLeaveUserIds = new Set();
+        allLeaves.forEach(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            if (now >= start && now <= end) {
+              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            }
+          });
+
+          // Calculate overall statistics
+          const today = new Date().toISOString().split('T')[0];
+          let totalSoldiers = soldiers.length;
+          let present = 0;
+          let onLeave = 0;
+          let awol = 0;
+          let onDuty = 0;
+
+          soldiers.forEach(soldier => {
+            // Check attendance special status
+            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (activeLeaveUserIds.has(soldier._id)) {
+              onLeave++;
+            } else if (special === 'AWOL') {
+              awol++;
+            } else if (special === 'Leave') {
+              onLeave++;
+            } else if (special === 'on_duty') {
+              onDuty++;
+            } else {
+              present++;
+            }
+          });
+
+          // Update statistics display
+          document.getElementById('total-soldiers').textContent = totalSoldiers;
+          document.getElementById('present-count').textContent = present;
+          document.getElementById('leave-count').textContent = onLeave;
+          document.getElementById('duty-count').textContent = onDuty;
+          document.getElementById('awol-count').textContent = awol;
+
+          // Update percentages
+          const presentPercent = totalSoldiers > 0 ? ((present / totalSoldiers) * 100).toFixed(2) : 0;
+          const leavePercent = totalSoldiers > 0 ? ((onLeave / totalSoldiers) * 100).toFixed(2) : 0;
+          const dutyPercent = totalSoldiers > 0 ? ((onDuty / totalSoldiers) * 100).toFixed(2) : 0;
+          const awolPercent = totalSoldiers > 0 ? ((awol / totalSoldiers) * 100).toFixed(2) : 0;
+
+          document.getElementById('present-percent').textContent = `${presentPercent}%`;
+          document.getElementById('leave-percent').textContent = `${leavePercent}%`;
+          document.getElementById('duty-percent').textContent = `${dutyPercent}%`;
+          document.getElementById('awol-percent').textContent = `${awolPercent}%`;
+
+          // Update pie chart
+          updatePieChart(presentPercent, leavePercent, dutyPercent, awolPercent);
+
+          // Update y-axis labels
+          const yAxisLabels = document.querySelectorAll('.y-axis span');
+          if (yAxisLabels.length >= 3) {
+            const maxValue = Math.max(present, onLeave, onDuty, awol);
+            yAxisLabels[0].textContent = maxValue;
+            yAxisLabels[1].textContent = Math.round(maxValue * 0.67);
+            yAxisLabels[2].textContent = Math.round(maxValue * 0.33);
+          }
+
+          // Update attendance chart bars (simplified - using last 5 days)
+          updateAttendanceChart(soldiers, allLeaves, today);
+
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+
+      // Update pie chart with dynamic percentages
+      function updatePieChart(presentPercent, leavePercent, dutyPercent, awolPercent) {
+        const pieChart = document.getElementById('status-pie-chart');
+        if (!pieChart) return;
+
+        // Calculate angles (360 degrees total)
+        const presentAngle = (presentPercent / 100) * 360;
+        const leaveAngle = presentAngle + (leavePercent / 100) * 360;
+        const dutyAngle = leaveAngle + (dutyPercent / 100) * 360;
+        const awolAngle = dutyAngle + (awolPercent / 100) * 360;
+
+        // Create conic gradient
+        const gradient = `conic-gradient(
+          rgba(35,179,90,.95) 0 ${presentAngle}deg,
+          rgba(214,166,79,.95) ${presentAngle}deg ${leaveAngle}deg,
+          rgba(45,110,247,.95) ${leaveAngle}deg ${dutyAngle}deg,
+          rgba(217,74,58,.95) ${dutyAngle}deg ${awolAngle}deg
+        )`;
+
+        pieChart.style.background = gradient;
+      }
+
+      // Update attendance chart with company-wise data for today
+      function updateAttendanceChart(soldiers, allLeaves, today) {
+        const barRows = document.querySelector('.bar-rows');
+        if (!barRows) return;
+
+        // Group soldiers by company
+        const companyData = {};
+        soldiers.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyData[company]) {
+            companyData[company] = { total: 0, present: 0, absent: 0 };
+          }
+          companyData[company].total++;
+        });
+
+        // Calculate active leaves for today
+        const activeLeaveUserIdsForDay = new Set();
+        allLeaves.forEach(leave => {
+          const start = new Date(leave.start_date);
+          const end = new Date(leave.end_date);
+          const todayDate = new Date(today);
+          if (todayDate >= start && todayDate <= end) {
+            activeLeaveUserIdsForDay.add(leave.user_id._id || leave.user_id);
+          }
+        });
+
+        // Calculate present/absent per company
+        soldiers.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+
+          if (special === 'AWOL') {
+            companyData[company].absent++;
+          } else if (special === 'Leave' || activeLeaveUserIdsForDay.has(soldier._id)) {
+            companyData[company].absent++;
+          } else if (special === 'on_duty') {
+            // on duty not counted as absent, but not present? Wait, perhaps count as present or separate.
+            // For simplicity, treat as present.
+            companyData[company].present++;
+          } else {
+            companyData[company].present++;
+          }
+        });
+
+        // Clear existing bars
+        barRows.innerHTML = '';
+
+        // Find max total for scaling
+        const maxTotal = Math.max(...Object.values(companyData).map(d => d.total));
+
+        // Update y-axis labels
+        const yAxis = document.querySelector('.y-axis');
+        if (yAxis) {
+          const spans = yAxis.querySelectorAll('span');
+          if (spans.length >= 3) {
+            spans[0].textContent = maxTotal;
+            spans[1].textContent = Math.round(maxTotal / 2);
+            spans[2].textContent = '0';
+          }
+        }
+
+        // Generate bars for each company
+        Object.keys(companyData).sort().forEach(company => {
+          const data = companyData[company];
+          const presentHeight = data.total > 0 ? (data.present / maxTotal) * 180 : 0;
+          const absentHeight = data.total > 0 ? (data.absent / maxTotal) * 180 : 0;
+
+          const group = document.createElement('div');
+          group.className = 'group';
+          group.innerHTML = `
+            <div class="bars">
+              <div class="bar-present" style="height:${presentHeight}px" title="Present: ${data.present}"></div>
+              <div class="bar-absent" style="height:${absentHeight}px" title="Absent: ${data.absent}"></div>
+            </div>
+            <div class="bar-x">${company}</div>
+          `;
+          barRows.appendChild(group);
+        });
+      }
+
+      // Refresh data with loading indicator
+      async function refreshData() {
+        const btn = document.querySelector('button[onclick="refreshData()"]');
+        const originalText = btn.textContent;
+        btn.textContent = 'Refreshing...';
+        btn.disabled = true;
+
+        try {
+          await fetchTotalUsers();
+          alert('Data refreshed successfully!');
+        } catch (error) {
+          console.error('Refresh failed:', error);
+          alert('Failed to refresh data. Please check your connection.');
+        } finally {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      // Show soldiers list modal with company grouping and status
+      function showSoldiersList() {
+        if (!window.soldiersData || window.soldiersData.length === 0) {
+          alert('No soldier records found in the database. Please ensure soldiers are registered with role "soldier".');
+          return;
+        }
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 30px; border-radius: 12px; width: 90%; max-width: 1000px; max-height: 80%;
+          overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        let soldiersList = '<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-green); padding-bottom: 10px;">Soldiers by Company</h3>';
+        soldiersList += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total Soldiers: ' + window.soldiersData.length + '</div>';
+
+        // Get unique companies
+        const companies = [...new Set(window.soldiersData.map(s => s.company || 'Unknown'))].sort();
+
+        // Add company filter
+        soldiersList += '<div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Filter by Company:</label>';
+        soldiersList += '<select id="companyFilter" onchange="filterSoldiers()" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">';
+        soldiersList += '<option value="all">All Companies</option>';
+        companies.forEach(company => {
+          soldiersList += `<option value="${company}">${company}</option>`;
+        });
+        soldiersList += '</select>';
+        soldiersList += '</div>';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Filter by Status:</label>';
+        soldiersList += '<select id="statusFilter" onchange="filterSoldiers()" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px;">';
+        soldiersList += '<option value="all">All Status</option>';
+        soldiersList += '<option value="present">Present</option>';
+        soldiersList += '<option value="leave">On Leave</option>';
+        soldiersList += '<option value="awol">AWOL</option>';
+        soldiersList += '<option value="duty">On Duty</option>';
+        soldiersList += '</select>';
+        soldiersList += '</div>';
+        soldiersList += '<div>';
+        soldiersList += '<label style="color: var(--text); margin-right: 10px;">Search:</label>';
+        soldiersList += '<input type="text" id="soldierSearch" oninput="filterSoldiers()" placeholder="Name or Service Number" style="background: var(--panel-3); color: var(--text); border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px; width: 200px;">';
+        soldiersList += '</div>';
+        soldiersList += '</div>';
+
+        // Group soldiers by company
+        const companyGroups = {};
+        const today = new Date().toISOString().split('T')[0];
+        
+        window.soldiersData.forEach(soldier => {
+          const company = soldier.company || 'Unknown';
+          if (!companyGroups[company]) {
+            companyGroups[company] = [];
+          }
+          
+          // Determine soldier status
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+          
+          let status = 'Present';
+          let statusColor = 'var(--accent-green)';
+          
+          if (special === 'AWOL') {
+            status = 'AWOL';
+            statusColor = 'var(--accent-red)';
+          } else if (special === 'Leave') {
+            status = 'On Leave';
+            statusColor = 'var(--accent-orange)';
+          } else if (special === 'on_duty') {
+            status = 'On Duty';
+            statusColor = 'var(--accent-blue)';
+          }
+          
+          soldier.currentStatus = status;
+          soldier.statusColor = statusColor;
+          companyGroups[company].push(soldier);
+        });
+
+        soldiersList += '<div id="soldiersContainer">';
+
+        // Display all initially
+        Object.keys(companyGroups).forEach(company => {
+          soldiersList += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Company: ${company} (${companyGroups[company].length} soldiers)</h4>`;
+          soldiersList += '<div style="display: grid; gap: 10px;">';
+          companyGroups[company].forEach(soldier => {
+            soldiersList += `
+              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
+                  <div style="color: var(--muted); font-size: 14px;">
+                    Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: bold; color: ${soldier.statusColor}; margin-bottom: 5px;">${soldier.currentStatus}</div>
+                  <button onclick="showAttendanceModal('${JSON.stringify(soldier).replace(/'/g, '\\\'')}')" style="background: var(--accent-blue); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button>
+                </div>
+              </div>
+            `;
+          });
+          soldiersList += '</div>';
+        });
+
+        soldiersList += '</div>';
+        soldiersList += '<button onclick="this.closest(\'.modal-overlay\').remove()" style="margin-top: 20px; padding: 10px 20px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Close</button>';
+
+        modalContent.innerHTML = soldiersList;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+      }
+
+      // Filter soldiers function (to be called from modal)
+      function filterSoldiers() {
+        const companyFilter = document.getElementById('companyFilter')?.value || 'all';
+        const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+        const searchTerm = document.getElementById('soldierSearch')?.value?.toLowerCase() || '';
+
+        const soldierCards = document.querySelectorAll('#soldiersContainer > div > div');
+        
+        soldierCards.forEach(card => {
+          const company = card.closest('div').previousElementSibling?.textContent?.split(': ')[1]?.split(' (')[0] || '';
+          const soldierName = card.querySelector('div:first-child div:first-child')?.textContent?.toLowerCase() || '';
+          const serviceNumber = card.querySelector('div:first-child div:last-child')?.textContent?.toLowerCase() || '';
+          const status = card.querySelector('div:last-child div:first-child')?.textContent || '';
+
+          const matchesCompany = companyFilter === 'all' || company === companyFilter;
+          const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'present' && status === 'Present') ||
+            (statusFilter === 'leave' && status === 'On Leave') ||
+            (statusFilter === 'awol' && status === 'AWOL') ||
+            (statusFilter === 'duty' && status === 'On Duty');
+          const matchesSearch = soldierName.includes(searchTerm) || serviceNumber.includes(searchTerm);
+
+          if (matchesCompany && matchesStatus && matchesSearch) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      // Show attendance modal for individual soldier
+      function showAttendanceModal(soldierData) {
+        const soldier = typeof soldierData === 'string' ? JSON.parse(soldierData) : soldierData;
+        
+        // Create attendance modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+          z-index: 1001;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: var(--card); padding: 30px; border-radius: 12px; width: 500px; max-width: 90%;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+        const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+
+        let modalHTML = `
+          <h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--accent-green); padding-bottom: 10px;">${soldier.name}</h3>
+          <div style="margin-bottom: 20px;">
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Service Number:</strong> ${soldier.service_number}</div>
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Rank:</strong> ${soldier.rank}</div>
+            <div style="color: var(--text); margin-bottom: 5px;"><strong>Company:</strong> ${soldier.company || 'Unknown'}</div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: var(--text); margin-bottom: 10px;">Today's Attendance</h4>
+            <div style="background: var(--panel-3); padding: 15px; border-radius: 8px;">
+              <div style="color: var(--text); margin-bottom: 5px;"><strong>Status:</strong> <span style="color: ${soldier.statusColor};">${soldier.currentStatus}</span></div>
+              ${attendance.notes ? `<div style="color: var(--muted); margin-bottom: 5px;"><strong>Notes:</strong> ${attendance.notes}</div>` : ''}
+              ${attendance.timestamp ? `<div style="color: var(--muted); font-size: 12px;"><strong>Last Updated:</strong> ${new Date(attendance.timestamp).toLocaleString()}</div>` : ''}
+            </div>
+          </div>
+          <button onclick="this.closest('.modal-overlay').remove()" style="width: 100%; padding: 10px; background: var(--accent-red); color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+        `;
+
+        modalContent.innerHTML = modalHTML;
+        modal.classList.add('modal-overlay');
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(event) {
+          if (event.target === modal) {
+            modal.remove();
+          }
+        });
+      }
+
+      // Load notices on page load and fetch data
+      window.addEventListener('DOMContentLoaded', function() {
+        loadAdjutantNotices();
+        fetchTotalUsers();
+
+        // Auto-refresh every 30 seconds
+        setInterval(fetchTotalUsers, 30000);
+      });
+    </script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment variables
+backend/.env
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc

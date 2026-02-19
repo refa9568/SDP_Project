@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Soldier Self-Service Portal</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+}
+body{
+    background:#2f3a32;
+    font-family:Segoe UI, Arial, sans-serif;
+    color:#e6e6c6;
+}
+
+/* ===== HEADER ===== */
+.header{
+    background:#6b7740;
+    padding:20px 28px;
+    border-bottom:2px solid #8f9960;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.header h1{
+    margin:0;
+    font-size:26px;
+    color:#ffffff;
+}
+.logout{
+    padding:8px 22px;
+    background:#3a4638;
+    border:1px solid #9ea96a;
+    color:#e6e6c6;
+    border-radius:6px;
+    cursor:pointer;
+}
+.logout:hover{
+    background:#4a5648;
+}
+
+/* ===== MAIN ===== */
+.main{
+    padding:26px;
+}
+
+/* ===== GRID ===== */
+.grid{
+    max-width:1200px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:26px;
+}
+
+/* ===== PANEL ===== */
+.panel{
+    background:#6f7f46;
+    border-radius:10px;
+    padding:20px;
+    border:1px solid #8f9960;
+}
+.panel-title{
+    background:#2f3b32;
+    color:#d9d4a6;
+    text-align:center;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:16px;
+    font-weight:600;
+}
+
+/* ===== PERSONAL INFO ===== */
+.info-box{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:12px 14px;
+    margin-bottom:12px;
+}
+
+/* ===== LEAVE BALANCE ===== */
+.balance{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+}
+.balance-card{
+    background:#2f3b32;
+    border:1px solid #8f9960;
+    border-radius:6px;
+    padding:16px;
+    text-align:center;
+    position: relative;
+    min-height: 150px;
+}
+.balance-card h3{
+    margin:0;
+    font-size:16px;
+    color:#e6e6c6;
+}
+.balance-card .count{
+    font-size:34px;
+    font-weight:bold;
+    color:#e33b2f;
+    text-align: center;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.annual-count, .casual-count {
+    bottom: 20px;
+}
+.recreational-count {
+    bottom: 40px;
+}
+
+/* ===== APPLY LEAVE ===== */
+.leave-options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+.leave-btn{
+    padding:30px 10px;
+    border-radius:8px;
+    text-align:center;
+    font-weight:600;
+    font-size:18px;
+    color:#ffffff;
+    cursor:pointer;
+    transition:transform 0.2s, opacity 0.2s;
+}
+.leave-btn:hover{
+    transform:scale(1.05);
+    opacity:0.9;
+}
+.annual{background:#24446c;}
+.casual{background:#1b1d18;}
+.recreation{background:#2f5a1f;}
+.medical{background:#5b1a15;}
+
+/* ===== ATTENDANCE ===== */
+.attendance-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#2f3b32;
+    padding:14px 16px;
+    border-radius:6px;
+    margin-bottom:12px;
+}
+.present{
+    background:#6fcf50;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.absent{
+    background:#d13b2f;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.not-given{
+    background:#3b82f6;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.leave{
+    background:#f59e0b;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+.awol{
+    background:#ef4444;
+    color:#ffffff;
+    padding:4px 16px;
+    border-radius:4px;
+}
+
+/* ===== NOTIFICATION BOX ===== */
+.notification-box{
+    margin-top:16px;
+    padding:14px 18px;
+    border-radius:6px;
+    font-weight:600;
+    font-size:15px;
+    text-align:center;
+    display:none;
+}
+.notification-box.approved{
+    background:#6fcf50;
+    color:#ffffff;
+    border:2px solid #4ea33a;
+    display:block;
+}
+.notification-box.rejected{
+    background:#d13b2f;
+    color:#ffffff;
+    border:2px solid #a42820;
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>Soldier Self-Service Portal</h1>
+    <div style="display: flex; gap: 10px;">
+        <button class="logout" onclick="changePassword()">Change Password</button>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<div class="grid">
+
+    <!-- PERSONAL INFO -->
+    <div class="panel">
+        <div class="panel-title">Personal Info</div>
+        <div class="info-box" id="user-name">Name &nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-id">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-rank">Rank &nbsp;&nbsp;&nbsp;: Loading...</div>
+        <div class="info-box" id="user-company">Company : Loading...</div>
+    </div>
+
+    <!-- LEAVE BALANCE -->
+    <div class="panel">
+        <div class="panel-title">Leave Balance</div>
+        <div class="balance">
+            <div class="balance-card">
+                <h3>Annual Leave</h3>
+                <div class="count annual-count">60</div>
+            </div>
+            <div class="balance-card">
+                <h3>Recreational Leave</h3>
+                <div class="count recreational-count">15</div>
+            </div>
+            <div class="balance-card">
+                <h3>Casual Leave</h3>
+                <div class="count casual-count">30</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLY LEAVE -->
+    <div class="panel">
+        <div class="panel-title">Apply for Leave</div>
+        <div class="leave-options">
+            <div class="leave-btn annual" onclick="applyLeave('Annual Leave')">Annual Leave</div>
+            <div class="leave-btn casual" onclick="applyLeave('Casual Leave')">Casual Leave</div>
+            <div class="leave-btn recreation" onclick="applyLeave('Recreation Leave')">Recreation Leave</div>
+            <div class="leave-btn medical" onclick="applyLeave('Medical Leave')">Medical Leave</div>
+        </div>
+        <div id="leaveNotification" class="notification-box"></div>
+    </div>
+
+    <!-- DAILY ATTENDANCE -->
+    <div class="panel">
+        <div class="panel-title">Daily Attendance</div>
+
+        <div class="attendance-row">
+            <span>Morning PT</span>
+            <span id="morning-pt-status" class="not-given">Not given yet</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Office</span>
+            <span id="office-status" class="not-given">Not given yet</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Afternoon Games</span>
+            <span id="games-status" class="not-given">Not given yet</span>
+        </div>
+
+        <div class="attendance-row">
+            <span>Roll Call</span>
+            <span id="roll-call-status" class="not-given">Not given yet</span>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:5000';
+// Load user data from localStorage
+function loadUserData() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    if (!user) {
+        // No user logged in, redirect to login
+        window.location.href = '../../login.html';
+        return;
+    }
+    
+    // Populate personal info
+    document.getElementById('user-name').textContent = `Name     : ${user.name}`;
+    document.getElementById('user-id').textContent = `ID         : ${user.service_number}`;
+    document.getElementById('user-rank').textContent = `Rank     : ${user.rank}`;
+    document.getElementById('user-company').textContent = `Company : ${user.company}`;
+    
+    return user;
+}
+
+// Load leave balance from API
+async function loadLeaveBalance() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/leaves/balance`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.balance && Array.isArray(data.balance)) {
+                // Map leave types to the dashboard cards
+                const balanceMap = {};
+                data.balance.forEach(item => {
+                    const type = item.type_name.toLowerCase();
+                    balanceMap[type] = item.remaining_days;
+                });
+                
+                // Update the counts
+                document.querySelector('.balance-card:nth-child(1) .count').textContent = balanceMap['annual leave'] || balanceMap['annual'] || 0;
+                document.querySelector('.balance-card:nth-child(2) .count').textContent = balanceMap['recreational leave'] || balanceMap['recreational'] || 0;
+                document.querySelector('.balance-card:nth-child(3) .count').textContent = balanceMap['casual leave'] || balanceMap['casual'] || 0;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading leave balance:', error);
+    }
+}
+
+// Load daily attendance from localStorage
+function loadAttendance(user) {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `attendance_${user.service_number}_${today}`;
+    const attendance = JSON.parse(localStorage.getItem(key) || '{}');
+
+    // Update each activity status
+    const activities = [
+        { key: 'morning_pt_attendance', id: 'morning-pt-status' },
+        { key: 'office_attendance', id: 'office-status' },
+        { key: 'games_attendance', id: 'games-status' },
+        { key: 'roll_call_attendance', id: 'roll-call-status' }
+    ];
+
+    activities.forEach(activity => {
+        const status = attendance[activity.key] || 'not-given'; // Default to not-given if not marked
+        const statusElement = document.getElementById(activity.id);
+        
+        if (status === 'present') {
+            statusElement.textContent = 'Present';
+            statusElement.className = 'present';
+        } else if (status === 'absent') {
+            statusElement.textContent = 'Absent';
+            statusElement.className = 'absent';
+        } else {
+            statusElement.textContent = 'Not given yet';
+            statusElement.className = 'not-given';
+        }
+    });
+
+    // If special status is AWOL or Leave, override all to show Leave or AWOL
+    const special = attendance['special_status'];
+    if (special === 'AWOL') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'AWOL';
+            statusElement.className = 'awol';
+        });
+    } else if (special === 'Leave') {
+        activities.forEach(activity => {
+            const statusElement = document.getElementById(activity.id);
+            statusElement.textContent = 'Leave';
+            statusElement.className = 'leave';
+        });
+    }
+}
+
+// Check leave status and display notification
+function checkLeaveStatus(user) {
+    const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+    const notification = document.getElementById('leaveNotification');
+    
+    // Filter requests for current soldier
+    const myRequests = requests.filter(req => req.soldier === user.name);
+    
+    if (myRequests.length === 0) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    // Sort by ID (most recent first) and find the latest non-pending leave
+    myRequests.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+    const latestProcessedLeave = myRequests.find(req => 
+        req.status === 'Approved by CO' || 
+        req.status === 'Rejected by CO' ||
+        req.status === 'Approved' || 
+        req.status === 'Rejected'
+    );
+    
+    if (!latestProcessedLeave) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    // Check if this notification has already been seen
+    if (seenNotifications.includes(latestProcessedLeave.id)) {
+        notification.style.display = 'none';
+        return;
+    }
+    
+    // Show notification and mark as seen
+    // Only show approved/rejected if it's from CO (final decision)
+    if (latestProcessedLeave.status === 'Approved by CO' || latestProcessedLeave.status === 'Approved') {
+        notification.className = 'notification-box approved';
+        notification.textContent = '✓ Your leave is approved';
+    } else if (latestProcessedLeave.status === 'Rejected by CO' || latestProcessedLeave.status === 'Rejected') {
+        notification.className = 'notification-box rejected';
+        notification.textContent = '✗ Your leave is rejected';
+    }
+    
+    // Mark this notification as seen
+    seenNotifications.push(latestProcessedLeave.id);
+    localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
+}
+
+// Redirect to leave application page with pre-filled data
+function applyLeave(leaveType) {
+    window.location.href = 'sldr_lve_apply.html?type=' + encodeURIComponent(leaveType);
+}
+
+// Change password function
+function changePassword() {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+        z-index: 1000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    `;
+
+    modalContent.innerHTML = `
+        <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+        <form id="changePasswordForm">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
+                <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
+                <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
+                <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthDiv = document.getElementById('passwordStrength');
+        if (password.length === 0) {
+            strengthDiv.textContent = '';
+            strengthDiv.style.color = '';
+            return;
+        }
+
+        let score = 0;
+        if (password.length >= 6) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+
+        if (score === 1) {
+            strengthDiv.textContent = 'Weak';
+            strengthDiv.style.color = '#e74c3c';
+        } else if (score === 2) {
+            strengthDiv.textContent = 'Medium';
+            strengthDiv.style.color = '#f39c12';
+        } else if (score === 3) {
+            strengthDiv.textContent = 'Strong';
+            strengthDiv.style.color = '#27ae60';
+        }
+    }
+
+    // Add event listener to new password input
+    document.getElementById('newPassword').addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+
+    // Form submit
+    document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+
+        // Password validation
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not logged in!');
+            document.body.removeChild(modal);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await response.json();
+            console.log('Password change response:', data);
+
+            if (data.success) {
+                console.log('Redirecting to login...');
+                // Immediately logout and redirect for security
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '../../login.html';
+            } else {
+                alert(data.error || 'Failed to change password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Connection error. Please try again.');
+        }
+    });
+
+    // Cancel button
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+    });
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '../../login.html';
+    }
+}
+
+// Initialize page
+window.addEventListener('DOMContentLoaded', function() {
+    const user = loadUserData();
+    if (user) {
+        checkLeaveStatus(user);
+        loadLeaveBalance();
+        loadAttendance(user);
+        
+        // Listen for localStorage changes to update attendance in real-time
+        window.addEventListener('storage', function(e) {
+            if (e.key && e.key.startsWith('attendance_') && e.key.includes(user.service_number)) {
+                loadAttendance(user);
+            }
+        });
+        
+        // Also check for updates every 1 second in case of same-tab changes
+        setInterval(() => loadAttendance(user), 1000);
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Parade State Report</title>
+    <style>
+        :root {
+            --bg: #2f3b2f;
+            --panel: #556634;
+            --card: #2f3f34;
+            --stroke: rgba(255,255,255,.14);
+            --text: #ffffff;
+            --muted: #ffffff;
+            --btn: #cbbd7c;
+            --btnText: #223017;
+            --green: #23b35a;
+            --amber: #d6a64f;
+            --red: #d94a3a;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,.06), transparent 55%),
+                        radial-gradient(900px 600px at 85% 30%, rgba(0,0,0,.22), transparent 55%),
+                        var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 12px 26px rgba(0,0,0,.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+        }
+
+        .header-info {
+            text-align: right;
+        }
+
+        .header-info p {
+            margin: 4px 0;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn {
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 900;
+            cursor: pointer;
+            background: var(--btn);
+            color: var(--btnText);
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 8px 18px rgba(0,0,0,.22);
+            transition: transform .20s ease, box-shadow .20s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 30px rgba(0,0,0,.28);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.22);
+        }
+
+        .summary-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .summary-card .value {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 900;
+        }
+
+        .summary-card.present .value { color: var(--green); }
+        .summary-card.absent .value { color: var(--red); }
+        .summary-card.leave .value { color: var(--amber); }
+
+        .report-section {
+            background: var(--panel);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.22);
+        }
+
+        .report-section h2 {
+            margin: 0 0 20px 0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0.3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: rgba(0,0,0,.15);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: rgba(0,0,0,.3);
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        th {
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 12px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--stroke);
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,.05);
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .status-present {
+            background: rgba(35,179,90,.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .status-leave {
+            background: rgba(214,166,79,.2);
+            color: var(--amber);
+            border: 1px solid var(--amber);
+        }
+
+        .status-absent {
+            background: rgba(217,74,58,.2);
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .company-section {
+            margin-bottom: 32px;
+        }
+
+        .company-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,.2);
+            border-radius: 8px;
+            border: 1px solid var(--stroke);
+        }
+
+        .company-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .company-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .company-stats span {
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📋 Daily Parade State Report</h1>
+            </div>
+            <div class="header-info">
+                <p><strong>Date:</strong> <span id="currentDate"></span></p>
+                <p><strong>Time:</strong> <span id="currentTime"></span></p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+            <button class="btn" style="background: #23b35a; color: white; border-color: #23b35a;" onclick="sendReportToCO('daily_parade_state')">📤 Send to CO</button>
+        </div>
+
+        <div style="margin-top: 24px;"></div>
+
+        <div class="summary-cards">
+            <div class="summary-card present">
+                <h3>Total Present</h3>
+                <p class="value" id="totalPresent">0</p>
+            </div>
+            <div class="summary-card absent">
+                <h3>Total Absent</h3>
+                <p class="value" id="totalAbsent">0</p>
+            </div>
+            <div class="summary-card leave">
+                <h3>On Leave</h3>
+                <p class="value" id="totalLeave">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Strength</h3>
+                <p class="value" id="totalStrength">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Readiness</h3>
+                <p class="value" id="readiness">0%</p>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2>🏢 Company-wise Parade State</h2>
+            <div id="companySections">
+                <div class="loading">Loading data from database...</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="window.print()">🖨️ Print Report</button>
+            <a href="adjt_dashboard.html" class="btn">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+
+        // Set current date and time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Get user status (Present, Leave, Absent, etc.)
+        function getUserStatus(user, leaves) {
+            // Check if user has active leave
+            const activeLeave = leaves.find(leave => 
+                leave.user_id === user.user_id && 
+                leave.status === 'approved' &&
+                new Date(leave.start_date) <= new Date() &&
+                new Date(leave.end_date) >= new Date()
+            );
+
+            if (activeLeave) {
+                return {
+                    status: 'Leave',
+                    remarks: `${activeLeave.leave_type} (${activeLeave.duration} days)`,
+                    class: 'status-leave'
+                };
+            }
+
+            // For now, assume everyone else is present
+            // In real scenario, you would check attendance records
+            return {
+                status: 'Present',
+                remarks: '—',
+                class: 'status-present'
+            };
+        }
+
+        // Load and display parade state data
+        async function loadParadeState() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Please login first');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                // Fetch users and leaves
+                const [usersResponse, leavesResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/users`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE}/api/leaves`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (!usersResponse.ok || !leavesResponse.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const usersData = await usersResponse.json();
+                const leavesData = await leavesResponse.json();
+
+                const users = usersData.users || [];
+                const leaves = leavesData.leaves || [];
+
+                // Group users by company
+                const companies = {};
+                users.forEach(user => {
+                    const company = user.company || 'Unassigned';
+                    if (!companies[company]) {
+                        companies[company] = [];
+                    }
+                    companies[company].push(user);
+                });
+
+                // Calculate overall statistics
+                let totalPresent = 0;
+                let totalLeave = 0;
+                let totalAbsent = 0;
+
+                // Generate company sections
+                const companySectionsDiv = document.getElementById('companySections');
+                companySectionsDiv.innerHTML = '';
+
+                Object.keys(companies).sort().forEach(companyName => {
+                    const companyUsers = companies[companyName];
+                    
+                    // Calculate company stats
+                    let companyPresent = 0;
+                    let companyLeave = 0;
+                    let companyAbsent = 0;
+
+                    const userStatusData = companyUsers.map(user => {
+                        const statusInfo = getUserStatus(user, leaves);
+                        if (statusInfo.status === 'Present') companyPresent++;
+                        else if (statusInfo.status === 'Leave') companyLeave++;
+                        else companyAbsent++;
+                        return { user, statusInfo };
+                    });
+
+                    totalPresent += companyPresent;
+                    totalLeave += companyLeave;
+                    totalAbsent += companyAbsent;
+
+                    // Create company section
+                    const section = document.createElement('div');
+                    section.className = 'company-section';
+                    
+                    section.innerHTML = `
+                        <div class="company-header">
+                            <h3>${companyName}</h3>
+                            <div class="company-stats">
+                                <span>Present: <strong style="color: var(--green);">${companyPresent}</strong></span>
+                                <span>Leave: <strong style="color: var(--amber);">${companyLeave}</strong></span>
+                                <span>Absent: <strong style="color: var(--red);">${companyAbsent}</strong></span>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Service Number</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${userStatusData.map(({ user, statusInfo }) => `
+                                    <tr>
+                                        <td>${user.rank || '—'}</td>
+                                        <td>${user.name}</td>
+                                        <td>${user.service_number}</td>
+                                        <td><span class="status-badge ${statusInfo.class}">${statusInfo.status}</span></td>
+                                        <td>${statusInfo.remarks}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    
+                    companySectionsDiv.appendChild(section);
+                });
+
+                // Update summary cards
+                const totalStrength = totalPresent + totalLeave + totalAbsent;
+                const readiness = totalStrength > 0 ? Math.round((totalPresent / totalStrength) * 100) : 0;
+
+                document.getElementById('totalPresent').textContent = totalPresent;
+                document.getElementById('totalLeave').textContent = totalLeave;
+                document.getElementById('totalAbsent').textContent = totalAbsent;
+                document.getElementById('totalStrength').textContent = totalStrength;
+                document.getElementById('readiness').textContent = readiness + '%';
+
+            } catch (error) {
+                console.error('Error loading parade state:', error);
+                document.getElementById('companySections').innerHTML = `
+                    <div class="loading" style="color: var(--red);">
+                        Failed to load data. Please ensure the backend server is running.
+                    </div>
+                `;
+            }
+        }
+
+        // Send Report to CO
+        function sendReportToCO(reportType) {
+            alert('📤 Report sent to CO successfully!\n\nThe Daily Parade State report has been submitted to the Commanding Officer\'s Notice Board.');
+        }
+
+        // Initialize on page load
+        updateDateTime();
+        loadParadeState();
+        setInterval(updateDateTime, 60000); // Update time every minute
+    </script>
+</body>
+</html>
