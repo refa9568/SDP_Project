@@ -1,0 +1,720 @@
+2026-01-15T00:52:18: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T00:52:18: Database connected successfully
+2026-01-15T00:52:42: 2026-01-14T18:52:42.009Z - GET /health
+2026-01-15T00:54:20: 2026-01-14T18:54:20.680Z - POST /api/auth/login
+2026-01-15T00:55:37: 2026-01-14T18:55:37.960Z - POST /api/auth/login
+2026-01-15T00:55:55: 2026-01-14T18:55:55.607Z - POST /api/auth/login
+2026-01-15T01:02:21: 2026-01-14T19:02:21.068Z - GET /api/users
+2026-01-15T01:04:24: 2026-01-14T19:04:24.802Z - POST /api/users
+2026-01-15T01:04:24: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Captain', 'Test User', 'soldier', 'Radio', '$2a$10$Yfu2/mse6cVFIcSQ4IVetO8ElgSIOHRlK4qGNPrhu/ncL35ZuY5cu', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:04:37: 2026-01-14T19:04:37.586Z - POST /api/users
+2026-01-15T01:04:37: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Captain', 'Test User', 'soldier', 'Radio', '$2a$10$iLQVZUP1JfIhVUF.hVyfk.yeaj.gSEcf6YiGYmh5qVHm1w0CZiyae', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:06:02: 2026-01-14T19:06:02.871Z - GET /api/users
+2026-01-15T01:07:40: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T01:07:40: Database connected successfully
+2026-01-15T01:10:28: 2026-01-14T19:10:28.068Z - POST /api/auth/login
+2026-01-15T01:13:22: 2026-01-14T19:13:22.621Z - POST /api/auth/login
+2026-01-15T01:13:47: 2026-01-14T19:13:47.739Z - POST /api/auth/login
+2026-01-15T01:13:53: 2026-01-14T19:13:53.987Z - GET /api/users
+2026-01-15T01:15:11: 2026-01-14T19:15:11.928Z - POST /api/auth/login
+2026-01-15T01:16:38: 2026-01-14T19:16:38.056Z - GET /api/users
+2026-01-15T01:27:45: 2026-01-14T19:27:45.208Z - POST /api/auth/login
+2026-01-15T01:27:48: 2026-01-14T19:27:48.916Z - GET /api/users
+2026-01-15T01:28:41: 2026-01-14T19:28:41.060Z - POST /api/users
+2026-01-15T01:28:41: Create user error: Error: Column 'service_number' cannot be null
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.create (D:\SDP_Project\backend\src\models\User.js:12:33)
+    at createUser (D:\SDP_Project\backend\src\controllers\userController.js:74:31) {
+  code: 'ER_BAD_NULL_ERROR',
+  errno: 1048,
+  sql: '\n' +
+    '      INSERT INTO users (service_number, `rank`, name, role, company, password_hash, email, phone, date_of_joining)\n' +
+    "      VALUES (NULL, 'Major', 'Suraiya Mustari Labiba', 'co', 'BHQ', '$2a$10$eEls5KsNCtq.jeZwmkKpZ.76NjzyTSIxkDg.73OrwzcjZJy7M0jPG', NULL, NULL, NULL)\n" +
+    '    ',
+  sqlState: '23000',
+  sqlMessage: "Column 'service_number' cannot be null"
+}
+2026-01-15T01:31:47: 2026-01-14T19:31:47.687Z - POST /api/auth/login
+2026-01-15T01:31:50: 2026-01-14T19:31:50.710Z - GET /api/users
+2026-01-15T01:31:59: 2026-01-14T19:31:59.329Z - POST /api/users
+2026-01-15T01:31:59: 2026-01-14T19:31:59.467Z - GET /api/users
+2026-01-15T01:32:15: 2026-01-14T19:32:15.917Z - GET /api/users
+2026-01-15T01:32:17: 2026-01-14T19:32:17.033Z - GET /api/users
+2026-01-15T01:33:14: 2026-01-14T19:33:14.349Z - GET /api/users
+2026-01-15T01:33:45: 2026-01-14T19:33:45.929Z - POST /api/users
+2026-01-15T01:33:46: 2026-01-14T19:33:46.073Z - GET /api/users
+2026-01-15T01:33:50: 2026-01-14T19:33:50.614Z - DELETE /api/users/undefined
+2026-01-15T01:33:50: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:33:53: 2026-01-14T19:33:53.291Z - GET /api/users
+2026-01-15T01:33:56: 2026-01-14T19:33:56.885Z - DELETE /api/users/undefined
+2026-01-15T01:33:56: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:34:42: 2026-01-14T19:34:42.747Z - POST /api/users
+2026-01-15T01:34:42: 2026-01-14T19:34:42.881Z - GET /api/users
+2026-01-15T01:34:48: 2026-01-14T19:34:48.282Z - DELETE /api/users/undefined
+2026-01-15T01:34:48: Delete user error: Error: Truncated incorrect DOUBLE value: 'undefined'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.delete (D:\SDP_Project\backend\src\models\User.js:94:33)
+    at deleteUser (D:\SDP_Project\backend\src\controllers\userController.js:139:37)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at D:\SDP_Project\backend\src\middleware\auth.js:47:5
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_TRUNCATED_WRONG_VALUE',
+  errno: 1292,
+  sql: "DELETE FROM users WHERE user_id = 'undefined'",
+  sqlState: '22007',
+  sqlMessage: "Truncated incorrect DOUBLE value: 'undefined'"
+}
+2026-01-15T01:35:51: 2026-01-14T19:35:51.545Z - GET /api/users
+2026-01-15T01:37:28: 2026-01-14T19:37:28.067Z - GET /api/users
+2026-01-15T01:38:05: 2026-01-14T19:38:05.491Z - POST /api/users
+2026-01-15T01:38:05: 2026-01-14T19:38:05.625Z - GET /api/users
+2026-01-15T01:39:26: 2026-01-14T19:39:26.785Z - POST /api/users
+2026-01-15T01:39:26: 2026-01-14T19:39:26.922Z - GET /api/users
+2026-01-15T01:39:53: 2026-01-14T19:39:53.420Z - POST /api/users
+2026-01-15T01:39:53: 2026-01-14T19:39:53.551Z - GET /api/users
+2026-01-15T01:40:07: 2026-01-14T19:40:07.650Z - POST /api/auth/login
+2026-01-15T01:40:10: 2026-01-14T19:40:10.285Z - GET /api/leaves/balance
+2026-01-15T01:40:10: Get leave balance error: Error: Unknown column '$1' in 'on clause'
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.getLeaveBalance (D:\SDP_Project\backend\src\models\Leave.js:143:31)
+    at getLeaveBalance (D:\SDP_Project\backend\src\controllers\leaveController.js:224:35)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: '\n' +
+    '      SELECT lt.type_name, lt.max_days,\n' +
+    "             COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.total_days ELSE 0 END), 0) as used_days,\n" +
+    "             lt.max_days - COALESCE(SUM(CASE WHEN l.status = 'approved' THEN l.total_days ELSE 0 END), 0) as remaining_days\n" +
+    '      FROM leave_types lt\n' +
+    '      LEFT JOIN leaves l ON lt.leave_type_id = l.leave_type_id AND l.user_id = $1\n' +
+    '      GROUP BY lt.leave_type_id, lt.type_name, lt.max_days\n' +
+    '      ORDER BY lt.type_name\n' +
+    '    ',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column '$1' in 'on clause'"
+}
+2026-01-15T01:40:10: 2026-01-14T19:40:10.300Z - GET /api/leaves/types
+2026-01-15T01:40:10: 2026-01-14T19:40:10.311Z - GET /api/leaves
+2026-01-15T01:40:10: Get leaves error: Error: Undeclared variable: $3
+    at PromisePool.query (D:\SDP_Project\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at Object.findAll (D:\SDP_Project\backend\src\models\Leave.js:83:31)
+    at getAllLeaves (D:\SDP_Project\backend\src\controllers\leaveController.js:67:34)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\SDP_Project\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (D:\SDP_Project\backend\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (D:\SDP_Project\backend\node_modules\express\lib\router\layer.js:95:5) {
+  code: 'ER_SP_UNDECLARED_VAR',
+  errno: 1327,
+  sql: '\n' +
+    '      SELECT l.*, u.service_number, u.rank, u.name, u.company, lt.type_name,\n' +
+    '             approver.name as approved_by_name\n' +
+    '      FROM leaves l\n' +
+    '      JOIN users u ON l.user_id = u.user_id\n' +
+    '      JOIN leave_types lt ON l.leave_type_id = lt.leave_type_id\n' +
+    '      LEFT JOIN users approver ON l.approved_by = approver.user_id\n' +
+    '      WHERE 1=1\n' +
+    '     AND l.user_id = $1 AND l.status = $2 ORDER BY l.created_at DESC LIMIT $3',
+  sqlState: '42000',
+  sqlMessage: 'Undeclared variable: $3'
+}
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+Error: Cannot find module '../config/database'
+Require stack:
+- D:\SDP_Project\backend\src\models\User.js
+- D:\SDP_Project\backend\src\controllers\authController.js
+- D:\SDP_Project\backend\src\routes\authRoutes.js
+- D:\SDP_Project\backend\src\server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1365:15)
+    at Hook._require.Module.require (C:\Users\IFTIAK\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+    at require (node:internal/modules/helpers:135:16)
+    at Object.<anonymous> (D:\SDP_Project\backend\src\models\User.js:1:14)
+    at Module._compile (node:internal/modules/cjs/loader:1688:14)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+2026-01-15T01:52:38: 
+╔═══════════════════════════════════════════════════╗
+║          ParadeOps Backend Server                 ║
+║                                                   ║
+║  Server running on port 5000                      ║
+║  Environment: development                        ║
+║                                                   ║
+║  API Endpoints:                                   ║
+║  - Auth: http://localhost:5000/api/auth           ║
+║  - Users: http://localhost:5000/api/users         ║
+║  - Leaves: http://localhost:5000/api/leaves       ║
+║  - Parade: http://localhost:5000/api/parade-state ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+  
+2026-01-15T01:52:38: Database connected successfully
+2026-01-15T01:53:46: 2026-01-14T19:53:46.808Z - GET /api/leaves/balance
+2026-01-15T01:53:46: 2026-01-14T19:53:46.833Z - GET /api/leaves/types
+2026-01-15T01:53:46: 2026-01-14T19:53:46.846Z - GET /api/leaves
+2026-01-15T01:53:46: 2026-01-14T19:53:46.859Z - GET /api/reports/leave-history
+2026-01-15T02:04:58: 2026-01-14T20:04:58.295Z - GET /api/leaves/balance
+2026-01-15T02:04:58: 2026-01-14T20:04:58.305Z - GET /api/leaves/types
+2026-01-15T02:04:58: 2026-01-14T20:04:58.315Z - GET /api/leaves
+2026-01-15T02:04:58: 2026-01-14T20:04:58.322Z - GET /api/reports/leave-history
