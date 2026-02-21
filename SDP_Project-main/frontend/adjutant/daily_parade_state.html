@@ -567,7 +567,7 @@
             const leave = 26;     // 8 + 5 + 6 + 7
             const absent = 8;     // 2 + 1 + 3 + 2
             const total = present + leave + absent;
-            const readiness = Math.round((present / total) * 100);
+            const readiness = ((present / total) * 100).toFixed(2);
 
             document.getElementById('totalPresent').textContent = present;
             document.getElementById('totalLeave').textContent = leave;

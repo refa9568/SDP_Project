@@ -551,7 +551,7 @@
           // Update company table
           Object.keys(companyStats).forEach(companyName => {
             const stats = companyStats[companyName];
-            const readiness = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+            const readiness = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(2) : 0;
             
             // Map company names to element IDs
             const idMap = {

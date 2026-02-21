@@ -487,7 +487,7 @@
 
                 // Update summary cards
                 const totalStrength = totalPresent + totalLeave + totalAbsent;
-                const readiness = totalStrength > 0 ? Math.round((totalPresent / totalStrength) * 100) : 0;
+                const readiness = totalStrength > 0 ? ((totalPresent / totalStrength) * 100).toFixed(2) : 0;
 
                 document.getElementById('totalPresent').textContent = totalPresent;
                 document.getElementById('totalLeave').textContent = totalLeave;

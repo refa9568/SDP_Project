@@ -498,7 +498,7 @@
 
                 Object.keys(companyStats).sort().forEach(company => {
                     const stats = companyStats[company];
-                    const readiness = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+                    const readiness = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(2) : 0;
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -514,7 +514,7 @@
 
                 // Add footer total row
                 const tfoot = document.getElementById('companySummaryFooter');
-                const overallReadiness = totalStrength > 0 ? Math.round((totalPresent / totalStrength) * 100) : 0;
+                const overallReadiness = totalStrength > 0 ? ((totalPresent / totalStrength) * 100).toFixed(2) : 0;
                 tfoot.innerHTML = `
                     <tr style="background: rgba(255,255,255,.05); font-weight: 900;">
                         <td><strong>Total</strong></td>
