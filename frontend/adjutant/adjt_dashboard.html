@@ -1082,11 +1082,11 @@
 
         // Display all initially
         Object.keys(companyGroups).forEach(company => {
-          soldiersList += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Company: ${company} (${companyGroups[company].length} soldiers)</h4>`;
-          soldiersList += '<div style="display: grid; gap: 10px;">';
+          soldiersList += `<h4 class="company-header" data-company="${company}" style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Company: ${company} (${companyGroups[company].length} soldiers)</h4>`;
+          soldiersList += `<div class="company-grid" data-company="${company}" style="display: grid; gap: 10px;">`;
           companyGroups[company].forEach(soldier => {
             soldiersList += `
-              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+              <div class="soldier-card" data-company="${company}" data-status="${soldier.currentStatus}" data-name="${soldier.name.toLowerCase()}" data-service="${soldier.service_number.toLowerCase()}" style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
                   <div style="color: var(--muted); font-size: 14px;">
@@ -1095,7 +1095,6 @@
                 </div>
                 <div style="text-align: right;">
                   <div style="font-weight: bold; color: ${soldier.statusColor}; margin-bottom: 5px;">${soldier.currentStatus}</div>
-                  <button onclick="showAttendanceModal('${JSON.stringify(soldier).replace(/'/g, '\\\'')}')" style="background: var(--accent-blue); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button>
                 </div>
               </div>
             `;
@@ -1125,13 +1124,19 @@
         const statusFilter = document.getElementById('statusFilter')?.value || 'all';
         const searchTerm = document.getElementById('soldierSearch')?.value?.toLowerCase() || '';
 
-        const soldierCards = document.querySelectorAll('#soldiersContainer > div > div');
+        // Get all soldier cards
+        const soldierCards = document.querySelectorAll('.soldier-card');
+        const companyHeaders = document.querySelectorAll('.company-header');
+        const companyGrids = document.querySelectorAll('.company-grid');
+
+        // Track which companies have visible soldiers
+        const visibleCompanies = new Set();
         
         soldierCards.forEach(card => {
-          const company = card.closest('div').previousElementSibling?.textContent?.split(': ')[1]?.split(' (')[0] || '';
-          const soldierName = card.querySelector('div:first-child div:first-child')?.textContent?.toLowerCase() || '';
-          const serviceNumber = card.querySelector('div:first-child div:last-child')?.textContent?.toLowerCase() || '';
-          const status = card.querySelector('div:last-child div:first-child')?.textContent || '';
+          const company = card.getAttribute('data-company');
+          const status = card.getAttribute('data-status');
+          const name = card.getAttribute('data-name');
+          const serviceNumber = card.getAttribute('data-service');
 
           const matchesCompany = companyFilter === 'all' || company === companyFilter;
           const matchesStatus = statusFilter === 'all' || 
@@ -1139,12 +1144,32 @@
             (statusFilter === 'leave' && status === 'On Leave') ||
             (statusFilter === 'awol' && status === 'AWOL') ||
             (statusFilter === 'duty' && status === 'On Duty');
-          const matchesSearch = soldierName.includes(searchTerm) || serviceNumber.includes(searchTerm);
+          const matchesSearch = searchTerm === '' || name.includes(searchTerm) || serviceNumber.includes(searchTerm);
 
           if (matchesCompany && matchesStatus && matchesSearch) {
             card.style.display = 'flex';
+            visibleCompanies.add(company);
           } else {
             card.style.display = 'none';
+          }
+        });
+
+        // Show/hide company headers and grids based on whether they have visible soldiers
+        companyHeaders.forEach(header => {
+          const company = header.getAttribute('data-company');
+          if (visibleCompanies.has(company)) {
+            header.style.display = 'block';
+          } else {
+            header.style.display = 'none';
+          }
+        });
+
+        companyGrids.forEach(grid => {
+          const company = grid.getAttribute('data-company');
+          if (visibleCompanies.has(company)) {
+            grid.style.display = 'grid';
+          } else {
+            grid.style.display = 'none';
           }
         });
       }
