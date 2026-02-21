@@ -98,6 +98,16 @@
       letter-spacing:.2px;
       cursor:pointer;
     }
+    .change-password-btn{
+      padding: 10px 18px;
+      border-radius: 8px;
+      background: var(--accent-green);
+      border: 1px solid rgba(35,179,90,.8);
+      color: white;
+      font-weight: 800;
+      letter-spacing:.2px;
+      cursor:pointer;
+    }
 
     /* section panel */
     .panel{
@@ -381,7 +391,7 @@
 
         <div class="top-actions">
           <button class="logout" onclick="refreshData()">Refresh Data</button>
-          <button class="logout" onclick="changePassword()">Change Password</button>
+          <button class="change-password-btn" onclick="changePassword()">Change Password</button>
           <button class="logout" onclick="logout()">Logout</button>
         </div>
       </div>
@@ -459,6 +469,9 @@
       <div class="bottom-actions">
         <button class="big-btn light" onclick="forwardToCO()">Forward to CO</button>
         <button class="big-btn dark" onclick="window.location.href='report.html'">Generate Battalion Report</button>
+      </div>
+      <div style="margin-top: 12px;">
+        <button class="big-btn" onclick="window.location.href='../mongodb-viewer.html'" style="width: 100%; background: #2d6ef7; color: white;">📊 View Soldier Attendance (MongoDB)</button>
       </div>
     </section>
 
@@ -1318,30 +1331,30 @@
 
           const modalContent = document.createElement('div');
           modalContent.style.cssText = `
-              background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              background: var(--panel); color: var(--text); padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.3); border: 1px solid var(--stroke);
           `;
 
           modalContent.innerHTML = `
-              <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+              <h3 style="margin-top: 0; color: var(--text);">Change Password</h3>
               <form id="changePasswordForm">
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
-                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">Current Password</label>
+                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                   </div>
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
-                      <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
-                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">New Password</label>
+                      <small style="color: var(--muted); font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                       <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
                   </div>
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
-                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">Confirm New Password</label>
+                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                   </div>
                   <div style="display: flex; gap: 10px;">
-                      <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
-                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                      <button type="submit" style="flex: 1; padding: 10px; background: var(--green); color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: var(--red); color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
                   </div>
               </form>
           `;
@@ -1365,13 +1378,13 @@
 
               if (score === 1) {
                   strengthDiv.textContent = 'Weak';
-                  strengthDiv.style.color = '#e74c3c';
+                  strengthDiv.style.color = 'var(--red)';
               } else if (score === 2) {
                   strengthDiv.textContent = 'Medium';
-                  strengthDiv.style.color = '#f39c12';
+                  strengthDiv.style.color = 'var(--amber)';
               } else if (score === 3) {
                   strengthDiv.textContent = 'Strong';
-                  strengthDiv.style.color = '#27ae60';
+                  strengthDiv.style.color = 'var(--green)';
               }
           }
 
