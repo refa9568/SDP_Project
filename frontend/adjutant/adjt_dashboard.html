@@ -310,23 +310,23 @@
     <section class="stats">
       <div class="stat total">
         <div class="label">Total Strength</div>
-        <div class="num" id="total-soldiers">450</div>
+        <div class="num" id="total-soldiers">0</div>
       </div>
       <div class="stat present">
         <div class="label">Present</div>
-        <div class="num" id="present-count">361</div>
+        <div class="num" id="present-count">0</div>
       </div>
       <div class="stat leave">
         <div class="label">On Leave</div>
-        <div class="num" id="leave-count">32</div>
+        <div class="num" id="leave-count">0</div>
       </div>
       <div class="stat duty">
         <div class="label">On Duty</div>
-        <div class="num" id="duty-count">55</div>
+        <div class="num" id="duty-count">0</div>
       </div>
       <div class="stat awol">
         <div class="label">AWOL</div>
-        <div class="num" id="awol-count">02</div>
+        <div class="num" id="awol-count">0</div>
       </div>
     </section>
 
@@ -453,30 +453,30 @@
 
           const modalContent = document.createElement('div');
           modalContent.style.cssText = `
-              background: white; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              background: var(--panel); color: var(--text); padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.3); border: 1px solid var(--stroke);
           `;
 
           modalContent.innerHTML = `
-              <h3 style="margin-top: 0; color: #333;">Change Password</h3>
+              <h3 style="margin-top: 0; color: var(--text);">Change Password</h3>
               <form id="changePasswordForm">
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Current Password</label>
-                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">Current Password</label>
+                      <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                   </div>
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">New Password</label>
-                      <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
-                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">New Password</label>
+                      <small style="color: var(--muted); font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
+                      <input type="password" id="newPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                       <div id="passwordStrength" style="margin-top: 5px; font-size: 12px; font-weight: bold;"></div>
                   </div>
                   <div style="margin-bottom: 20px;">
-                      <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm New Password</label>
-                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                      <label style="display: block; margin-bottom: 5px; font-weight: bold; color: var(--text);">Confirm New Password</label>
+                      <input type="password" id="confirmPassword" required style="width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 4px; background: var(--card); color: var(--text);">
                   </div>
                   <div style="display: flex; gap: 10px;">
-                      <button type="submit" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
-                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                      <button type="submit" style="flex: 1; padding: 10px; background: var(--green); color: white; border: none; border-radius: 4px; cursor: pointer;">Change Password</button>
+                      <button type="button" id="cancelBtn" style="flex: 1; padding: 10px; background: var(--red); color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
                   </div>
               </form>
           `;
@@ -500,13 +500,13 @@
 
               if (score === 1) {
                   strengthDiv.textContent = 'Weak';
-                  strengthDiv.style.color = '#e74c3c';
+                  strengthDiv.style.color = 'var(--red)';
               } else if (score === 2) {
                   strengthDiv.textContent = 'Medium';
-                  strengthDiv.style.color = '#f39c12';
+                  strengthDiv.style.color = 'var(--amber)';
               } else if (score === 3) {
                   strengthDiv.textContent = 'Strong';
-                  strengthDiv.style.color = '#27ae60';
+                  strengthDiv.style.color = 'var(--green)';
               }
           }
 
@@ -789,32 +789,44 @@
             }
           });
 
+          // Fetch attendance summary
+          const attendanceResponse = await fetch(`${API_BASE}/api/attendance/summary`, {
+              headers: {
+                  'Authorization': `Bearer ${token}`
+              }
+          });
+
+          let attendanceSummary = { leave: 0, awol: 0 };
+          if (attendanceResponse.ok) {
+              const attendanceData = await attendanceResponse.json();
+              if (attendanceData.success) {
+                  attendanceSummary = attendanceData.summary;
+              }
+          } else {
+              console.error('Failed to fetch attendance:', attendanceResponse.status);
+          }
+
           // Calculate overall statistics
           const today = new Date().toISOString().split('T')[0];
           let totalSoldiers = soldiers.length;
           let present = 0;
-          let onLeave = 0;
-          let awol = 0;
+          let onLeave = activeLeaveUserIds.size;
+          let awol = attendanceSummary.awol || 0;
           let onDuty = 0;
 
           soldiers.forEach(soldier => {
-            // Check attendance special status
+            // Check attendance special status for on_duty
             const attendanceKey = `attendance_${soldier.service_number}_${today}`;
             const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
             const special = attendance['special_status'];
 
-            if (activeLeaveUserIds.has(soldier._id)) {
-              onLeave++;
-            } else if (special === 'AWOL') {
-              awol++;
-            } else if (special === 'Leave') {
-              onLeave++;
-            } else if (special === 'on_duty') {
+            if (special === 'on_duty') {
               onDuty++;
-            } else {
-              present++;
             }
           });
+
+          // Adjust present count (total - leave - awol - duty)
+          present = Math.max(0, totalSoldiers - onLeave - awol - onDuty);
 
           // Update statistics display
           document.getElementById('total-soldiers').textContent = totalSoldiers;

@@ -283,6 +283,7 @@
     };
 
     let soldiersData = []; // Will hold fetched soldier data
+    let dataLoaded = false; // Flag to track if data loaded successfully
 
     // Fetch soldiers data on page load
     async function fetchSoldiersData() {
@@ -304,6 +305,9 @@
         if (!userResponse.ok) {
           console.error('Failed to fetch users:', userResponse.status);
           alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+          soldiersData = []; // Ensure it's empty
+          dataLoaded = false;
+          buildPreview(); // Show error state
           return;
         }
 
@@ -374,9 +378,18 @@
         // Populate company filter immediately after data is loaded
         populateCompanyFilter();
 
+        // Mark data as loaded
+        dataLoaded = true;
+
+        // Build initial preview
+        buildPreview();
+
       } catch (error) {
         console.error('Error fetching soldiers data:', error);
         alert('Error loading soldier data. Please check your connection.');
+        soldiersData = [];
+        dataLoaded = false;
+        buildPreview();
       }
     }
 
@@ -405,8 +418,13 @@
     };
 
     function buildPreview(){
-      if (soldiersData.length === 0) {
+      if (!dataLoaded) {
         preview.innerHTML = '<div class="hint">Loading soldier data...</div>';
+        return;
+      }
+
+      if (soldiersData.length === 0) {
+        preview.innerHTML = '<div class="hint">No soldier data available. Please check your connection and try again.</div>';
         return;
       }
 

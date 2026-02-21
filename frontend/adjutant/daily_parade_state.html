@@ -200,6 +200,12 @@
             border: 1px solid var(--red);
         }
 
+        .status-duty {
+            background: rgba(45,110,247,.2);
+            color: var(--blue);
+            border: 1px solid var(--blue);
+        }
+
         .company-section {
             margin-bottom: 32px;
         }
@@ -323,9 +329,11 @@
 
         // Get user status (Present, Leave, Absent, etc.)
         function getUserStatus(user, leaves) {
+            const today = new Date().toISOString().split('T')[0];
+            
             // Check if user has active leave
             const activeLeave = leaves.find(leave => 
-                leave.user_id === user.user_id && 
+                (leave.user_id._id || leave.user_id) === user._id && 
                 leave.status === 'approved' &&
                 new Date(leave.start_date) <= new Date() &&
                 new Date(leave.end_date) >= new Date()
@@ -334,13 +342,31 @@
             if (activeLeave) {
                 return {
                     status: 'Leave',
-                    remarks: `${activeLeave.leave_type} (${activeLeave.duration} days)`,
+                    remarks: `${activeLeave.type_name || activeLeave.leave_type || 'Leave'} (${activeLeave.days || activeLeave.total_days || activeLeave.duration} days)`,
                     class: 'status-leave'
                 };
             }
 
-            // For now, assume everyone else is present
-            // In real scenario, you would check attendance records
+            // Check attendance status from localStorage
+            const attendanceKey = `attendance_${user.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
+
+            if (special === 'AWOL') {
+                return {
+                    status: 'AWOL',
+                    remarks: attendance.notes || 'Absent Without Leave',
+                    class: 'status-absent'
+                };
+            } else if (special === 'on_duty') {
+                return {
+                    status: 'On Duty',
+                    remarks: attendance.notes || 'On Duty',
+                    class: 'status-duty'
+                };
+            }
+
+            // Default to present
             return {
                 status: 'Present',
                 remarks: '—',
@@ -409,7 +435,8 @@
                         const statusInfo = getUserStatus(user, leaves);
                         if (statusInfo.status === 'Present') companyPresent++;
                         else if (statusInfo.status === 'Leave') companyLeave++;
-                        else companyAbsent++;
+                        else if (statusInfo.status === 'AWOL') companyAbsent++;
+                        // On Duty is not counted in present/absent
                         return { user, statusInfo };
                     });
 

@@ -37,4 +37,4 @@ Start-Process "http://localhost:8000/frontend/login.html"
 
 Write-Host ""
 Write-Host "Note: MongoDB must be running for the backend to work." -ForegroundColor Yellow
-Write-Host "Make sure MongoDB service is started (Services → MongoDB Server)." -ForegroundColor Yellow
+Write-Host "Make sure MongoDB service is started (Services -> MongoDB Server)." -ForegroundColor Yellow
