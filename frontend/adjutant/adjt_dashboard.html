@@ -326,7 +326,7 @@
       </div>
       <div class="stat awol">
         <div class="label">AWOL</div>
-        <div class="num" id="awol-count">0</div>
+        <div class="num" id="awol-count" onclick="showAWOLList()" style="cursor: pointer;">0</div>
       </div>
     </section>
 
@@ -382,7 +382,7 @@
             <div>Present: <span class="tag green" id="present-percent">88%</span></div>
             <div>On Leave: <span class="tag amber" id="leave-percent">8%</span></div>
             <div>On Duty: <span class="tag blue" id="duty-percent">3%</span></div>
-            <div>AWOL: <span class="tag red" id="awol-percent">1%</span></div>
+            <div>AWOL: <span class="tag red" id="awol-percent">0%</span></div>
           </div>
         </div>
       </div>
@@ -423,7 +423,6 @@
       <div class="panel">
         <h3 class="panel-title">Reports & Actions</h3>
         <button class="list-btn black" onclick="window.location.href='daily_parade_state.html'">Daily Parade State</button>
-        <button class="list-btn" onclick="window.location.href='../mongodb-viewer.html'" style="margin-top: 10px; background: #2d6ef7; color: white;">Soldier Attendance (MongoDB)</button>
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.12);">
           <div style="font-weight: 800; font-size: 13px; color: rgba(233,239,214,.72); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Critical Action for CO</div>
           <textarea 
@@ -733,6 +732,190 @@
           sessionStorage.clear();
           window.location.href = '../../login.html';
         }
+      }
+
+      function showAWOLList() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Fetch AWOL soldiers from API
+        fetch(`${API_BASE}/api/attendance?date=${today}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            alert('Failed to fetch attendance data');
+            return;
+          }
+          
+          const awolRecords = data.records.filter(r => r.awol === 'yes');
+          const soldiers = [];
+          
+          // Match with soldiers data
+          awolRecords.forEach(record => {
+            const soldier = window.soldiersData.find(s => s.service_number === record.service_number);
+            if (soldier) {
+              soldiers.push(soldier);
+            }
+          });
+
+          // Create modal
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+          `;
+
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+            background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+          `;
+
+          let html = `<h3 style="margin-top: 0; color: var(--text); border-bottom: 2px solid var(--red); padding-bottom: 10px;">AWOL Soldiers</h3>`;
+          if (soldiers.length === 0) {
+            html += '<p style="color: var(--muted);">No soldiers marked as AWOL.</p>';
+          } else {
+            html += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total: ' + soldiers.length + '</div>';
+            html += '<div style="display: grid; gap: 10px;">';
+            soldiers.forEach(soldier => {
+              html += `
+                <div style="background: var(--panelAlt); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="removeFromAWOL('${soldier.service_number}')">
+                  <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
+                  <div style="color: var(--muted); font-size: 14px;">
+                    Service Number: ${soldier.service_number} | Rank: ${soldier.rank} | Company: ${soldier.company}
+                  </div>
+                  <div style="color: var(--red); font-size: 12px; margin-top: 5px;">Click to remove from AWOL</div>
+                </div>
+              `;
+            });
+            html += '</div>';
+          }
+
+          html += `<div style="margin-top: 20px; text-align: center;">
+            <button onclick="clearAllAWOL(); modal.remove();" style="padding: 10px 20px; background: var(--red); color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">Clear All AWOL</button>
+            <button onclick="showAWOLList(); modal.remove();" style="padding: 10px 20px; background: var(--btn); color: var(--btnText); border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">Refresh</button>
+            <button onclick="modal.remove()" style="padding: 10px 20px; background: var(--accent-blue); color: var(--btnText); border: none; border-radius: 6px; cursor: pointer;">Close</button>
+          </div>`;
+
+          modalContent.innerHTML = html;
+          modal.appendChild(modalContent);
+          document.body.appendChild(modal);
+
+          // Close modal when clicking outside
+          modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+              modal.remove();
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching AWOL list:', error);
+          alert('Failed to load AWOL list');
+        });
+      }
+
+      async function removeFromAWOL(serviceNumber) {
+        if (!confirm('Remove this soldier from AWOL status? They will be marked as Present.')) {
+          return;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceKey = `attendance_${serviceNumber}_${today}`;
+        const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+
+        // Set special status to none
+        attendance['special_status'] = 'none';
+
+        // Set all attendance to present
+        const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+        activities.forEach(activity => {
+          attendance[activity + '_attendance'] = 'present';
+        });
+
+        localStorage.setItem(attendanceKey, JSON.stringify(attendance));
+
+        // Save to MongoDB
+        try {
+          const token = localStorage.getItem('token');
+          await fetch(`${API_BASE}/api/attendance/mark`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              service_number: serviceNumber,
+              morning_pt: 'present',
+              office: 'present',
+              games: 'present',
+              roll_call: 'present',
+              leave: '',
+              awol: ''
+            })
+          });
+        } catch (error) {
+          console.error('MongoDB update error:', error);
+        }
+
+        // Refresh data
+        fetchTotalUsers();
+        alert('Soldier removed from AWOL and marked as Present.');
+      }
+
+      async function clearAllAWOL() {
+        if (!confirm('Clear all AWOL statuses? All AWOL soldiers will be marked as Present.')) {
+          return;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        let clearedCount = 0;
+
+        window.soldiersData.forEach(async soldier => {
+          const key = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(key) || '{}');
+          if (attendance['special_status'] === 'awol') {
+            attendance['special_status'] = 'none';
+            const activities = ['morning_pt', 'office', 'games', 'roll_call'];
+            activities.forEach(activity => {
+              attendance[activity + '_attendance'] = 'present';
+            });
+            localStorage.setItem(key, JSON.stringify(attendance));
+
+            // Save to MongoDB
+            try {
+              const token = localStorage.getItem('token');
+              await fetch(`${API_BASE}/api/attendance/mark`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  service_number: soldier.service_number,
+                  morning_pt: 'present',
+                  office: 'present',
+                  games: 'present',
+                  roll_call: 'present',
+                  leave: '',
+                  awol: ''
+                })
+              });
+              clearedCount++;
+            } catch (error) {
+              console.error('MongoDB update error for', soldier.service_number, error);
+            }
+          }
+        });
+
+        // Refresh data after a short delay
+        setTimeout(() => {
+          fetchTotalUsers();
+          alert(`Cleared AWOL status for ${clearedCount} soldiers.`);
+        }, 1000);
       }
 
       // Fetch total soldiers from API and update dashboard
