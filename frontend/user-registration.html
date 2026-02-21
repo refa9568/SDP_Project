@@ -124,13 +124,13 @@
 
             <div class="form-group">
                 <label for="name">Full Name <span class="required">*</span></label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label for="rank">Rank <span class="required">*</span></label>
                 <select id="rank" name="rank" required>
-                    <option value="">Select Rank</option>
+                    <option value=""></option>
                     <option value="Soldier">Soldier</option>
                     <option value="Lance Corporal">Lance Corporal</option>
                     <option value="Corporal">Corporal</option>
@@ -145,7 +145,7 @@
             <div class="form-group">
                 <label for="role">Role <span class="required">*</span></label>
                 <select id="role" name="role" required>
-                    <option value="">Select Role</option>
+                    <option value=""></option>
                     <option value="soldier">Soldier</option>
                     <option value="coy_comd">Company Commander</option>
                     <option value="adjutant">Adjutant</option>
@@ -157,7 +157,7 @@
             <div class="form-group">
                 <label for="company">Company</label>
                 <select id="company" name="company">
-                    <option value="">Select Company</option>
+                    <option value=""></option>
                     <option value="BHQ">BHQ</option>
                     <option value="HQ">HQ</option>
                     <option value="Radio">Radio</option>
@@ -168,20 +168,13 @@
             </div>
 
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="example@gmail.com">
-            </div>
-
-            <div class="form-group">
                 <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone" pattern="(013|014|015|016|017|018|019)[0-9]{8}" title="Phone number must start with 013,014,015,016,017,018, or 019 and be 11 digits">
+                <input type="tel" id="phone" name="phone" pattern="(013|014|015|016|017|018|019)[0-9]{8}" title="Phone number must start with 013,014,015,016,017,018, or 019 and be 11 digits" autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label for="password">Password <span class="required">*</span></label>
-                <small style="color: #666; font-weight: 300;">(At least 6 characters, one uppercase letter, one special character)</small>
-                <input type="password" id="password" name="password" required placeholder="Enter password">
-                <div id="passwordStrength" class="password-strength"></div>
+                <input type="password" id="password" name="password" required autocomplete="off">
             </div>
 
             <button type="submit" id="submitBtn">
@@ -192,37 +185,11 @@
         <div id="message" class="message"></div>
 
         <p style="text-align: center; margin-top: 20px;">
-            Already have an account? <a href="/login.html">Login here</a>
+            Already have an account? <a href="login.html">Login here</a>
         </p>
     </div>
 
     <script>
-        // Password strength checker
-        function checkPasswordStrength(password) {
-            const strengthDiv = document.getElementById('passwordStrength');
-            if (password.length === 0) {
-                strengthDiv.textContent = '';
-                strengthDiv.className = 'password-strength';
-                return;
-            }
-
-            let score = 0;
-            if (password.length >= 6) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
-
-            if (score === 1) {
-                strengthDiv.textContent = 'Weak';
-                strengthDiv.className = 'password-strength weak';
-            } else if (score === 2) {
-                strengthDiv.textContent = 'Medium';
-                strengthDiv.className = 'password-strength medium';
-            } else if (score === 3) {
-                strengthDiv.textContent = 'Strong';
-                strengthDiv.className = 'password-strength strong';
-            }
-        }
-
         // Add event listener to password input
         document.getElementById('password').addEventListener('input', function() {
             checkPasswordStrength(this.value);
@@ -230,14 +197,6 @@
 
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            // Password validation
-            const password = document.getElementById('password').value;
-            const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,}$/;
-            if (!passwordRegex.test(password)) {
-                alert('Password must be at least 6 characters long, contain at least one uppercase letter, and one special character.');
-                return;
-            }
 
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
@@ -288,32 +247,6 @@
             }
         });
 
-        // Auto-fill company based on role
-        document.getElementById('role').addEventListener('change', function() {
-            const role = this.value;
-            const companySelect = document.getElementById('company');
-
-            if (role === 'commanding_officer' || role === 'adjutant') {
-                companySelect.value = 'HQ';
-            } else if (role === 'coy_comd') {
-                companySelect.value = 'BHQ'; // Default for company commanders
-            }
-        });
-
-        // Auto-set role based on service number
-        document.getElementById('service_number').addEventListener('input', function() {
-            const serviceNumber = this.value.trim();
-            const roleSelect = document.getElementById('role');
-            const serviceNum = parseInt(serviceNumber);
-
-            if (!isNaN(serviceNum) && serviceNum >= 1111005) {
-                roleSelect.value = 'soldier';
-                roleSelect.disabled = true;
-            } else {
-                roleSelect.disabled = false;
-                // Don't auto-set for officers, let admin choose
-            }
-        });
     </script>
 </body>
 </html>

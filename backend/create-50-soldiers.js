@@ -13,9 +13,9 @@ async function createSoldiers() {
     // First, delete all soldiers except coy_comd and key users
     await User.deleteMany({
       role: 'soldier',
-      company: 'Alpha'
+      company: 'Radio'
     });
-    console.log('✓ Cleared existing Alpha company soldiers');
+    console.log('✓ Cleared existing Radio company soldiers');
 
     // Bengali names
     const bengaliFirstNames = [
@@ -55,14 +55,18 @@ async function createSoldiers() {
       'Chatterjee', 'Dutt', 'Nandi', 'Bakshi', 'Mitra', 'Chakraborti'
     ];
 
-    // Generate 50 soldiers
+    // Generate 100 soldiers
     const hash = await bcrypt.hash('A#1234', 10);
     const soldiers = [];
 
-    for (let i = 1; i <= 50; i++) {
-      const serviceNo = String(100000 + i).slice(-5);
-      const rank = ranks[Math.floor(Math.random() * ranks.length)];
-      const company = 'Alpha'; // All in Alpha company for this coy_comd
+    for (let i = 1; i <= 100; i++) {
+      const serviceNo = String(1111405 + (i - 1));
+      let rank;
+      if (i <= 5) rank = 'Sergeant';
+      else if (i <= 15) rank = 'Corporal';
+      else if (i <= 30) rank = 'Lance Corporal';
+      else rank = 'Soldier';
+      const company = 'Radio'; // All in Radio company for this coy_comd
       
       // Bengali names
       const firstNames = [
@@ -110,13 +114,15 @@ async function createSoldiers() {
         rank: rank,
         company: company,
         role: 'soldier',
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@army.mil`,
+        phone: `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
         password_hash: hash
       });
     }
 
     // Insert all soldiers
     const created = await User.insertMany(soldiers);
-    console.log(`\n✓ Created ${created.length} soldiers for Alpha Company`);
+    console.log(`\n✓ Created ${created.length} soldiers for Radio Company`);
     console.log('\nSoldier Details:');
     console.log('================');
     created.forEach((s, idx) => {

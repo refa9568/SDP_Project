@@ -84,36 +84,8 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
 }
 
 /* layout for employment page */
-.employment{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin:20px}
+.employment{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin:20px}
 .table-panel{max-width:680px;overflow:auto}
-.rank-panel{
-  background:var(--darkPanel);
-  border:3px solid var(--sand);
-  padding:14px;
-  border-radius:12px;
-  text-align:left;
-  box-shadow:0 8px 20px rgba(0,0,0,0.4);
-}
-.rank-panel h3{margin:0 0 10px 0;font-size:16px;font-weight:800;letter-spacing:0.5px;color:var(--sand)}
-.rank-list{list-style:none;padding:0;margin:8px 0 0 0;font-size:14px;font-weight:800}
-.rank-list li{
-  padding:12px;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  color:var(--text);
-  cursor:pointer;
-  border-radius:8px;
-  margin-bottom:6px;
-  background:rgba(85,107,47,0.3);
-  transition:all 0.2s;
-}
-.rank-list li:hover{
-  background:var(--olive);
-  transform:translateX(4px);
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-.rank-list li:active{
-  transform:translateX(2px) scale(0.98);
-}
 
 /* Modal styles */
 .modal{
@@ -242,21 +214,14 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
     </table>
   </div>
 
-  <div class="panel rank-panel">
-    <h3>Rank Wise State (without Lve)</h3>
-    <ul class="rank-list">
-      <!-- Dynamic content will be loaded here -->
-      <li>Loading...</li>
-    </ul>
-  </div>
-</div>
-
 <!-- Saved Teams Section -->
-<div class="panel table-panel" style="margin-top: 20px;">
+<div class="panel table-panel">
   <h3 style="margin: 0 0 15px 0; color: var(--sand);">Saved Teams</h3>
   <div id="teamsContainer">
     <p style="color: var(--text); opacity: 0.7;">No teams saved yet. Create your first team above.</p>
   </div>
+</div>
+
 </div>
 
 <!-- Team Creation Modal -->
@@ -314,111 +279,10 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
     </form>
   </div>
 </div>
-<div id="rankModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h3 id="modalTitle">Rank Details</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Sena No</th>
-          <th>Name</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="modalTableBody">
-      </tbody>
-    </table>
-  </div>
-</div>
 
 <script>
-// Sample data for each rank
-const rankData = {
-  'Sergeant': [
-    { senaNo: 'Army No-1234', name: 'Hasnat Abdullah', status: 'On Duty' },
-    { senaNo: 'Army No-1236', name: 'Shahriar Rahman', status: 'On Parade' },
-    { senaNo: 'Army No-1240', name: 'Tanvir Ahmed', status: 'On Duty' },
-    { senaNo: 'Army No-1237', name: 'Minhaz', status: 'On Duty' }
-  ],
-  'Corporal': [
-    { senaNo: 'Army No-1235', name: 'Rakib Hossain', status: 'On Duty' },
-    { senaNo: 'Army No-1239', name: 'Arif Uddin', status: 'On Leave' },
-    { senaNo: 'Army No-1242', name: 'Saifullah Khan', status: 'On Course' },
-    { senaNo: 'Army No-1244', name: 'Shawon', status: 'On Duty' },
-    { senaNo: 'Army No-1245', name: 'Rifat', status: 'On Duty' }
-  ],
-  'Lance Corporal': [
-    { senaNo: 'Army No-1237', name: 'Imran Kabir', status: 'On Course' },
-    { senaNo: 'Army No-1243', name: 'Mehedi Hasan', status: 'On Duty' },
-    { senaNo: 'Army No-1246', name: 'Akib', status: 'On Duty' }
-  ],
-  'Soldier': [
-    { senaNo: 'Army No-1238', name: 'Mahmudul Hasan', status: 'On Duty' },
-    { senaNo: 'Army No-1241', name: 'Nazmul Islam', status: 'On Parade' },
-    { senaNo: 'Army No-1247', name: 'Ridoy', status: 'On Duty' },
-    { senaNo: 'Army No-1248', name: 'Shuvo', status: 'On Duty' },
-    { senaNo: 'Army No-1249', name: 'Fahim Ahmed', status: 'On Leave' },
-    { senaNo: 'Army No-1250', name: 'Sabbir Hossain', status: 'On Duty' },
-    { senaNo: 'Army No-1251', name: 'Kamrul Islam', status: 'On Duty' },
-    { senaNo: 'Army No-1252', name: 'Ashraful Alam', status: 'On Parade' },
-    { senaNo: 'Army No-1253', name: 'Rubel Miah', status: 'On Duty' },
-    { senaNo: 'Army No-1254', name: 'Sajjad Hossain', status: 'On Duty' }
-    // ... and 25 more (showing 10 for brevity)
-  ]
-};
-
-function showRankDetails(rank) {
-  const modal = document.getElementById('rankModal');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalTableBody = document.getElementById('modalTableBody');
-  
-  modalTitle.textContent = `${rank} Personnel Details`;
-  
-  // Clear previous data
-  modalTableBody.innerHTML = '';
-  
-  // Use dynamic data if available, otherwise fallback to static
-  const personnel = (window.rankData && window.rankData[rank]) ? window.rankData[rank] : (rankData[rank] || []);
-  personnel.forEach(person => {
-    const row = document.createElement('tr');
-    const statusClass = person.status === 'On Leave' ? 'status-leave' : '';
-    row.innerHTML = `
-      <td>${person.id || person.senaNo || person.service_number}</td>
-      <td>${person.name}</td>
-      <td class="${statusClass}">${person.status}</td>
-    `;
-    modalTableBody.appendChild(row);
-  });
-  
-  // Show modal
-  modal.style.display = 'block';
-}
-
-function closeModal() {
-  document.getElementById('rankModal').style.display = 'none';
-}
-
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-  const modal = document.getElementById('rankModal');
-  if (event.target === modal) {
-    modal.style.display = 'none';
-  }
-}
-
-// Close modal on Escape key
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Escape') {
-    closeModal();
-  }
-});
-
 // Dynamic rank data loading
 const API_BASE = 'http://localhost:5000';
-
-// Load rank data on page load
-window.addEventListener('DOMContentLoaded', loadRankData);
 
 async function loadRankData() {
   console.log('loadRankData called');
@@ -526,9 +390,17 @@ function updateRankListWithStaticData() {
 // Load rank data on page load
 window.addEventListener('DOMContentLoaded', function() {
   console.log('DOMContentLoaded fired');
-  loadRankData();
   displaySavedTeams();
   loadEmploymentSchedule();
+
+  // Hide edit controls when accessed from CO dashboard (view-only mode)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('from') === 'co') {
+    const createTeamBtn = document.getElementById('createTeamBtn');
+    const editScheduleBtn = document.getElementById('editScheduleBtn');
+    if (createTeamBtn) createTeamBtn.style.display = 'none';
+    if (editScheduleBtn) editScheduleBtn.style.display = 'none';
+  }
 
   // Form submission handler
   document.getElementById('teamForm').addEventListener('submit', saveTeam);
