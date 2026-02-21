@@ -288,18 +288,6 @@
 
     const API_BASE = 'http://localhost:5000';
 
-    // Fallback sample data
-    const sampleRows = [
-      { id:'001', rank:'LCPL', name:'Akib', company:'RR', status:'AWOL', remark:'Not Reported' },
-      { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
-      { id:'003', rank:'CPL', name:'Shawon', company:'HQ', status:'On Duty', remark:'RP Duty' },
-      { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
-      { id:'005', rank:'SGT', name:'Minhaz', company:'RR', status:'Present', remark:'' },
-      { id:'006', rank:'LCPL', name:'Rifat', company:'HQ', status:'Leave', remark:'Medical Leave' },
-      { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
-      { id:'008', rank:'SNK', name:'Shuvo', company:'HQ', status:'Present', remark:'' },
-    ];
-
     async function buildPreview(){
       const startIso = (document.getElementById('startDate').value || '').trim();
       const endIso = (document.getElementById('endDate').value || '').trim();
@@ -439,51 +427,7 @@
         preview.innerHTML = html;
       } catch (error) {
         console.error('Error building preview:', error);
-        // Fallback to sample data
-        let filteredRows = sampleRows;
-        const selectedCompany = document.getElementById('companyFilter').value;
-        if (selectedCompany !== 'all') {
-          filteredRows = sampleRows.filter(r => r.company === selectedCompany);
-        }
-
-        const counts = filteredRows.reduce((acc, r)=>{
-          acc.total++; if(r.status==='Present') acc.present++; if(r.status==='Leave') acc.leave++; if(r.status==='AWOL') acc.awol++; if(r.status==='On Duty') acc.duty++; return acc;
-        }, { total:0, present:0, leave:0, awol:0, duty:0 });
-
-        const headers = ['ID'];
-        if(include.rank) headers.push('Rank');
-        if(include.name) headers.push('Name');
-        if(include.company) headers.push('Company');
-        if(include.status) headers.push('Status');
-        if(include.remark) headers.push('Remarks');
-
-        const rowsHtml = filteredRows.map(r=>{
-          const cells = [r.id];
-          if(include.rank) cells.push(r.rank);
-          if(include.name) cells.push(r.name);
-          if(include.company) cells.push(r.company);
-          if(include.status) cells.push(statusPill(r.status));
-          if(include.remark) cells.push(r.remark);
-          return `<tr>${cells.map((c,i)=>`<td>${c || ''}</td>`).join('')}</tr>`;
-        }).join('');
-
-        const html = `
-          <div class="preview-card">
-            <div class="report-title">PARADE STATE REPORT</div>
-            <div class="report-sub">Report Period: ${startIso || endIso ? `${start} to ${end}` : 'Sample Data'}</div>
-            <div class="summary">
-              <div class="badge total"><div><span style="font-size:20px">${counts.total}</span><span class="small">Total</span></div></div>
-              <div class="badge present"><div><span style="font-size:20px">${counts.present}</span><span class="small">Present</span></div></div>
-              <div class="badge leave"><div><span style="font-size:20px">${counts.leave}</span><span class="small">Leave</span></div></div>
-              <div class="badge awol"><div><span style="font-size:20px">${counts.awol}</span><span class="small">AWOL</span></div></div>
-            </div>
-            <table class="report-table">
-              <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
-          </div>`;
-
-        preview.innerHTML = html;
+        preview.innerHTML = '<div class="hint" style="color: var(--red);">Error loading report data. Please check your connection and try again.</div>';
       }
     }
 

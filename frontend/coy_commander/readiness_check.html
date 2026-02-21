@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Readiness Check - Coy Comd</title>
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+
+<style>
+:root{
+  --dark:#2E3D32; /* specified dark green */
+  --olive:#556B2F; /* olive */
+  --sand:#C2B280; /* sand/khaki */
+  --green:#2ecc71; /* status green */
+  --amber:#f39c12; /* status amber */
+  --red:#e74c3c; /* status red */
+  --text:#ffffff;
+}
+
+*{
+  box-sizing:border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--dark);
+  color:var(--text);
+}
+
+/* ---------- HEADINGS ---------- */
+h2,h3{
+  font-weight:800;
+  color:#ffffff;
+  letter-spacing:0.5px;
+}
+
+/* ---------- HEADER ---------- */
+.header{
+  background:var(--olive);
+  border:3px solid var(--sand);
+  padding:18px;
+  margin:20px;
+  border-radius:12px;
+}
+
+.header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.title h2{
+  margin:0;
+  font-size:24px;
+}
+
+.back-button{
+  appearance:none;
+  background:rgba(255,255,255,0.1);
+  border:2px solid var(--sand);
+  color:var(--text);
+  padding:10px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:800;
+  transition:all 0.2s;
+}
+.back-button:hover{
+  background:rgba(255,255,255,0.2);
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ---------- PANELS ---------- */
+.panel{
+  background:#17221b;
+  border:3px solid var(--sand);
+  padding:20px;
+  border-radius:12px;
+  margin:20px;
+}
+
+.panel h3{
+  margin-top:0;
+  color:#C2B280;
+}
+
+/* ---------- TABLE ---------- */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+
+th,td{
+  border:1px solid var(--sand);
+  padding:12px;
+  text-align:left;
+  font-size:14px;
+}
+
+th{
+  background:#2E3D32;
+  color:#C2B280;
+  font-weight:600;
+}
+
+.tag{
+  padding:4px 8px;
+  border-radius:4px;
+  font-weight:600;
+  font-size:12px;
+}
+
+.tag.green{
+  background:#2ecc71;
+  color:#ffffff;
+}
+
+.tag.amber{
+  background:#f39c12;
+  color:#ffffff;
+}
+
+.tag.red{
+  background:#e74c3c;
+  color:#ffffff;
+}
+
+/* ---------- STATS CARDS ---------- */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:15px;
+  margin-top:20px;
+}
+
+.stat-card{
+  background:#2E3D32;
+  border:2px solid var(--sand);
+  padding:15px;
+  border-radius:8px;
+  text-align:center;
+}
+
+.stat-card h4{
+  margin:0 0 10px 0;
+  color:#C2B280;
+  font-size:14px;
+}
+
+.stat-card .value{
+  font-size:24px;
+  font-weight:800;
+  color:#ffffff;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+  color:#C2B280;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="title">
+      <h2>Company Readiness Check</h2>
+    </div>
+    <button class="back-button" onclick="window.location.href='coy_dashboard.html'">← Back to Dashboard</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Radio Company Readiness Overview</h3>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h4>Total Strength</h4>
+      <div class="value" id="totalStrength">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <h4>Present</h4>
+      <div class="value" id="presentCount">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <h4>On Leave</h4>
+      <div class="value" id="leaveCount">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <h4>On Duty</h4>
+      <div class="value" id="dutyCount">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <h4>AWOL</h4>
+      <div class="value" id="awolCount">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <h4>Readiness %</h4>
+      <div class="value" id="readinessPercent">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Detailed Status Breakdown</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Service Number</th>
+        <th>Name</th>
+        <th>Rank</th>
+        <th>Status</th>
+        <th>Readiness</th>
+      </tr>
+    </thead>
+    <tbody id="soldierStatusTable">
+      <tr>
+        <td colspan="5" class="loading">Loading soldier data...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:5000';
+
+// Check authentication
+function checkAuth() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = '../login.html';
+    return null;
+  }
+
+  try {
+    const decoded = jwt_decode(token);
+    if (decoded.role !== 'coy_comd') {
+      alert('Access denied. Company Commander access required.');
+      window.location.href = '../login.html';
+      return null;
+    }
+    return decoded;
+  } catch (error) {
+    console.error('Invalid token:', error);
+    window.location.href = '../login.html';
+    return null;
+  }
+}
+
+// Load readiness data
+async function loadReadinessData() {
+  const user = checkAuth();
+  if (!user) return;
+
+  try {
+    const response = await fetch(`${API_BASE}/api/users/company/${user.company}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch soldier data');
+    }
+
+    const soldiers = await response.json();
+
+    // Calculate readiness stats
+    let total = soldiers.length;
+    let present = 0;
+    let onLeave = 0;
+    let onDuty = 0;
+    let awol = 0;
+
+    soldiers.forEach(soldier => {
+      if (soldier.special_status === 'on_leave') {
+        onLeave++;
+      } else if (soldier.special_status === 'on_duty') {
+        onDuty++;
+      } else if (soldier.special_status === 'AWOL') {
+        awol++;
+      } else {
+        present++;
+      }
+    });
+
+    const readiness = total > 0 ? ((present / total) * 100).toFixed(2) : 0;
+
+    // Update stats cards
+    document.getElementById('totalStrength').textContent = total;
+    document.getElementById('presentCount').textContent = present;
+    document.getElementById('leaveCount').textContent = onLeave;
+    document.getElementById('dutyCount').textContent = onDuty;
+    document.getElementById('awolCount').textContent = awol;
+    document.getElementById('readinessPercent').textContent = `${readiness}%`;
+
+    // Update readiness color
+    const readinessElement = document.getElementById('readinessPercent');
+    if (readiness >= 80) {
+      readinessElement.style.color = '#2ecc71';
+    } else if (readiness >= 60) {
+      readinessElement.style.color = '#f39c12';
+    } else {
+      readinessElement.style.color = '#e74c3c';
+    }
+
+    // Update detailed table
+    const tableBody = document.getElementById('soldierStatusTable');
+    tableBody.innerHTML = '';
+
+    soldiers.forEach(soldier => {
+      let status = 'Present';
+      let readinessStatus = 'Ready';
+      let statusClass = 'green';
+
+      if (soldier.special_status === 'on_leave') {
+        status = 'On Leave';
+        readinessStatus = 'Not Ready';
+        statusClass = 'amber';
+      } else if (soldier.special_status === 'on_duty') {
+        status = 'On Duty';
+        readinessStatus = 'Not Ready';
+        statusClass = 'amber';
+      } else if (soldier.special_status === 'AWOL') {
+        status = 'AWOL';
+        readinessStatus = 'Not Ready';
+        statusClass = 'red';
+      }
+
+      const row = `
+        <tr>
+          <td>${soldier.service_number}</td>
+          <td>${soldier.name}</td>
+          <td>${soldier.rank}</td>
+          <td><span class="tag ${statusClass}">${status}</span></td>
+          <td><span class="tag ${statusClass}">${readinessStatus}</span></td>
+        </tr>
+      `;
+      tableBody.innerHTML += row;
+    });
+
+  } catch (error) {
+    console.error('Error loading readiness data:', error);
+    document.getElementById('soldierStatusTable').innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; color: #e74c3c;">Error loading data. Please try again.</td>
+      </tr>
+    `;
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  checkAuth();
+  loadReadinessData();
+});
+</script>
+
+</body>
+</html>

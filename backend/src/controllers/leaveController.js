@@ -18,8 +18,11 @@ const getAllLeaves = async (req, res) => {
         return res.json({ count: 0, leaves: [] });
       }
     } else if (user.role === 'coy_comd') {
-      // Company Commander sees leaves from their company
-      filters.unit = user.company;
+      // Company Commander sees only Radio company leaves
+      filters.unit = 'Radio';
+    } else if (user.role === 'adjutant') {
+      // Adjutant sees all leaves except Radio company
+      filters.exclude_unit = 'Radio';
     }
     // adjutant, bsm, commanding_officer see all leaves
 
@@ -297,7 +300,7 @@ const deleteLeave = async (req, res) => {
 const clearAllLeaves = async (req, res) => {
   try {
     const user = req.user;
-    const allowedRoles = ['adjutant', 'commanding_officer'];
+    const allowedRoles = ['adjutant', 'commanding_officer', 'coy_comd'];
     if (!allowedRoles.includes((user.role || '').toLowerCase())) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }

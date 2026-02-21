@@ -211,7 +211,7 @@
           <span>Report Preview</span>
         </div>
         <div id="preview" class="preview-box">
-          <div class="hint">Configure report settings and click Generate Preview<br/><small style="opacity:0.7;">The system will fetch real-time data from all companies</small></div>
+          <div class="hint">Configure report settings and click Generate Preview<br/><small style="opacity:0.7;">The system will fetch real-time data from the database</small></div>
         </div>
         <div class="footer">
           <button class="back" onclick="location.href='coy_dashboard.html'">Back</button>
@@ -220,38 +220,16 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
   <script>
-    // Simulated database - In production, this would be fetched from your backend API
-    // Generate 450 personnel records across different companies
-    const personnelDatabase = [];
-    const ranks = ['SNK', 'LCPL', 'CPL', 'SGT', 'WO', 'SWO', 'MWO'];
-    const firstNames = ['Akib', 'Rahul', 'Shawon', 'Arman', 'Minhaz', 'Rifat', 'Ridoy', 'Shuvo', 'Fahim', 'Sakib', 'Tamim', 'Mushfiq', 'Sabbir', 'Nasir', 'Mehedi', 'Rashid', 'Karim', 'Rahim', 'Jalal', 'Mizan'];
-    const lastNames = ['Rahman', 'Kumar', 'Ahmed', 'Khan', 'Uddin', 'Hassan', 'Islam', 'Alam', 'Hasan', 'Ali', 'Iqbal', 'Hossain', 'Chowdhury', 'Siddique', 'Mahmud'];
-    const companies = ['HQ', 'Radio', 'RR', 'Support'];
-    const statuses = ['Present', 'Leave', 'AWOL', 'On Duty'];
-    const remarks = ['', '', '', '', 'Annual Leave', 'Medical Leave', 'RP Duty', 'Guard Duty', 'Training', 'Not Reported', 'Unauthorized Absence', 'Sick Leave'];
+    const API_BASE = 'http://localhost:5000';
+    const preview = document.getElementById('preview');
+    const btnPreview = document.getElementById('btnPreview');
+    const btnPrint = document.getElementById('btnPrint');
 
-    for(let i = 1; i <= 450; i++) {
-      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      let remark = remarks[Math.floor(Math.random() * remarks.length)];
-      
-      // Add appropriate remarks based on status
-      if(status === 'Leave' && !remark) remark = 'Annual Leave';
-      if(status === 'AWOL' && !remark) remark = 'Not Reported';
-      if(status === 'On Duty' && !remark) remark = 'Guard Duty';
-      
-      personnelDatabase.push({
-        id: String(i).padStart(3, '0'),
-        rank: ranks[Math.floor(Math.random() * ranks.length)],
-        name: `${firstName} ${lastName}`,
-        company: companies[Math.floor(Math.random() * companies.length)],
-        status: status,
-        remark: remark,
-        date: i % 2 === 0 ? '2025-01-02' : '2025-01-01'
-      });
-    }
+    let soldiersData = [];
+    let leaveData = [];
+    let attendanceData = [];
 
     const fmt = (iso) => {
       if(!iso) return '';
@@ -270,21 +248,75 @@
       return `<span class="pill ${cls}">${s}</span>`;
     };
 
-    async function fetchPersonnelData(startDate, endDate, companyFilter) {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Filter data based on date range and company
-      return personnelDatabase.filter(person => {
-        const matchDate = person.date >= startDate && person.date <= endDate;
-        const matchCompany = companyFilter === 'all' || person.company === companyFilter;
-        return matchDate && matchCompany;
-      });
+    // Load data on page load
+    window.addEventListener('DOMContentLoaded', loadReportData);
+
+    async function loadReportData() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '../../login.html';
+          return;
+        }
+
+        let decoded;
+        try {
+          decoded = jwt_decode(token);
+        } catch (error) {
+          console.error('Invalid token:', error);
+          alert('Your session has expired. Please log in again.');
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+          return;
+        }
+
+        // Update title based on user role/company
+        const userRole = decoded.role;
+        const userCompany = decoded.company;
+        if (userRole === 'commanding_officer') {
+          document.querySelector('.title h1').textContent = 'Commanding Officer - All Companies Report Generation';
+        } else {
+          document.querySelector('.title h1').textContent = `${userCompany || 'All Companies'} Report Generation`;
+        }
+
+        // Fetch soldiers
+        const userResponse = await fetch(`${API_BASE}/api/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) {
+          console.error('Failed to fetch users:', userResponse.status);
+          alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+          return;
+        }
+
+        const userData = await userResponse.json();
+        const allSoldiers = userData.users.filter(user => user.role === 'soldier');
+
+        // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (leaveResponse.ok) {
+          const leaveDataResponse = await leaveResponse.json();
+          leaveData = leaveDataResponse.leaves;
+        }
+
+        soldiersData = allSoldiers;
+
+        // Show initial message
+        preview.innerHTML = '<div class="hint">Data loaded successfully. Configure report settings and click Generate Preview</div>';
+
+      } catch (error) {
+        console.error('Error loading report data:', error);
+        alert('Error loading report data. Please check your connection.');
+      }
     }
 
     async function buildPreview() {
-      const preview = document.getElementById('preview');
-      const btnPreview = document.getElementById('btnPreview');
       const startIso = document.getElementById('startDate').value || '';
       const endIso = document.getElementById('endDate').value || '';
       const companyFilter = document.getElementById('companyFilter').value;
@@ -299,8 +331,107 @@
       preview.innerHTML = '<div class="hint loading">⏳ Fetching real-time data from all companies...</div>';
 
       try {
-        // Fetch data from "database"
-        const records = await fetchPersonnelData(startIso, endIso, companyFilter);
+        const token = localStorage.getItem('token');
+
+        // Fetch attendance data for the date range
+        // Since we need data for a range, we'll fetch for each date in the range
+        const startDate = new Date(startIso);
+        const endDate = new Date(endIso);
+        const dateRange = [];
+
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          dateRange.push(d.toISOString().split('T')[0]);
+        }
+
+        // For simplicity, let's use the most recent date in the range for attendance
+        // In a full implementation, you'd aggregate data across the date range
+        const attendanceDate = dateRange[dateRange.length - 1];
+
+        let attendanceResponse;
+        if (companyFilter === 'all') {
+          attendanceResponse = await fetch(`${API_BASE}/api/attendance?date=${attendanceDate}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } else {
+          attendanceResponse = await fetch(`${API_BASE}/api/attendance?date=${attendanceDate}&company=${companyFilter}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
+
+        let attendanceRecords = [];
+        if (attendanceResponse.ok) {
+          const attendanceData = await attendanceResponse.json();
+          attendanceRecords = attendanceData.records || [];
+        }
+
+        // Process soldiers with current status
+        const records = soldiersData
+          .filter(soldier => companyFilter === 'all' || soldier.company === companyFilter)
+          .map(soldier => {
+            // Find attendance record for this soldier
+            const attendance = attendanceRecords.find(att => att.service_number === soldier.service_number);
+
+            let status = 'Present';
+            let remark = '';
+
+            if (attendance) {
+              // Check AWOL status
+              if (attendance.awol === 'yes') {
+                status = 'AWOL';
+                remark = 'Not Reported';
+              }
+              // Check if on leave
+              else if (attendance.leave) {
+                status = 'Leave';
+                remark = attendance.leave;
+              }
+              // Check if on duty (based on any special attendance)
+              else if (attendance.morning_pt === 'present' || attendance.office === 'present' ||
+                       attendance.games === 'present' || attendance.roll_call === 'present') {
+                // If they have any attendance marked, they're present
+                status = 'Present';
+              } else {
+                // Check for approved leave in the date range
+                const activeLeave = leaveData.find(leave => {
+                  const leaveStart = new Date(leave.start_date);
+                  const leaveEnd = new Date(leave.end_date);
+                  const checkDate = new Date(attendanceDate);
+                  return (leave.user_id._id || leave.user_id) === soldier._id &&
+                         checkDate >= leaveStart && checkDate <= leaveEnd && leave.status === 'approved';
+                });
+                if (activeLeave) {
+                  status = 'Leave';
+                  remark = activeLeave.type_name || 'Leave';
+                }
+              }
+            } else {
+              // No attendance record - check for leave
+              const activeLeave = leaveData.find(leave => {
+                const leaveStart = new Date(leave.start_date);
+                const leaveEnd = new Date(leave.end_date);
+                const checkDate = new Date(attendanceDate);
+                return (leave.user_id._id || leave.user_id) === soldier._id &&
+                       checkDate >= leaveStart && checkDate <= leaveEnd && leave.status === 'approved';
+              });
+              if (activeLeave) {
+                status = 'Leave';
+                remark = activeLeave.type_name || 'Leave';
+              } else {
+                status = 'AWOL';
+                remark = 'No Record';
+              }
+            }
+
+            return {
+              id: soldier.service_number,
+              rank: soldier.rank,
+              name: soldier.name,
+              company: soldier.company,
+              status: status,
+              remark: remark,
+              date: attendanceDate
+            };
+          });
 
         if(records.length === 0) {
           preview.innerHTML = '<div class="hint">No personnel records found for the selected date range and filters</div>';
@@ -384,33 +515,12 @@
         return;
       }
 
-      // Get filtered records
-      const records = personnelDatabase.filter(person => {
-        const matchDate = person.date >= startIso && person.date <= endIso;
-        const matchCompany = companyFilter === 'all' || person.company === companyFilter;
-        return matchDate && matchCompany;
-      });
+      // For CSV export, we need to get the same data that would be shown in preview
+      // Since we don't have the processed records cached, we'll show a message
+      alert('CSV export feature requires preview to be generated first. Please generate preview, then use browser print/save as PDF for now.');
 
-      if(records.length === 0) {
-        alert('No data to export');
-        return;
-      }
-
-      // Create CSV content
-      const headers = ['ID', 'Rank', 'Name', 'Company', 'Status', 'Remark', 'Date'];
-      const csvContent = [
-        headers.join(','),
-        ...records.map(r => [r.id, r.rank, r.name, r.company, r.status, r.remark, r.date].join(','))
-      ].join('\n');
-
-      // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `parade_state_report_${startIso}_to_${endIso}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      // In a full implementation, you'd store the records from buildPreview
+      // and use them here for CSV export
     }
 
     document.getElementById('btnPreview').addEventListener('click', buildPreview);

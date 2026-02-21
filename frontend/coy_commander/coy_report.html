@@ -124,7 +124,6 @@
         </div>
         <div class="top-actions">
           <button class="btn light" onclick="location.href='coy_dashboard.html'">Home</button>
-          <button class="btn light" onclick="location.href='Leave_approval.html'">Next</button>
           <button class="btn dark" onclick="location.href='../../login.html'">Logout</button>
         </div>
       </div>
@@ -215,26 +214,21 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
   <script>
+    const API_BASE = 'http://localhost:5000';
     const preview = document.getElementById('preview');
     const btnPreview = document.getElementById('btnPreview');
     const btnPrint = document.getElementById('btnPrint');
+
+    let soldiersData = [];
+    let leaveData = [];
+
     const fmt = (iso) => {
       if(!iso) return '';
       const [y,m,d] = iso.split('-');
       return `${d}/${m}/${y}`;
     };
-
-    const sampleRows = [
-      { id:'001', rank:'LCPL', name:'Akib', company:'Radio', status:'AWOL', remark:'Not Reported' },
-      { id:'002', rank:'SWO', name:'Rahul', company:'Radio', status:'Present', remark:'' },
-      { id:'003', rank:'CPL', name:'Shawon', company:'Radio', status:'On Duty', remark:'RP Duty' },
-      { id:'004', rank:'WO', name:'Arman', company:'Radio', status:'Leave', remark:'Annual Leave' },
-      { id:'005', rank:'SGT', name:'Minhaz', company:'Radio', status:'Present', remark:'' },
-      { id:'006', rank:'LCPL', name:'Rifat', company:'Radio', status:'Leave', remark:'Medical Leave' },
-      { id:'007', rank:'SNK', name:'Ridoy', company:'Radio', status:'Present', remark:'' },
-      { id:'008', rank:'SNK', name:'Shuvo', company:'Radio', status:'Present', remark:'' },
-    ];
 
     const statusPill = (s) => {
       const map = {
@@ -247,7 +241,118 @@
       return `<span class="pill ${cls}">${s}</span>`;
     };
 
+    // Load data on page load
+    window.addEventListener('DOMContentLoaded', loadReportData);
+
+    async function loadReportData() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '../../login.html';
+          return;
+        }
+
+        let decoded;
+        try {
+          decoded = jwt_decode(token);
+        } catch (error) {
+          console.error('Invalid token:', error);
+          alert('Your session has expired. Please log in again.');
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '../../login.html';
+          return;
+        }
+
+        const currentCompany = decoded.company;
+        const displayCompany = currentCompany === 'BHQ' ? 'Radio' : currentCompany;
+
+        // Update title
+        document.querySelector('.title h1').textContent = `${displayCompany} Company Report Generation`;
+
+        // Fetch soldiers
+        const userResponse = await fetch(`${API_BASE}/api/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!userResponse.ok) {
+          console.error('Failed to fetch users:', userResponse.status);
+          alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
+          return;
+        }
+
+        const userData = await userResponse.json();
+        const companySoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === displayCompany);
+
+        // Fetch leaves
+        const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (leaveResponse.ok) {
+          const leaveDataResponse = await leaveResponse.json();
+          leaveData = leaveDataResponse.leaves;
+        }
+
+        // Process soldiers with current status
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+
+        soldiersData = companySoldiers.map(soldier => {
+          // Check attendance
+          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+          const special = attendance['special_status'];
+
+          let status = 'Present';
+          let remark = '';
+
+          if (special === 'AWOL') {
+            status = 'AWOL';
+            remark = 'Not Reported';
+          } else if (special === 'on_duty') {
+            status = 'On Duty';
+            remark = 'RP Duty';
+          } else {
+            // Check for approved leave
+            const activeLeave = leaveData.find(leave => {
+              const start = new Date(leave.start_date);
+              const end = new Date(leave.end_date);
+              return (leave.user_id._id || leave.user_id) === soldier._id &&
+                     now >= start && now <= end && leave.status === 'approved';
+            });
+            if (activeLeave) {
+              status = 'Leave';
+              remark = activeLeave.type_name || 'Leave';
+            }
+          }
+
+          return {
+            id: soldier.service_number,
+            rank: soldier.rank,
+            name: soldier.name,
+            company: displayCompany,
+            status: status,
+            remark: remark
+          };
+        });
+
+        // Show initial message
+        preview.innerHTML = '<div class="hint">Data loaded successfully. Configure report settings and click Generate Preview</div>';
+
+      } catch (error) {
+        console.error('Error loading report data:', error);
+        alert('Error loading report data. Please check your connection.');
+      }
+    }
+
     function buildPreview(){
+      if (soldiersData.length === 0) {
+        preview.innerHTML = '<div class="hint">No soldier data available. Please check your connection.</div>';
+        return;
+      }
+
       const startIso = (document.getElementById('startDate').value || '').trim();
       const endIso = (document.getElementById('endDate').value || '').trim();
       const start = fmt(startIso); const end = fmt(endIso);
@@ -260,7 +365,7 @@
         remark: document.getElementById('colRemark').checked,
       };
 
-      const counts = sampleRows.reduce((acc, r)=>{
+      const counts = soldiersData.reduce((acc, r)=>{
         acc.total++; if(r.status==='Present') acc.present++; if(r.status==='Leave') acc.leave++; if(r.status==='AWOL') acc.awol++; return acc;
       }, { total:0, present:0, leave:0, awol:0 });
 
@@ -271,7 +376,7 @@
       if(include.status) headers.push('Status');
       if(include.remark) headers.push('Remarks');
 
-      const rowsHtml = sampleRows.map(r=>{
+      const rowsHtml = soldiersData.map(r=>{
         const cells = [r.id];
         if(include.rank) cells.push(r.rank);
         if(include.name) cells.push(r.name);

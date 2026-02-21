@@ -31,8 +31,8 @@ h2,h3{font-weight:800;color:#ffffff;letter-spacing:0.5px}
   gap:10px;
 }
 
-/* Back and Next buttons (enhanced visibility) */
-.back-button, .next-button{
+/* Home button (enhanced visibility) */
+.home-button{
   appearance:none;
   background:rgba(255,255,255,0.1);
   border:2px solid var(--sand);
@@ -43,7 +43,7 @@ h2,h3{font-weight:800;color:#ffffff;letter-spacing:0.5px}
   font-weight:800;
   transition:all 0.2s;
 }
-.back-button:hover, .next-button:hover{
+.home-button:hover{
   background:rgba(255,255,255,0.2);
   transform:translateY(-2px);
   box-shadow:0 4px 12px rgba(0,0,0,0.3);
@@ -65,6 +65,23 @@ th{background:#3b4f40;font-weight:800}
 /* Add alternating row colors for better readability */
 tbody tr:nth-child(odd){background:rgba(255,255,255,0.05)}
 tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
+
+/* Edit mode styling */
+#employmentTable td[contenteditable="true"] {
+  background-color: rgba(255,255,255,0.1) !important;
+  border: 1px solid var(--sand) !important;
+  min-height: 20px;
+}
+
+#employmentTable td[contenteditable="true"]:focus {
+  background-color: rgba(255,255,255,0.2) !important;
+  outline: 2px solid var(--olive);
+  outline-offset: -1px;
+}
+
+.delete-row-btn:hover {
+  background-color: #c0392b !important;
+}
 
 /* layout for employment page */
 .employment{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin:20px}
@@ -138,38 +155,89 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
 .modal table{margin-top:15px;background:rgba(0,0,0,0.2)}
 .modal th{background:var(--darkPanel)}
 .status-leave{color:#e74c3c;font-weight:800}
+
+/* ---------- TEAM CARDS ---------- */
+.team-card {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid var(--sand);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.team-card:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.team-card h4 {
+  margin: 0 0 10px 0;
+  color: var(--sand);
+  font-size: 16px;
+}
+
+.team-card .team-info {
+  margin-bottom: 8px;
+}
+
+.team-card .team-info strong {
+  color: var(--text);
+}
+
+.team-card .team-info span {
+  color: var(--text);
+  margin-left: 8px;
+}
+
+.team-card .team-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.team-card button {
+  padding: 5px 10px;
+  border: 1px solid var(--sand);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.team-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
 </style>
 </head>
 <body>
 <div class="header">
   <h2>Daily Employment – Radio Coy</h2>
   <div class="nav-buttons">
-    <button class="back-button" id="backBtn" onclick="goBack()" aria-label="Go back">Back</button>
-    <button class="next-button" id="nextBtn" onclick="window.location.href='coy_report.html'" aria-label="Go to reports">Next</button>
+    <button class="home-button" id="homeBtn" onclick="window.location.href='coy_dashboard.html'" aria-label="Go to dashboard">Home</button>
+    <button class="home-button" id="createTeamBtn" onclick="openTeamModal()" aria-label="Create new team">Create Team</button>
+    <button class="home-button" id="editScheduleBtn" onclick="toggleEditMode()" aria-label="Edit daily schedule">Edit Schedule</button>
+  </div>
 </div>
-<script>
+
 <div class="employment">
   <div class="panel table-panel">
-    <table>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: var(--sand);">Daily Employment Schedule</h3>
+      <div id="editControls" style="display: none;">
+        <button class="home-button" onclick="addNewRow()" style="padding: 8px 12px; font-size: 12px;">Add Row</button>
+        <button class="home-button" onclick="saveSchedule()" style="padding: 8px 12px; font-size: 12px; background: #2ecc71;">Save</button>
+        <button class="home-button" onclick="cancelEdit()" style="padding: 8px 12px; font-size: 12px; background: #e74c3c;">Cancel</button>
+      </div>
+    </div>
+    <table id="employmentTable">
     <thead>
-    <tr><th>Date</th><th>Major Events</th><th>Coy Employment</th></tr>
+    <tr><th>Date</th><th>Major Events</th><th>Coy Employment</th><th id="actionHeader" style="display: none;">Actions</th></tr>
     </thead>
     <tbody>
-    <tr><td>01.01.2026</td><td>GOC Guard (01.01.26–31.01.26)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
-    <tr><td>02.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
-    <tr><td>03.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
-    <tr><td>04.01.2026</td><td>Quarter Guard Duty</td><td>2×Sgt, 6×OR</td></tr>
-    <tr><td>05.01.2026</td><td>Trg Ground Development</td><td>1×JCO, 1×Sgt</td></tr>
-    <tr><td>06.01.2026</td><td>Firing Competition Practice</td><td>1×Sgt, 2×SNK</td></tr>
-    <tr><td>07.01.2026</td><td>RP Duty</td><td>6×OR</td></tr>
-    <tr><td>08.01.2026</td><td>Admin Day</td><td>8×OR</td></tr>
-    <tr><td>09.01.2026</td><td>GOC Guard (Contd)</td><td>1×JCO, 2×Sgt, 10×OR</td></tr>
-    <tr><td>10.01.2026</td><td>Trg Ground Development</td><td>1×JCO, 1×Sgt</td></tr>
-    <tr><td>11.01.2026</td><td>Firing Competition Practice</td><td>1×Sgt, 2×SNK</td></tr>
-    <tr><td>12.01.2026</td><td>RP Duty</td><td>6×OR</td></tr>
-    <tr><td>13.01.2026</td><td>Quarter Guard Duty</td><td>2×Sgt, 6×OR</td></tr>
-    <tr><td>14.01.2026</td><td>Trg Conference</td><td>1×JCO, 2×Sgt</td></tr>
-    <tr><td>15.01.2026</td><td>Admin Day</td><td>8×OR</td></tr>
+    <!-- Data will be loaded dynamically -->
     </tbody>
     </table>
   </div>
@@ -177,15 +245,75 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
   <div class="panel rank-panel">
     <h3>Rank Wise State (without Lve)</h3>
     <ul class="rank-list">
-      <li onclick="showRankDetails('Sgt')">4×Sgt</li>
-      <li onclick="showRankDetails('Cpl')">5×Cpl</li>
-      <li onclick="showRankDetails('L/Cpl')">3×L/Cpl</li>
-      <li onclick="showRankDetails('Snk')">35×Snk</li>
+      <!-- Dynamic content will be loaded here -->
+      <li>Loading...</li>
     </ul>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Saved Teams Section -->
+<div class="panel table-panel" style="margin-top: 20px;">
+  <h3 style="margin: 0 0 15px 0; color: var(--sand);">Saved Teams</h3>
+  <div id="teamsContainer">
+    <p style="color: var(--text); opacity: 0.7;">No teams saved yet. Create your first team above.</p>
+  </div>
+</div>
+
+<!-- Team Creation Modal -->
+<div id="teamModal" class="modal">
+  <div class="modal-content" style="max-width: 600px;">
+    <span class="close" onclick="closeTeamModal()">&times;</span>
+    <h3 id="teamModalTitle">Create New Team</h3>
+
+    <form id="teamForm">
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; color: var(--sand); font-weight: 600;">Team Name:</label>
+        <input type="text" id="teamName" required style="width: 100%; padding: 10px; border: 2px solid var(--sand); border-radius: 6px; background: rgba(255,255,255,0.1); color: var(--text);">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 10px; color: var(--sand); font-weight: 600;">Personnel Requirements:</label>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text); font-size: 14px;">Sergeant (Sgt):</label>
+            <input type="number" id="sgtCount" min="0" value="0" style="width: 100%; padding: 8px; border: 2px solid var(--sand); border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text);">
+          </div>
+
+          <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text); font-size: 14px;">Corporal (Cpl):</label>
+            <input type="number" id="cplCount" min="0" value="0" style="width: 100%; padding: 8px; border: 2px solid var(--sand); border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text);">
+          </div>
+
+          <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text); font-size: 14px;">Lance Corporal (LCpl):</label>
+            <input type="number" id="lcplCount" min="0" value="0" style="width: 100%; padding: 8px; border: 2px solid var(--sand); border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text);">
+          </div>
+
+          <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text); font-size: 14px;">Soldier (Snk):</label>
+            <input type="number" id="snkCount" min="0" value="0" style="width: 100%; padding: 8px; border: 2px solid var(--sand); border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text);">
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; color: var(--sand); font-weight: 600;">Duty Name:</label>
+        <input type="text" id="dutyName" placeholder="e.g., Guard Duty, Training, etc." style="width: 100%; padding: 10px; border: 2px solid var(--sand); border-radius: 6px; background: rgba(255,255,255,0.1); color: var(--text);">
+      </div>
+
+      <div style="margin-bottom: 25px;">
+        <label style="display: block; margin-bottom: 8px; color: var(--sand); font-weight: 600;">Remarks:</label>
+        <textarea id="teamRemarks" rows="3" placeholder="Additional notes or instructions..." style="width: 100%; padding: 10px; border: 2px solid var(--sand); border-radius: 6px; background: rgba(255,255,255,0.1); color: var(--text); resize: vertical;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="closeTeamModal()" style="padding: 10px 20px; background: #e74c3c; color: white; border: 2px solid var(--sand); border-radius: 8px; cursor: pointer;">Cancel</button>
+        <button type="submit" style="padding: 10px 20px; background: #2ecc71; color: white; border: 2px solid var(--sand); border-radius: 8px; cursor: pointer;">Save Team</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div id="rankModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
@@ -207,61 +335,25 @@ tbody tr:hover{background:rgba(194,178,128,0.15);transition:background 0.2s}
 <script>
 // Sample data for each rank
 const rankData = {
-  'Sgt': [
+  'Sergeant': [
     { senaNo: 'Army No-1234', name: 'Hasnat Abdullah', status: 'On Duty' },
     { senaNo: 'Army No-1236', name: 'Shahriar Rahman', status: 'On Parade' },
     { senaNo: 'Army No-1240', name: 'Tanvir Ahmed', status: 'On Duty' },
     { senaNo: 'Army No-1237', name: 'Minhaz', status: 'On Duty' }
   ],
-  'Cpl': [
+  'Corporal': [
     { senaNo: 'Army No-1235', name: 'Rakib Hossain', status: 'On Duty' },
     { senaNo: 'Army No-1239', name: 'Arif Uddin', status: 'On Leave' },
     { senaNo: 'Army No-1242', name: 'Saifullah Khan', status: 'On Course' },
     { senaNo: 'Army No-1244', name: 'Shawon', status: 'On Duty' },
     { senaNo: 'Army No-1245', name: 'Rifat', status: 'On Duty' }
   ],
-  'L/Cpl': [
+  'Lance Corporal': [
     { senaNo: 'Army No-1237', name: 'Imran Kabir', status: 'On Course' },
     { senaNo: 'Army No-1243', name: 'Mehedi Hasan', status: 'On Duty' },
     { senaNo: 'Army No-1246', name: 'Akib', status: 'On Duty' }
   ],
-  'Snk': [
-    { senaNo: 'Army No-1238', name: 'Mahmudul Hasan', status: 'On Duty' },
-    { senaNo: 'Army No-1241', name: 'Nazmul Islam', status: 'On Parade' },
-    { senaNo: 'Army No-1247', name: 'Ridoy', status: 'On Duty' },
-    { senaNo: 'Army No-1248', name: 'Shuvo', status: 'On Duty' },
-    { senaNo: 'Army No-1249', name: 'Fahim Ahmed', status: 'On Leave' },
-    { senaNo: 'Army No-1250', name: 'Sabbir Hossain', status: 'On Duty' },
-    { senaNo: 'Army No-1251', name: 'Kamrul Islam', status: 'On Duty' },
-    { senaNo: 'Army No-1252', name: 'Ashraful Alam', status: 'On Parade' },
-    { senaNo: 'Army No-1253', name: 'Rubel Miah', status: 'On Duty' },
-    { senaNo: 'Army No-1254', name: 'Sajjad Hossain', status: 'On Duty' }
-    // ... and 25 more (showing 10 for brevity)
-  ]
-};
-
-<script>
-// Sample data for each rank
-const rankData = {
-  'Sgt': [
-    { senaNo: 'Army No-1234', name: 'Hasnat Abdullah', status: 'On Duty' },
-    { senaNo: 'Army No-1236', name: 'Shahriar Rahman', status: 'On Parade' },
-    { senaNo: 'Army No-1240', name: 'Tanvir Ahmed', status: 'On Duty' },
-    { senaNo: 'Army No-1237', name: 'Minhaz', status: 'On Duty' }
-  ],
-  'Cpl': [
-    { senaNo: 'Army No-1235', name: 'Rakib Hossain', status: 'On Duty' },
-    { senaNo: 'Army No-1239', name: 'Arif Uddin', status: 'On Leave' },
-    { senaNo: 'Army No-1242', name: 'Saifullah Khan', status: 'On Course' },
-    { senaNo: 'Army No-1244', name: 'Shawon', status: 'On Duty' },
-    { senaNo: 'Army No-1245', name: 'Rifat', status: 'On Duty' }
-  ],
-  'L/Cpl': [
-    { senaNo: 'Army No-1237', name: 'Imran Kabir', status: 'On Course' },
-    { senaNo: 'Army No-1243', name: 'Mehedi Hasan', status: 'On Duty' },
-    { senaNo: 'Army No-1246', name: 'Akib', status: 'On Duty' }
-  ],
-  'Snk': [
+  'Soldier': [
     { senaNo: 'Army No-1238', name: 'Mahmudul Hasan', status: 'On Duty' },
     { senaNo: 'Army No-1241', name: 'Nazmul Islam', status: 'On Parade' },
     { senaNo: 'Army No-1247', name: 'Ridoy', status: 'On Duty' },
@@ -329,104 +421,39 @@ const API_BASE = 'http://localhost:5000';
 window.addEventListener('DOMContentLoaded', loadRankData);
 
 async function loadRankData() {
+  console.log('loadRankData called');
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('You are not logged in. Redirecting to login page.');
-      window.location.href = '../../login.html';
+    console.log('Fetching rank summary from API...');
+    const response = await fetch(`${API_BASE}/api/users/rank-summary`);
+
+    if (!response.ok) {
+      console.log('API call failed, status:', response.status, '- falling back to static data');
+      updateRankListWithStaticData();
       return;
     }
 
-    // Fetch soldiers from Radio company
-    const userResponse = await fetch(`${API_BASE}/api/users`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const data = await response.json();
+    console.log('Rank summary data received:', data);
 
-    if (!userResponse.ok) {
-      console.error('Failed to fetch users:', userResponse.status);
-      alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
-      return;
-    }
-
-    const userData = await userResponse.json();
-    const radioSoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === 'Radio');
-
-    // Fetch leaves
-    const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    let allLeaves = [];
-    if (leaveResponse.ok) {
-      const leaveData = await leaveResponse.json();
-      allLeaves = leaveData.leaves;
-    } else {
-      console.error('Failed to fetch leaves:', leaveResponse.status);
-    }
-
-    // Process soldier data with current status
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    const processedSoldiers = radioSoldiers.map(soldier => {
-      // Check attendance for today
-      const attendanceKey = `attendance_${soldier.service_number}_${today}`;
-      const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
-      const special = attendance['special_status'];
-
-      let status = 'On Parade';
-      if (special === 'AWOL') {
-        status = 'AWOL';
-      } else if (special === 'Leave') {
-        status = 'On Leave';
-      } else if (special === 'on_duty') {
-        status = 'On Duty';
-      } else {
-        // Check if on approved leave
-        const activeLeave = allLeaves.find(leave => {
-          const start = new Date(leave.start_date);
-          const end = new Date(leave.end_date);
-          return leave.service_number === soldier.service_number &&
-                 now >= start && now <= end && leave.status === 'approved';
-        });
-        if (activeLeave) {
-          status = 'On Leave';
-        } else {
-          status = 'On Parade';
-        }
-      }
-
-      return {
-        id: soldier.service_number,
-        name: soldier.name,
-        rank: soldier.rank,
-        status: status
-      };
-    });
-
-    // Group soldiers by rank and filter out those on leave
-    const rankGroups = {};
-    processedSoldiers.forEach(soldier => {
-      if (soldier.status !== 'On Leave') { // Only count those not on leave
-        if (!rankGroups[soldier.rank]) {
-          rankGroups[soldier.rank] = [];
-        }
-        rankGroups[soldier.rank].push(soldier);
-      }
-    });
+    // The API returns rankCounts and rankDetails directly
+    const rankCounts = data.rankCounts;
+    const rankDetails = data.rankDetails;
 
     // Update the rank list with dynamic counts
     const rankList = document.querySelector('.rank-list');
     if (rankList) {
       rankList.innerHTML = '';
 
-      // Define rank order and mapping
-      const rankOrder = ['Sergeant', 'Corporal', 'Lance Corporal', 'Soldier'];
+      // Define rank order and mapping (officers first, then NCOs, then soldiers)
+      const rankOrder = ['Colonel', 'Major', 'Captain', 'Lieutenant', 'SWO', 'WO', 'Subedar', 'Sergeant', 'Corporal', 'Lance Corporal', 'Soldier'];
       const rankDisplay = {
+        'Colonel': 'Col',
+        'Major': 'Maj',
+        'Captain': 'Capt',
+        'Lieutenant': 'Lt',
+        'SWO': 'SWO',
+        'WO': 'WO',
+        'Subedar': 'Sub',
         'Sergeant': 'Sgt',
         'Corporal': 'Cpl',
         'Lance Corporal': 'L/Cpl',
@@ -434,8 +461,8 @@ async function loadRankData() {
       };
 
       rankOrder.forEach(rank => {
-        if (rankGroups[rank]) {
-          const count = rankGroups[rank].length;
+        if (rankCounts[rank] && rankCounts[rank] > 0) {
+          const count = rankCounts[rank];
           const displayName = rankDisplay[rank] || rank;
           const li = document.createElement('li');
           li.onclick = () => showRankDetails(rank);
@@ -446,12 +473,393 @@ async function loadRankData() {
     }
 
     // Update global rankData for modal
-    window.rankData = rankGroups;
+    window.rankData = rankDetails;
+    console.log('Dynamic rank data loaded:', rankDetails);
 
   } catch (error) {
     console.error('Error loading rank data:', error);
-    alert('Error loading rank data. Please check your connection.');
+    console.log('Falling back to static data');
+    updateRankListWithStaticData();
   }
+}
+
+function updateRankListWithStaticData() {
+  console.log('Updating with static data');
+  const rankList = document.querySelector('.rank-list');
+  if (rankList) {
+    rankList.innerHTML = '';
+
+    // Count soldiers not on leave from static data
+    const staticCounts = {};
+    Object.keys(rankData).forEach(rank => {
+      const availableSoldiers = rankData[rank].filter(soldier => soldier.status !== 'On Leave');
+      if (availableSoldiers.length > 0) {
+        // Map rank names to display names
+        const displayName = rank === 'Colonel' ? 'Col' :
+                           rank === 'Major' ? 'Maj' :
+                           rank === 'Captain' ? 'Capt' :
+                           rank === 'Lieutenant' ? 'Lt' :
+                           rank === 'SWO' ? 'SWO' :
+                           rank === 'WO' ? 'WO' :
+                           rank === 'Subedar' ? 'Sub' :
+                           rank === 'Lance Corporal' ? 'L/Cpl' :
+                           rank === 'Sergeant' ? 'Sgt' :
+                           rank === 'Corporal' ? 'Cpl' :
+                           rank === 'Soldier' ? 'Snk' : rank;
+        staticCounts[rank] = { count: availableSoldiers.length, display: displayName };
+      }
+    });
+
+    // Display the counts
+    Object.entries(staticCounts).forEach(([rank, data]) => {
+      const li = document.createElement('li');
+      li.onclick = () => showRankDetails(rank);
+      li.textContent = `${data.count}×${data.display}`;
+      rankList.appendChild(li);
+    });
+
+    // Set global rankData to static data for modal
+    window.rankData = rankData;
+  }
+}
+
+// Load rank data on page load
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('DOMContentLoaded fired');
+  loadRankData();
+  displaySavedTeams();
+  loadEmploymentSchedule();
+
+  // Form submission handler
+  document.getElementById('teamForm').addEventListener('submit', saveTeam);
+});
+
+let editingTeamId = null;
+
+function openTeamModal(teamId = null) {
+  const modal = document.getElementById('teamModal');
+  const modalTitle = document.getElementById('teamModalTitle');
+  const form = document.getElementById('teamForm');
+
+  if (teamId) {
+    // Editing existing team
+    const teams = getSavedTeams();
+    const team = teams.find(t => t.id === teamId);
+    if (team) {
+      editingTeamId = teamId;
+      modalTitle.textContent = 'Edit Team';
+      document.getElementById('teamName').value = team.name;
+      document.getElementById('sgtCount').value = team.requirements.sgt;
+      document.getElementById('cplCount').value = team.requirements.cpl;
+      document.getElementById('lcplCount').value = team.requirements.lcpl;
+      document.getElementById('snkCount').value = team.requirements.snk;
+      document.getElementById('dutyName').value = team.dutyName;
+      document.getElementById('teamRemarks').value = team.remarks;
+    }
+  } else {
+    // Creating new team
+    editingTeamId = null;
+    modalTitle.textContent = 'Create New Team';
+    form.reset();
+  }
+
+  modal.style.display = 'block';
+}
+
+function closeTeamModal() {
+  document.getElementById('teamModal').style.display = 'none';
+  editingTeamId = null;
+}
+
+function saveTeam(event) {
+  event.preventDefault();
+
+  const teamData = {
+    id: editingTeamId || Date.now().toString(),
+    name: document.getElementById('teamName').value.trim(),
+    requirements: {
+      sgt: parseInt(document.getElementById('sgtCount').value) || 0,
+      cpl: parseInt(document.getElementById('cplCount').value) || 0,
+      lcpl: parseInt(document.getElementById('lcplCount').value) || 0,
+      snk: parseInt(document.getElementById('snkCount').value) || 0
+    },
+    dutyName: document.getElementById('dutyName').value.trim(),
+    remarks: document.getElementById('teamRemarks').value.trim(),
+    createdAt: editingTeamId ? undefined : new Date().toISOString()
+  };
+
+  if (!teamData.name) {
+    alert('Please enter a team name.');
+    return;
+  }
+
+  const teams = getSavedTeams();
+
+  if (editingTeamId) {
+    // Update existing team
+    const index = teams.findIndex(t => t.id === editingTeamId);
+    if (index !== -1) {
+      teams[index] = { ...teams[index], ...teamData };
+    }
+  } else {
+    // Add new team
+    teams.push(teamData);
+  }
+
+  saveTeamsToStorage(teams);
+  displaySavedTeams();
+  closeTeamModal();
+}
+
+function deleteTeam(teamId) {
+  if (confirm('Are you sure you want to delete this team?')) {
+    const teams = getSavedTeams();
+    const filteredTeams = teams.filter(t => t.id !== teamId);
+    saveTeamsToStorage(filteredTeams);
+    displaySavedTeams();
+  }
+}
+
+function getSavedTeams() {
+  const teams = localStorage.getItem('employment_teams');
+  return teams ? JSON.parse(teams) : [];
+}
+
+function saveTeamsToStorage(teams) {
+  localStorage.setItem('employment_teams', JSON.stringify(teams));
+}
+
+function displaySavedTeams() {
+  const container = document.getElementById('teamsContainer');
+  const teams = getSavedTeams();
+
+  if (teams.length === 0) {
+    container.innerHTML = '<p style="color: var(--text); opacity: 0.7;">No teams saved yet. Create your first team above.</p>';
+    return;
+  }
+
+  let html = '<div style="display: grid; gap: 15px;">';
+
+  teams.forEach(team => {
+    const requirements = [];
+    if (team.requirements.sgt > 0) requirements.push(`${team.requirements.sgt}×Sgt`);
+    if (team.requirements.cpl > 0) requirements.push(`${team.requirements.cpl}×Cpl`);
+    if (team.requirements.lcpl > 0) requirements.push(`${team.requirements.lcpl}×LCpl`);
+    if (team.requirements.snk > 0) requirements.push(`${team.requirements.snk}×Snk`);
+
+    html += `
+      <div class="team-card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+          <h4>${team.name}</h4>
+          <div class="team-actions">
+            <button onclick="openTeamModal('${team.id}')" style="background: #3498db; color: white;">Edit</button>
+            <button onclick="deleteTeam('${team.id}')" style="background: #e74c3c; color: white;">Delete</button>
+          </div>
+        </div>
+        <div class="team-info">
+          <strong>Requirements:</strong>
+          <span>${requirements.join(', ') || 'None specified'}</span>
+        </div>
+        ${team.dutyName ? `<div class="team-info"><strong>Duty:</strong> <span>${team.dutyName}</span></div>` : ''}
+        ${team.remarks ? `<div class="team-info"><strong>Remarks:</strong> <span>${team.remarks}</span></div>` : ''}
+        ${team.createdAt ? `<div style="font-size: 12px; color: var(--text); opacity: 0.7; margin-top: 8px;">Created: ${new Date(team.createdAt).toLocaleDateString()}</div>` : ''}
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Initialize team display on page load
+// (handled in DOMContentLoaded above)
+
+// Form submission handler
+// (handled in DOMContentLoaded above)
+
+// Close team modal when clicking outside
+window.onclick = function(event) {
+  const rankModal = document.getElementById('rankModal');
+  const teamModal = document.getElementById('teamModal');
+
+  if (event.target === rankModal) {
+    rankModal.style.display = 'none';
+  }
+  if (event.target === teamModal) {
+    closeTeamModal();
+  }
+}
+
+// Close team modal on Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeModal();
+    closeTeamModal();
+  }
+});
+
+// Employment Schedule Editing Functions
+let isEditMode = false;
+let originalScheduleData = [];
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const editControls = document.getElementById('editControls');
+  const actionHeader = document.getElementById('actionHeader');
+  const editBtn = document.getElementById('editScheduleBtn');
+
+  if (isEditMode) {
+    editControls.style.display = 'block';
+    actionHeader.style.display = 'table-cell';
+    editBtn.textContent = 'Exit Edit';
+    editBtn.style.background = '#e74c3c';
+    makeTableEditable();
+    originalScheduleData = getCurrentScheduleData();
+  } else {
+    editControls.style.display = 'none';
+    actionHeader.style.display = 'none';
+    editBtn.textContent = 'Edit Schedule';
+    editBtn.style.background = 'rgba(255,255,255,0.1)';
+    makeTableReadOnly();
+  }
+}
+
+function makeTableEditable() {
+  const rows = document.querySelectorAll('#employmentTable tbody tr');
+  rows.forEach((row, index) => {
+    const cells = row.querySelectorAll('td');
+    cells.forEach((cell, cellIndex) => {
+      if (cellIndex < 3) { // Only make Date, Major Events, Coy Employment editable
+        cell.contentEditable = 'true';
+        cell.style.backgroundColor = 'rgba(255,255,255,0.1)';
+        cell.style.border = '1px solid var(--sand)';
+      }
+    });
+
+    // Add delete button
+    if (!row.querySelector('.delete-row-btn')) {
+      const actionCell = document.createElement('td');
+      actionCell.innerHTML = `<button class="delete-row-btn" onclick="deleteRow(${index})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button>`;
+      row.appendChild(actionCell);
+    }
+  });
+}
+
+function makeTableReadOnly() {
+  const rows = document.querySelectorAll('#employmentTable tbody tr');
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    cells.forEach((cell, cellIndex) => {
+      if (cellIndex < 3) {
+        cell.contentEditable = 'false';
+        cell.style.backgroundColor = '';
+        cell.style.border = '';
+      }
+    });
+
+    // Remove delete buttons
+    const deleteBtn = row.querySelector('.delete-row-btn');
+    if (deleteBtn) {
+      deleteBtn.parentElement.remove();
+    }
+  });
+}
+
+function addNewRow() {
+  const tbody = document.querySelector('#employmentTable tbody');
+  const newRow = document.createElement('tr');
+
+  // Get today's date in DD.MM.YYYY format
+  const today = new Date();
+  const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+
+  newRow.innerHTML = `
+    <td contenteditable="true" style="background-color: rgba(255,255,255,0.1); border: 1px solid var(--sand);">${dateStr}</td>
+    <td contenteditable="true" style="background-color: rgba(255,255,255,0.1); border: 1px solid var(--sand);"></td>
+    <td contenteditable="true" style="background-color: rgba(255,255,255,0.1); border: 1px solid var(--sand);"></td>
+    <td><button class="delete-row-btn" onclick="deleteRow(${tbody.children.length})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button></td>
+  `;
+
+  tbody.appendChild(newRow);
+}
+
+function deleteRow(index) {
+  if (confirm('Are you sure you want to delete this row?')) {
+    const tbody = document.querySelector('#employmentTable tbody');
+    tbody.children[index].remove();
+  }
+}
+
+function saveSchedule() {
+  const scheduleData = getCurrentScheduleData();
+  localStorage.setItem('employment_schedule', JSON.stringify(scheduleData));
+  alert('Schedule saved successfully!');
+  toggleEditMode();
+}
+
+function cancelEdit() {
+  if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+    loadEmploymentSchedule();
+    toggleEditMode();
+  }
+}
+
+function getCurrentScheduleData() {
+  const rows = document.querySelectorAll('#employmentTable tbody tr');
+  const data = [];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 3) {
+      data.push({
+        date: cells[0].textContent.trim(),
+        majorEvents: cells[1].textContent.trim(),
+        coyEmployment: cells[2].textContent.trim()
+      });
+    }
+  });
+
+  return data;
+}
+
+function loadEmploymentSchedule() {
+  const savedData = localStorage.getItem('employment_schedule');
+  const tbody = document.querySelector('#employmentTable tbody');
+
+  let scheduleData;
+  if (savedData) {
+    scheduleData = JSON.parse(savedData);
+  } else {
+    // Default data
+    scheduleData = [
+      { date: '01.01.2026', majorEvents: 'GOC Guard (01.01.26–31.01.26)', coyEmployment: '1×JCO, 2×Sgt, 10×OR' },
+      { date: '02.01.2026', majorEvents: 'GOC Guard (Contd)', coyEmployment: '1×JCO, 2×Sgt, 10×OR' },
+      { date: '03.01.2026', majorEvents: 'GOC Guard (Contd)', coyEmployment: '1×JCO, 2×Sgt, 10×OR' },
+      { date: '04.01.2026', majorEvents: 'Quarter Guard Duty', coyEmployment: '2×Sgt, 6×OR' },
+      { date: '05.01.2026', majorEvents: 'Trg Ground Development', coyEmployment: '1×JCO, 1×Sgt' },
+      { date: '06.01.2026', majorEvents: 'Firing Competition Practice', coyEmployment: '1×Sgt, 2×SNK' },
+      { date: '07.01.2026', majorEvents: 'RP Duty', coyEmployment: '6×OR' },
+      { date: '08.01.2026', majorEvents: 'Admin Day', coyEmployment: '8×OR' },
+      { date: '09.01.2026', majorEvents: 'GOC Guard (Contd)', coyEmployment: '1×JCO, 2×Sgt, 10×OR' },
+      { date: '10.01.2026', majorEvents: 'Trg Ground Development', coyEmployment: '1×JCO, 1×Sgt' },
+      { date: '11.01.2026', majorEvents: 'Firing Competition Practice', coyEmployment: '1×Sgt, 2×SNK' },
+      { date: '12.01.2026', majorEvents: 'RP Duty', coyEmployment: '6×OR' },
+      { date: '13.01.2026', majorEvents: 'Quarter Guard Duty', coyEmployment: '2×Sgt, 6×OR' },
+      { date: '14.01.2026', majorEvents: 'Trg Conference', coyEmployment: '1×JCO, 2×Sgt' },
+      { date: '15.01.2026', majorEvents: 'Admin Day', coyEmployment: '8×OR' }
+    ];
+  }
+
+  tbody.innerHTML = '';
+  scheduleData.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.date}</td>
+      <td>${item.majorEvents}</td>
+      <td>${item.coyEmployment}</td>
+    `;
+    tbody.appendChild(row);
+  });
 }
 </script>
 </body>

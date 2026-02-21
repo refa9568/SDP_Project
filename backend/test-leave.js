@@ -8,7 +8,7 @@ async function testLeaveSubmit() {
 
         // Simulate user
         const user = {
-            user_id: '696f0b5789261d85dcaa18d4', // from earlier
+            user_id: '696f0b5789261d85dcaa1951', // Aziz Ahmed - Radio company soldier
             role: 'soldier'
         };
 

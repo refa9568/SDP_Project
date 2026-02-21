@@ -83,9 +83,78 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+const getRankSummary = async (req, res) => {
+  try {
+    // Get all users (no auth required for this endpoint)
+    const users = await User.getAllUsers();
+
+    // Filter for Radio company only
+    const radioUsers = users.filter(user => user.company === 'Radio');
+
+    // Get all active leaves to exclude users on leave
+    const Leave = require('../models/Leave');
+    const activeLeaves = await Leave.findAll({ status: 'approved' });
+
+    // Create a set of user IDs on leave
+    const usersOnLeave = new Set(activeLeaves.map(leave => leave.user_id.toString()));
+
+    // Rank normalization mapping
+    const rankNormalization = {
+      'Cpl': 'Corporal',
+      'Sgt': 'Sergeant',
+      'L/Cpl': 'Lance Corporal',
+      'Snk': 'Soldier',
+      'WO': 'WO',
+      'SWO': 'SWO',
+      'Subedar': 'Subedar',
+      'Corporal': 'Corporal',
+      'Sergeant': 'Sergeant',
+      'Lance Corporal': 'Lance Corporal',
+      'Soldier': 'Soldier',
+      'Lieutenant': 'Lieutenant',
+      'Captain': 'Captain',
+      'Major': 'Major',
+      'Colonel': 'Colonel'
+    };
+
+    // Group users by normalized rank, excluding those on leave
+    const rankCounts = {};
+    const rankDetails = {};
+
+    radioUsers.forEach(user => {
+      if (!usersOnLeave.has(user._id.toString())) {
+        const rawRank = user.rank || 'Unknown';
+        const normalizedRank = rankNormalization[rawRank] || rawRank;
+
+        if (!rankCounts[normalizedRank]) {
+          rankCounts[normalizedRank] = 0;
+          rankDetails[normalizedRank] = [];
+        }
+
+        rankCounts[normalizedRank]++;
+        rankDetails[normalizedRank].push({
+          id: user._id,
+          service_number: user.service_number,
+          name: user.name,
+          status: 'Available'
+        });
+      }
+    });
+    
+    res.json({
+      rankCounts,
+      rankDetails
+    });
+  } catch (error) {
+    console.error('Get rank summary error:', error);
+    res.status(500).json({ error: 'Failed to fetch rank summary' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
-  getCurrentUser
+  getCurrentUser,
+  getRankSummary
 };

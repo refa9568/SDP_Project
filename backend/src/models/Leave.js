@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('./User');
 
 const leaveTypeSchema = new mongoose.Schema({
   type_name: {
@@ -62,7 +63,7 @@ const leaveSchema = new mongoose.Schema({
 });
 
 // Static methods
-leaveSchema.statics.findAll = function(filters = {}) {
+leaveSchema.statics.findAll = async function(filters = {}) {
   let query = this.find();
 
   if (filters.user_id) {
@@ -74,18 +75,26 @@ leaveSchema.statics.findAll = function(filters = {}) {
   }
 
   if (filters.unit) {
-    // This requires population and filtering
-    query = query.populate({
-      path: 'user_id',
-      match: { company: filters.unit }
-    });
+    // Find user IDs that belong to the specified company
+    const usersInCompany = await User.find({ company: filters.unit }, '_id');
+    const userIds = usersInCompany.map(user => user._id);
+    query = query.where('user_id').in(userIds);
   }
 
-  return query
+  if (filters.exclude_unit) {
+    // Find user IDs that belong to the company to exclude
+    const usersInExcludedCompany = await User.find({ company: filters.exclude_unit }, '_id');
+    const excludedUserIds = usersInExcludedCompany.map(user => user._id);
+    query = query.where('user_id').nin(excludedUserIds);
+  }
+
+  const leaves = await query
     .populate('user_id', 'name service_number rank company role')
     .populate('leave_type_id', 'type_name max_days')
     .populate('approved_by', 'name')
     .sort({ createdAt: -1 });
+
+  return leaves;
 };
 
 leaveSchema.statics.findLeaveById = function(leave_id) {
