@@ -472,12 +472,12 @@
 
         // Determine active leaves (current date between start and end)
         const now = new Date();
-        const activeLeaveUserIds = new Set();
+        const activeLeaveServiceNumbers = new Set();
         allLeaves.forEach(leave => {
             const start = new Date(leave.start_date);
             const end = new Date(leave.end_date);
-            if (now >= start && now <= end) {
-              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            if (now >= start && now <= end && leave.status === 'approved') {
+              activeLeaveServiceNumbers.add(leave.service_number);
             }
           });
 
@@ -485,7 +485,7 @@
           const today = new Date().toISOString().split('T')[0];
           let totalSoldiers = soldiers.length;
           let present = 0;
-          let onLeave = activeLeaveUserIds.size;
+          let onLeave = activeLeaveServiceNumbers.size;
           let awol = attendanceSummary.awol || 0;
           let onDuty = 0;
 
@@ -530,7 +530,7 @@
             
             companyStats[displayName].total++;
             
-            if (activeLeaveUserIds.has(soldier._id)) {
+            if (activeLeaveServiceNumbers.has(soldier.service_number)) {
               companyStats[displayName].leave++;
             } else {
               // Check attendance special status

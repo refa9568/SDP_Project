@@ -332,17 +332,18 @@
             const today = new Date().toISOString().split('T')[0];
             
             // Check if user has active leave
+            // Leaves are flattened by backend, match by service_number
             const activeLeave = leaves.find(leave => 
-                (leave.user_id._id || leave.user_id) === user._id && 
+                leave.service_number === user.service_number && 
                 leave.status === 'approved' &&
-                new Date(leave.start_date) <= new Date() &&
-                new Date(leave.end_date) >= new Date()
+                new Date(leave.start_date) <= new Date(today) &&
+                new Date(leave.end_date) >= new Date(today)
             );
 
             if (activeLeave) {
                 return {
                     status: 'Leave',
-                    remarks: `${activeLeave.type_name || activeLeave.leave_type || 'Leave'} (${activeLeave.days || activeLeave.total_days || activeLeave.duration} days)`,
+                    remarks: `${activeLeave.type_name || 'Leave'} (${activeLeave.days || 0} days)`,
                     class: 'status-leave'
                 };
             }

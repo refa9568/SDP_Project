@@ -66,6 +66,8 @@
     .input-row{ display:flex; align-items:center; gap:10px; }
     .input{ flex:1; display:flex; align-items:center; gap:10px; background: rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14); border-radius: 10px; height: 46px; padding: 0 12px; box-shadow: inset 0 6px 12px rgba(0,0,0,.18); }
     .input input{ flex:1; background: transparent; border:0; outline:0; color: var(--text); font-weight: 900; letter-spacing:.2px; }
+    .input select{ flex:1; background: transparent; border:0; outline:0; color: var(--text); font-weight: 900; letter-spacing:.2px; cursor: pointer; }
+    .input select option{ background: #2f3f34; color: var(--text); }
     .input .icon{ width:22px; height:22px; opacity:.85; }
     /* date-field: position calendar icon inside input and hide native indicator */
     .date-field{ position:relative; }
@@ -226,10 +228,12 @@
           <div class="section">
             <div class="field-label">Select Company</div>
             <div class="input-row">
-              <select id="companyFilter" class="input" aria-label="Company Filter">
-                <option value="all">All Companies</option>
-                <!-- Companies will be populated dynamically -->
-              </select>
+              <div class="input">
+                <select id="companyFilter" aria-label="Company Filter" style="width: 100%;">
+                  <option value="all">All Companies</option>
+                  <!-- Companies will be populated dynamically -->
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -273,29 +277,45 @@
 
   <script>
     const API_BASE = 'http://localhost:5000';
-    const preview = document.getElementById('preview');
-    const btnPreview = document.getElementById('btnPreview');
-    const btnPrint = document.getElementById('btnPrint');
-    const fmt = (iso) => {
-      if(!iso) return '';
-      const [y,m,d] = iso.split('-');
-      return `${d}/${m}/${y}`;
-    };
+    
+    // Wait for DOM to be ready before accessing elements
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 Page loaded, initializing...');
+      
+      const preview = document.getElementById('preview');
+      const btnPreview = document.getElementById('btnPreview');
+      const btnPrint = document.getElementById('btnPrint');
+      
+      if (!preview || !btnPreview || !btnPrint) {
+        console.error('Required elements not found!');
+        return;
+      }
+      
+      const fmt = (iso) => {
+        if(!iso) return '';
+        const [y,m,d] = iso.split('-');
+        return `${d}/${m}/${y}`;
+      };
 
-    let soldiersData = []; // Will hold fetched soldier data
-    let dataLoaded = false; // Flag to track if data loaded successfully
+      let soldiersData = []; // Will hold fetched soldier data
+      let dataLoaded = false; // Flag to track if data loaded successfully
 
-    // Fetch soldiers data on page load
-    async function fetchSoldiersData() {
+      // Fetch soldiers data on page load
+      async function fetchSoldiersData() {
       try {
+        console.log('Fetching soldiers data...');
         const token = localStorage.getItem('token');
         if (!token) {
           alert('You are not logged in. Redirecting to login page.');
-          window.location.href = '../../login.html';
+          window.location.href = '../login.html';
           return;
         }
 
+        // Show loading state
+        preview.innerHTML = '<div class="hint">Loading soldier data...</div>';
+
         // Fetch soldiers
+        console.log('Fetching users from API...');
         const userResponse = await fetch(`${API_BASE}/api/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -312,9 +332,23 @@
         }
 
         const userData = await userResponse.json();
+        console.log('Raw user data:', userData);
+        
+        if (!userData || !userData.users || !Array.isArray(userData.users)) {
+          console.error('Invalid user data structure:', userData);
+          alert('Invalid data received from server. Please contact administrator.');
+          soldiersData = [];
+          dataLoaded = false;
+          buildPreview();
+          return;
+        }
+        
+        console.log(`Fetched ${userData.users.length} users from API`);
         soldiersData = userData.users.filter(user => user.role === 'soldier');
+        console.log(`Filtered to ${soldiersData.length} soldiers`);
 
         // Fetch leaves
+        console.log('Fetching leaves from API...');
         const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -324,30 +358,39 @@
         let allLeaves = [];
         if (leaveResponse.ok) {
           const leaveData = await leaveResponse.json();
-          allLeaves = leaveData.leaves;
+          console.log('Raw leave data:', leaveData);
+          
+          if (leaveData && leaveData.leaves && Array.isArray(leaveData.leaves)) {
+            allLeaves = leaveData.leaves;
+            console.log(`Fetched ${allLeaves.length} leaves`);
+          } else {
+            console.warn('Invalid leave data structure, using empty array');
+          }
         } else {
           console.error('Failed to fetch leaves:', leaveResponse.status);
         }
 
         // Process soldier data with current status
+        console.log('Processing soldier statuses...');
         const now = new Date();
         const today = now.toISOString().split('T')[0];
 
         soldiersData = soldiersData.map(soldier => {
-          // Check attendance for today
-          const attendanceKey = `attendance_${soldier.service_number}_${today}`;
-          const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
-          const special = attendance['special_status'];
+          try {
+            // Check attendance for today
+            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            const special = attendance['special_status'];
 
-          let status = 'Present';
-          let remark = '';
+            let status = 'Present';
+            let remark = '';
 
-          if (special === 'AWOL') {
-            status = 'AWOL';
-            remark = attendance.notes || 'Not Reported';
-          } else if (special === 'Leave') {
-            status = 'Leave';
-            remark = attendance.notes || 'Leave';
+            if (special === 'AWOL') {
+              status = 'AWOL';
+              remark = attendance.notes || 'Not Reported';
+            } else if (special === 'Leave') {
+              status = 'Leave';
+              remark = attendance.notes || 'Leave';
           } else if (special === 'on_duty') {
             status = 'On Duty';
             remark = attendance.notes || 'Duty';
@@ -356,7 +399,7 @@
             const activeLeave = allLeaves.find(leave => {
               const start = new Date(leave.start_date);
               const end = new Date(leave.end_date);
-              return (leave.user_id._id || leave.user_id) === soldier._id &&
+              return leave.service_number === soldier.service_number &&
                      now >= start && now <= end && leave.status === 'approved';
             });
             if (activeLeave) {
@@ -366,27 +409,43 @@
           }
 
           return {
-            id: soldier.service_number,
-            rank: soldier.rank,
-            name: soldier.name,
-            company: soldier.company,
+            id: soldier.service_number || 'N/A',
+            rank: soldier.rank || 'N/A',
+            name: soldier.name || 'Unknown',
+            company: soldier.company || 'Unassigned',
             status: status,
             remark: remark
           };
+        } catch (soldierError) {
+          console.error('Error processing soldier:', soldier, soldierError);
+          return {
+            id: soldier.service_number || 'N/A',
+            rank: soldier.rank || 'N/A',
+            name: soldier.name || 'Unknown',
+            company: soldier.company || 'Unassigned',
+            status: 'Present',
+            remark: ''
+          };
+        }
         });
+        
+        console.log(`Processed ${soldiersData.length} soldiers with status`);
 
         // Populate company filter immediately after data is loaded
         populateCompanyFilter();
 
         // Mark data as loaded
         dataLoaded = true;
+        console.log('✓ Data loaded successfully');
 
         // Build initial preview
         buildPreview();
 
       } catch (error) {
         console.error('Error fetching soldiers data:', error);
-        alert('Error loading soldier data. Please check your connection.');
+        console.error('Error stack:', error.stack);
+        console.error('Error type:', error.name);
+        alert(`Error loading soldier data: ${error.message}\n\nPlease check browser console for details.`);
         soldiersData = [];
         dataLoaded = false;
         buildPreview();
@@ -418,6 +477,8 @@
     };
 
     function buildPreview(){
+      console.log('Building preview... dataLoaded:', dataLoaded, 'soldiers:', soldiersData.length);
+      
       if (!dataLoaded) {
         preview.innerHTML = '<div class="hint">Loading soldier data...</div>';
         return;
@@ -497,14 +558,20 @@
     // allow manual preview generation
     let previewShown = false;
     btnPreview.addEventListener('click', async ()=>{ 
-      await fetchSoldiersData();
+      if (!dataLoaded) {
+        await fetchSoldiersData();
+      }
       previewShown = true; 
       buildPreview(); 
     });
 
-    // Load data on page load to populate company filter
-    window.addEventListener('DOMContentLoaded', async () => {
-      await fetchSoldiersData();
+    // Load data on page load
+    fetchSoldiersData().then(() => {
+      // Auto-generate preview on load if data is available
+      if (dataLoaded && soldiersData.length > 0) {
+        previewShown = true;
+        buildPreview();
+      }
     });
 
     // debounce helper
@@ -537,6 +604,8 @@
         }
       });
     });
+    
+    }); // End of DOMContentLoaded
   </script>
 </body>
 </html>

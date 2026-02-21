@@ -780,12 +780,12 @@
 
         // Determine active leaves (current date between start and end)
         const now = new Date();
-        const activeLeaveUserIds = new Set();
+        const activeLeaveServiceNumbers = new Set();
         allLeaves.forEach(leave => {
             const start = new Date(leave.start_date);
             const end = new Date(leave.end_date);
-            if (now >= start && now <= end) {
-              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            if (now >= start && now <= end && leave.status === 'approved') {
+              activeLeaveServiceNumbers.add(leave.service_number);
             }
           });
 
@@ -810,7 +810,7 @@
           const today = new Date().toISOString().split('T')[0];
           let totalSoldiers = soldiers.length;
           let present = 0;
-          let onLeave = activeLeaveUserIds.size;
+          let onLeave = activeLeaveServiceNumbers.size;
           let awol = attendanceSummary.awol || 0;
           let onDuty = 0;
 
@@ -904,13 +904,13 @@
         });
 
         // Calculate active leaves for today
-        const activeLeaveUserIdsForDay = new Set();
+        const activeLeaveServiceNumbersForDay = new Set();
         allLeaves.forEach(leave => {
           const start = new Date(leave.start_date);
           const end = new Date(leave.end_date);
           const todayDate = new Date(today);
-          if (todayDate >= start && todayDate <= end) {
-            activeLeaveUserIdsForDay.add(leave.user_id._id || leave.user_id);
+          if (todayDate >= start && todayDate <= end && leave.status === 'approved') {
+            activeLeaveServiceNumbersForDay.add(leave.service_number);
           }
         });
 
@@ -923,7 +923,7 @@
 
           if (special === 'AWOL') {
             companyData[company].absent++;
-          } else if (special === 'Leave' || activeLeaveUserIdsForDay.has(soldier._id)) {
+          } else if (special === 'Leave' || activeLeaveServiceNumbersForDay.has(soldier.service_number)) {
             companyData[company].absent++;
           } else if (special === 'on_duty') {
             // on duty not counted as absent, but not present? Wait, perhaps count as present or separate.

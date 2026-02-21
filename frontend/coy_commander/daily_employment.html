@@ -390,7 +390,7 @@ async function loadRankData() {
         const activeLeave = allLeaves.find(leave => {
           const start = new Date(leave.start_date);
           const end = new Date(leave.end_date);
-          return (leave.user_id._id || leave.user_id) === soldier._id &&
+          return leave.service_number === soldier.service_number &&
                  now >= start && now <= end && leave.status === 'approved';
         });
         if (activeLeave) {

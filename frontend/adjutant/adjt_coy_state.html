@@ -373,12 +373,12 @@ async function loadCompanyState() {
 
         // Determine active leaves
         const now = new Date();
-        const activeLeaveUserIds = new Set();
+        const activeLeaveServiceNumbers = new Set();
         leaves.forEach(leave => {
             const start = new Date(leave.start_date);
             const end = new Date(leave.end_date);
-            if (now >= start && now <= end) {
-                activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            if (now >= start && now <= end && leave.status === 'approved') {
+                activeLeaveServiceNumbers.add(leave.service_number);
             }
         });
 
@@ -407,7 +407,7 @@ async function loadCompanyState() {
 
             if (special === 'AWOL') {
                 companyStats[company].awol++;
-            } else if (special === 'Leave' || activeLeaveUserIds.has(soldier._id)) {
+            } else if (special === 'Leave' || activeLeaveServiceNumbers.has(soldier.service_number)) {
                 companyStats[company].onLeave++;
             } else if (special === 'on_duty') {
                 companyStats[company].onDuty++;
