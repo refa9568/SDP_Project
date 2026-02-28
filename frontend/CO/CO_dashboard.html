@@ -287,7 +287,6 @@
           <p>Battalion-Wide Command & Control Center</p>
         </div>
         <div class="top-actions">
-          <button class="btn light" onclick="fetchTotalUsers()">Refresh Data</button>
           <button class="btn light" onclick="changePassword()">Change Password</button>
           <button class="btn dark" onclick="logout()">Logout</button>
         </div>
@@ -725,14 +724,15 @@
         fetchTotalUsers();
       });
       
+      // Auto-refresh disabled to prevent frequent logouts
       // Reload notices every 30 seconds
-      setInterval(function() {
-        loadNotices();
-        loadCriticalActions();
-      }, 30000);
+      // setInterval(function() {
+      //   loadNotices();
+      //   loadCriticalActions();
+      // }, 30000);
 
       // Reload stats every 30 seconds
-      setInterval(fetchTotalUsers, 30000);
+      // setInterval(fetchTotalUsers, 30000);
 
       // Change password function
       function changePassword() {

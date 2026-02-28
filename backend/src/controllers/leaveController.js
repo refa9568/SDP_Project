@@ -45,6 +45,7 @@ const getAllLeaves = async (req, res) => {
       const leaveType = obj.leave_type_id || {};
       return {
         leave_id:             obj._id.toString(),
+        user_id:              user._id || user,
         name:                 user.name            || 'Unknown',
         service_number:       user.service_number  || 'N/A',
         rank:                 user.rank            || '',

@@ -4,7 +4,6 @@ const cors = require('cors');
 const connectDB = require('../database/database');
 const authRoutes = require('./routes/authRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
-const equipmentRoutes = require('./routes/equipmentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 
@@ -58,7 +57,6 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/leaves', leaveRoutes);
-app.use('/api/equipment', equipmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
 

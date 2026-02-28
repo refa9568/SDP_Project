@@ -47,6 +47,13 @@ userSchema.virtual('user_id').get(function() {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
+// Never expose password_hash in JSON responses
+userSchema.methods.toJSON = function() {
+  const obj = this.toObject();
+  delete obj.password_hash;
+  return obj;
+};
+
 // Static methods
 userSchema.statics.findByServiceNumber = function(service_number) {
   return this.findOne({ service_number: new RegExp('^' + service_number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
@@ -61,7 +68,7 @@ userSchema.statics.getAllUsers = function() {
 };
 
 userSchema.statics.updateUser = function(user_id, updates) {
-  return this.findByIdAndUpdate(user_id, updates, { new: true });
+  return this.findByIdAndUpdate(user_id, updates, { new: true }).select('service_number name rank role company email phone');
 };
 
 userSchema.statics.validatePassword = async function(plainPassword, storedPassword) {

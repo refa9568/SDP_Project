@@ -376,6 +376,7 @@
       table{ display:block; overflow:auto; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 </head>
 
 <body>
@@ -1146,6 +1147,24 @@
             body: JSON.stringify(mongoPayload)
           });
           
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API Error:', response.status, errorData);
+            if (response.status === 403) {
+              // Decode token to check role
+              try {
+                const decoded = jwt_decode(token);
+                console.error('Token role:', decoded.role);
+                alert(`Permission Error: Your role is "${decoded.role}". If recently created, please clear cache:\n\n1. Press Ctrl+Shift+Delete\n2. Clear all browsing data\n3. Log out and log back in`);
+              } catch (e) {
+                alert('Insufficient permissions. Please clear cache and log back in: Ctrl+Shift+Delete');
+              }
+              return;
+            }
+            alert('Error saving: ' + (errorData.error || errorData.message || `Status ${response.status}`));
+            return;
+          }
+
           const data = await response.json();
           if (data.success) {
             console.log('Saved to MongoDB:', data.record.morning_pt, data.record.office, data.record.games, data.record.roll_call);
@@ -1464,8 +1483,8 @@
         fetchTotalUsers();
         // Auto-init today's attendance records for all soldiers
         initTodayAttendance();
-        // Auto-refresh data every 30 seconds for faster real-time updates
-        setInterval(fetchTotalUsers, 30000);
+        // Auto-refresh disabled to prevent frequent logouts
+        // setInterval(fetchTotalUsers, 30000);
       });
 
       async function initTodayAttendance() {

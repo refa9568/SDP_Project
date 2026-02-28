@@ -199,14 +199,26 @@ const changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     console.log('Updating password for user:', user.service_number);
+    console.log('User ID:', dbUser._id.toString());
 
-    // Update the user's password in the database
-    const updatedUser = await User.updateUser(dbUser._id, { password_hash: hashedPassword });
+    // Update the user's password in the database using direct update
+    const mongoose = require('mongoose');
+    const updatedUser = await User.findByIdAndUpdate(
+      new mongoose.Types.ObjectId(dbUser._id),
+      { $set: { password_hash: hashedPassword } },
+      { new: true }
+    );
 
-    console.log('Password update result:', updatedUser);
+    console.log('Password update result:', updatedUser ? 'User updated successfully' : 'Update failed');
+    
+    // Verify by fetching fresh from DB
+    const verifyUser = await User.findByServiceNumber(user.service_number);
+    const isPasswordChanged = await User.validatePassword(newPassword, verifyUser.password_hash);
+    
+    console.log('Password change verified:', isPasswordChanged);
 
-    if (!updatedUser) {
-      return res.status(400).json({ error: 'Password update failed' });
+    if (!isPasswordChanged) {
+      return res.status(400).json({ error: 'Password update failed - verification failed' });
     }
 
     res.json({ success: true, message: 'Password changed successfully' });
