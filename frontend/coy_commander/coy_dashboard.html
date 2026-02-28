@@ -268,6 +268,7 @@ window.addEventListener('DOMContentLoaded', loadDashboardData);
 
 async function loadDashboardData() {
   try {
+    console.log('[Dashboard] Loading dashboard data...');
     const token = localStorage.getItem('token');
     if (!token) {
       alert('You are not logged in. Redirecting to login page.');
@@ -279,7 +280,7 @@ async function loadDashboardData() {
     try {
       decoded = jwt_decode(token);
     } catch (error) {
-      console.error('Invalid token:', error);
+      console.error('[Dashboard] Invalid token:', error);
       alert('Your session has expired. Please log in again.');
       localStorage.clear();
       sessionStorage.clear();
@@ -287,13 +288,26 @@ async function loadDashboardData() {
       return;
     }
     const currentCompany = decoded.company;
-    const displayCompany = currentCompany === 'BHQ' ? 'Radio' : currentCompany;
+    // Convert company codes to display names for Radio Company (BHQ, HQ, or Radio all map to Radio)
+    let displayCompany = 'Radio';
+    if (currentCompany && currentCompany !== 'BHQ' && currentCompany !== 'HQ' && currentCompany !== 'Radio') {
+      displayCompany = currentCompany;
+    }
+    console.log('[Dashboard] Token company:', currentCompany, '-> Display company:', displayCompany);
 
     // Update titles
-    document.getElementById('dashboardTitle').textContent = `Dashboard – ${displayCompany} Coy Comd (Comd's Voice)`;
-    document.getElementById('rosterTitle').textContent = `Personal Roster - ${displayCompany} Company`;
+    const dashboardTitleEl = document.getElementById('dashboardTitle');
+    const rosterTitleEl = document.getElementById('rosterTitle');
+    if (!dashboardTitleEl || !rosterTitleEl) {
+      console.error('[Dashboard] Missing required HTML elements: dashboardTitle or rosterTitle');
+      alert('Dashboard HTML elements not found. Please refresh the page.');
+      return;
+    }
+    dashboardTitleEl.textContent = `Dashboard – ${displayCompany} Coy Comd (Comd's Voice)`;
+    rosterTitleEl.textContent = `Personal Roster - ${displayCompany} Company`;
 
     // Fetch soldiers from current company
+    console.log('[Dashboard] Fetching users from API...');
     const userResponse = await fetch(`${API_BASE}/api/users`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -301,15 +315,27 @@ async function loadDashboardData() {
     });
 
     if (!userResponse.ok) {
-      console.error('Failed to fetch users:', userResponse.status);
+      console.error('[Dashboard] Failed to fetch users:', userResponse.status);
+      const errorText = await userResponse.text();
+      console.error('[Dashboard] Error response:', errorText);
       alert(`Failed to load soldier data. Status: ${userResponse.status}. Please check your connection and permissions.`);
       return;
     }
 
     const userData = await userResponse.json();
+    console.log('[Dashboard] Users fetched:', userData);
+    
+    if (!userData.users || !Array.isArray(userData.users)) {
+      console.error('[Dashboard] Invalid user data structure:', userData);
+      alert('Invalid user data received from server.');
+      return;
+    }
+    
     const companySoldiers = userData.users.filter(user => user.role === 'soldier' && user.company === displayCompany);
+    console.log('[Dashboard] Company soldiers:', companySoldiers.length);
 
     // Fetch leaves
+    console.log('[Dashboard] Fetching leaves from API...');
     const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -319,9 +345,16 @@ async function loadDashboardData() {
     let allLeaves = [];
     if (leaveResponse.ok) {
       const leaveData = await leaveResponse.json();
-      allLeaves = leaveData.leaves;
+      if (leaveData.leaves && Array.isArray(leaveData.leaves)) {
+        allLeaves = leaveData.leaves;
+        console.log('[Dashboard] Leaves fetched:', allLeaves.length);
+      } else {
+        console.warn('[Dashboard] Invalid leave data structure:', leaveData);
+      }
     } else {
-      console.error('Failed to fetch leaves:', leaveResponse.status);
+      console.error('[Dashboard] Failed to fetch leaves:', leaveResponse.status);
+      const errorText = await leaveResponse.text();
+      console.error('[Dashboard] Leave fetch error response:', errorText);
     }
 
     // Process soldier data with current status
@@ -366,18 +399,29 @@ async function loadDashboardData() {
         status = 'On Duty';
         statusClass = 'status-duty';
       } else {
-        // Check if on approved leave
-        const activeLeave = allLeaves.find(leave => {
-          const start = new Date(leave.start_date);
-          const end = new Date(leave.end_date);
-          return (leave.user_id._id || leave.user_id) === soldier._id &&
-                 now >= start && now <= end && leave.status === 'approved';
-        });
-        if (activeLeave) {
-          status = 'On Leave';
-          statusClass = 'status-leave';
-        } else {
-          // Check for course/training (this would need to be implemented based on your data)
+        // Check if on approved leave - match by service_number instead of user_id
+        try {
+          const activeLeave = allLeaves.find(leave => {
+            try {
+              const start = new Date(leave.start_date);
+              const end = new Date(leave.end_date);
+              // Compare using service_number since the leave object has flattened user data
+              return leave.service_number === soldier.service_number &&
+                     now >= start && now <= end && leave.status === 'approved';
+            } catch (e) {
+              console.warn('[Dashboard] Error processing leave:', leave, e);
+              return false;
+            }
+          });
+          if (activeLeave) {
+            status = 'On Leave';
+            statusClass = 'status-leave';
+          } else {
+            status = 'On Parade';
+            statusClass = 'status-present';
+          }
+        } catch (e) {
+          console.error('[Dashboard] Error checking approved leave:', e);
           status = 'On Parade';
           statusClass = 'status-present';
         }
@@ -427,14 +471,24 @@ async function loadDashboardData() {
     }
 
     // Generate roster table with all soldiers initially
+    console.log('[Dashboard] Generating roster table...');
+    if (typeof generateRosterTable !== 'function') {
+      console.error('[Dashboard] generateRosterTable function not found');
+      alert('Dashboard function not available. Please refresh the page.');
+      return;
+    }
     generateRosterTable(allSoldiers, displayCompany);
 
     // Add search functionality
+    console.log('[Dashboard] Setting up search...');
     setupSearch();
+    
+    console.log('[Dashboard] Dashboard loaded successfully!');
 
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    alert('Error loading dashboard data. Please check your connection.');
+    console.error('[Dashboard] Error loading dashboard data:', error);
+    console.error('[Dashboard] Error stack:', error.stack);
+    alert(`Error loading dashboard data: ${error.message}. Check the console for details.`);
   }
 }
 

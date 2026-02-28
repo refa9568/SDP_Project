@@ -592,28 +592,28 @@
           const soldiers = userData.users.filter(user => user.role === 'soldier');
 
           // Fetch leaves
-          const leaveResponse = await fetch(`${API_BASE}/api/leaves?status=approved`, {
+          const leaveResponse = await fetch(`${API_BASE}/api/leaves`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
 
-          let leaves = [];
+          let allLeaves = [];
           if (leaveResponse.ok) {
             const leaveData = await leaveResponse.json();
-            leaves = leaveData.leaves;
+            allLeaves = leaveData.leaves;
           } else {
             console.error('Failed to fetch leaves:', leaveResponse.status);
           }
 
-          // Determine active leaves (current date between start and end)
+          // Determine active leaves (current date between start and end) and approved
           const now = new Date();
-          const activeLeaveUserIds = new Set();
-          leaves.forEach(leave => {
+          const activeLeaveServiceNumbers = new Set();
+          allLeaves.forEach(leave => {
             const start = new Date(leave.start_date);
             const end = new Date(leave.end_date);
-            if (now >= start && now <= end) {
-              activeLeaveUserIds.add(leave.user_id._id || leave.user_id);
+            if (now >= start && now <= end && leave.status === 'approved') {
+              activeLeaveServiceNumbers.add(leave.service_number);
             }
           });
 
@@ -649,9 +649,16 @@
             }
           }
 
+          // Calculate overall statistics
+          const today = new Date().toISOString().split('T')[0];
+          let totalSoldiers = soldiers.length;
+          let presentCount = 0;
+          let onLeaveCount = 0;
+          let dutyCount = 0;
+          let awolCount = 0;
+
           // Group soldiers by company and calculate statuses
           const companyGroups = {};
-          const today = new Date().toISOString().split('T')[0];
           soldiers.forEach(soldier => {
             const company = soldier.company || 'Unknown';
             if (!companyGroups[company]) {
@@ -662,21 +669,27 @@
             // Check attendance special status from API records
             const record = attendanceRecords.find(r => r.service_number === soldier.service_number);
             
-            if (activeLeaveUserIds.has(soldier._id)) {
+            if (activeLeaveServiceNumbers.has(soldier.service_number)) {
               companyGroups[company].onLeave++;
-            } else if (record && record.leave) {
+              onLeaveCount++;
+            } else if (record && record.leave === 'yes') {
               companyGroups[company].onLeave++;
+              onLeaveCount++;
             } else if (record && record.awol === 'yes') {
               companyGroups[company].awol++;
-            }
-            
-            // For on_duty, still check localStorage since it's not in DB
-            const attendanceKey = `attendance_${soldier.service_number}_${today}`;
-            const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
-            const special = attendance['special_status'];
-            
-            if (special === 'on_duty') {
-              companyGroups[company].duty++;
+              awolCount++;
+            } else {
+              // Check for on_duty status
+              const attendanceKey = `attendance_${soldier.service_number}_${today}`;
+              const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+              const special = attendance['special_status'];
+              
+              if (special === 'on_duty') {
+                companyGroups[company].duty++;
+                dutyCount++;
+              } else {
+                presentCount++;
+              }
             }
           });
 
@@ -684,7 +697,7 @@
           const tbody = document.getElementById('company-tbody');
           tbody.innerHTML = '';
 
-          Object.keys(companyGroups).forEach(company => {
+          Object.keys(companyGroups).sort().forEach(company => {
             const { total, onLeave, duty, awol } = companyGroups[company];
             const present = total - onLeave - duty - awol;
             const leave = onLeave;
@@ -700,12 +713,24 @@
             tbody.appendChild(row);
           });
 
-          document.getElementById('summary-total').textContent = soldiers.length;
+          // Update summary cards directly with calculated values
+          document.getElementById('summary-total').textContent = totalSoldiers;
+          document.getElementById('summary-present').textContent = presentCount;
+          document.getElementById('summary-leave').textContent = onLeaveCount;
+          document.getElementById('summary-duty').textContent = dutyCount;
+          document.getElementById('summary-awol').textContent = awolCount;
+
+          // Update footer totals
+          document.getElementById('footer-total').textContent = totalSoldiers;
+          document.getElementById('footer-present').textContent = presentCount;
+          document.getElementById('footer-leave').textContent = onLeaveCount;
+          document.getElementById('footer-duty').textContent = dutyCount;
+          document.getElementById('footer-awol').textContent = awolCount;
+
           // Store soldiers data for later use
           window.soldiersData = soldiers;
-
-          // Update summary after populating table
-          updateBattalionSummary();
+          
+          console.log('✓ BSM Dashboard data updated:', {totalSoldiers, presentCount, onLeaveCount, dutyCount, awolCount});
         } catch (error) {
           console.error('Error fetching data:', error);
         }
@@ -772,12 +797,19 @@
         Object.keys(companyGroups).forEach(company => {
           soldiersList += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Company: ${company}</h4>`;
           soldiersList += '<div style="display: grid; gap: 10px;">';
-          companyGroups[company].forEach(soldier => {
+          companyGroups[company].forEach((soldier, index) => {
+            // Get soldier name - ensure it's not empty/undefined
+            let soldierName = soldier.name ? soldier.name.trim() : '';
+            if (!soldierName || soldierName === 'member') {
+              soldierName = `Soldier ${index + 1}`;
+            }
+            const soldierRank = soldier.rank || 'N/A';
+            const soldierServiceNo = soldier.service_number || 'N/A';
             soldiersList += `
-              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="font-weight: bold; color: var(--text); margin-bottom: 5px; cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">${soldier.name}</div>
+              <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">
+                <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldierName}</div>
                 <div style="color: var(--muted); font-size: 14px;">
-                  Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                  Service Number: ${soldierServiceNo} | Rank: ${soldierRank}
                 </div>
               </div>
             `;
@@ -822,21 +854,29 @@
 
         companiesToShow.forEach(company => {
           if (companyGroups[company]) {
-            // Filter soldiers by search term
-            const filteredSoldiers = companyGroups[company].filter(soldier =>
-              soldier.name.toLowerCase().includes(searchTerm) ||
-              soldier.service_number.toLowerCase().includes(searchTerm)
-            );
+            // Filter soldiers by search term with fallback name handling
+            const filteredSoldiers = companyGroups[company].filter(soldier => {
+              const displayName = soldier.name && soldier.name.trim() ? soldier.name : '';
+              const serviceNo = soldier.service_number || '';
+              return displayName.toLowerCase().includes(searchTerm) || serviceNo.toLowerCase().includes(searchTerm);
+            });
 
             if (filteredSoldiers.length > 0) {
               html += `<h4 style="color: var(--text); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;">Company: ${company}</h4>`;
               html += '<div style="display: grid; gap: 10px;">';
-              filteredSoldiers.forEach(soldier => {
+              filteredSoldiers.forEach((soldier, index) => {
+                // Get soldier name - ensure it's not empty/undefined
+                let soldierName = soldier.name ? soldier.name.trim() : '';
+                if (!soldierName || soldierName === 'member') {
+                  soldierName = `Soldier ${index + 1}`;
+                }
+                const soldierRank = soldier.rank || 'N/A';
+                const soldierServiceNo = soldier.service_number || 'N/A';
                 html += `
-                  <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                    <div style="font-weight: bold; color: var(--text); margin-bottom: 5px; cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">${soldier.name}</div>
+                  <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="showAttendanceModal(${JSON.stringify(soldier).replace(/"/g, '&quot;')})">
+                    <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldierName}</div>
                     <div style="color: var(--muted); font-size: 14px;">
-                      Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
+                      Service Number: ${soldierServiceNo} | Rank: ${soldierRank}
                     </div>
                   </div>
                 `;
@@ -1124,7 +1164,8 @@
 
 // Remove soldier from special status
       async function removeFromSpecialStatus(serviceNumber, statusType) {
-        if (!confirm(`Remove this soldier from ${statusType.replace('_', ' ').toUpperCase()} status? They will be marked as Present.`)) {
+        const statusName = statusType === 'leave' ? 'LEAVE' : (statusType === 'awol' ? 'AWOL' : 'ON DUTY');
+        if (!confirm(`Remove this soldier from ${statusName} status? They will be marked as Present.`)) {
           return;
         }
 
@@ -1132,10 +1173,10 @@
         const attendanceKey = `attendance_${serviceNumber}_${today}`;
         const attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
 
-        // Set special status to none
+        // Clear special status from localStorage
         attendance['special_status'] = 'none';
 
-        // Set all attendance to present
+        // Mark all activities as present
         const activities = ['morning_pt', 'office', 'games', 'roll_call'];
         activities.forEach(activity => {
           attendance[activity + '_attendance'] = 'present';
@@ -1143,33 +1184,65 @@
 
         localStorage.setItem(attendanceKey, JSON.stringify(attendance));
 
-        // Save to MongoDB
+        // Save to MongoDB with proper status clearing
         try {
           const token = localStorage.getItem('token');
-          await fetch('http://localhost:5000/api/attendance/mark', {
+          const payload = {
+            service_number: serviceNumber,
+            date: today,
+            morning_pt: 'present',
+            office: 'present',
+            games: 'present',
+            roll_call: 'present'
+          };
+
+          // Set the status to 'no' to properly remove it
+          if (statusType === 'leave') {
+            payload.leave = 'no';
+            payload.awol = '';
+          } else if (statusType === 'awol') {
+            payload.awol = 'no';
+            payload.leave = '';
+          } else if (statusType === 'duty') {
+            payload.leave = '';
+            payload.awol = '';
+          }
+
+          console.log('Sending payload:', payload);
+          
+          const response = await fetch('http://localhost:5000/api/attendance/mark', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-              service_number: serviceNumber,
-              morning_pt: 'present',
-              office: 'present',
-              games: 'present',
-              roll_call: 'present',
-              leave: '',
-              awol: ''
-            })
+            body: JSON.stringify(payload)
           });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to remove from special status:', response.status, errorData);
+            alert(`Failed to remove soldier from ${statusName} status. Status: ${response.status}`);
+            return;
+          }
+
+          console.log(`✓ Removed ${serviceNumber} from ${statusName} status`);
         } catch (error) {
-          console.error('MongoDB update error:', error);
+          console.error('Error removing from special status:', error);
+          alert(`Error: ${error.message}`);
+          return;
         }
 
-        // Refresh table
-        fetchTotalUsers();
+        // Refresh dashboard immediately
+        await fetchTotalUsers();
 
-        alert('Soldier removed from special status and marked as Present.');
+        // Close the modal
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+          modal.remove();
+        }
+
+        alert(`✓ Soldier removed from ${statusName} status and marked as Present.`);
       }
 
       async function clearAWOL() {
@@ -1278,7 +1351,7 @@
             if (statusType === 'awol') {
               filteredRecords = data.records.filter(r => r.awol === 'yes');
             } else if (statusType === 'Leave') {
-              filteredRecords = data.records.filter(r => r.leave);
+              filteredRecords = data.records.filter(r => r.leave === 'yes');
             }
             
             filteredRecords.forEach(record => {
@@ -1310,8 +1383,9 @@
             html += '<div style="margin-bottom: 20px; color: var(--muted); font-size: 14px;">Total: ' + soldiers.length + '</div>';
             html += '<div style="display: grid; gap: 10px;">';
             soldiers.forEach(soldier => {
+              const statusParam = statusType === 'AWOL' ? 'awol' : (statusType === 'Leave' ? 'leave' : 'duty');
               html += `
-                <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="removeFromSpecialStatus('${soldier.service_number}', '${statusType === 'AWOL' ? 'awol' : statusType === 'Leave' ? 'leave' : 'duty'}')">
+                <div style="background: var(--panel-3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="removeFromSpecialStatus('${soldier.service_number}', '${statusParam}')">
                   <div style="font-weight: bold; color: var(--text); margin-bottom: 5px;">${soldier.name}</div>
                   <div style="color: var(--muted); font-size: 14px;">
                     Service Number: ${soldier.service_number} | Rank: ${soldier.rank}
@@ -1390,8 +1464,8 @@
         fetchTotalUsers();
         // Auto-init today's attendance records for all soldiers
         initTodayAttendance();
-        // Auto-refresh data every 60 seconds
-        setInterval(fetchTotalUsers, 60000);
+        // Auto-refresh data every 30 seconds for faster real-time updates
+        setInterval(fetchTotalUsers, 30000);
       });
 
       async function initTodayAttendance() {

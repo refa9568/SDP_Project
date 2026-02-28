@@ -964,6 +964,7 @@
 
         // Determine active leaves (current date between start and end)
         const now = new Date();
+        const today = new Date().toISOString().split('T')[0];
         const activeLeaveServiceNumbers = new Set();
         allLeaves.forEach(leave => {
             const start = new Date(leave.start_date);
@@ -973,25 +974,49 @@
             }
           });
 
+        // Also fetch today's attendance records to check for leaves marked by BSM
+        const attendanceResponse = await fetch(`${API_BASE}/api/attendance?date=${today}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        let attendanceRecords = [];
+        if (attendanceResponse.ok) {
+            const attendanceData = await attendanceResponse.json();
+            if (attendanceData.success) {
+                attendanceRecords = attendanceData.records;
+            }
+        } else {
+            console.error('Failed to fetch attendance:', attendanceResponse.status);
+        }
+
+        // Add attendance-marked leaves to the set
+        attendanceRecords.forEach(rec => {
+            if (rec.leave === 'yes') {
+                activeLeaveServiceNumbers.add(rec.service_number);
+            }
+        });
+
           // Fetch attendance summary
-          const attendanceResponse = await fetch(`${API_BASE}/api/attendance/summary`, {
+          const attendanceSummaryResponse = await fetch(`${API_BASE}/api/attendance/summary`, {
+
               headers: {
                   'Authorization': `Bearer ${token}`
               }
           });
 
           let attendanceSummary = { leave: 0, awol: 0 };
-          if (attendanceResponse.ok) {
-              const attendanceData = await attendanceResponse.json();
+          if (attendanceSummaryResponse.ok) {
+              const attendanceData = await attendanceSummaryResponse.json();
               if (attendanceData.success) {
                   attendanceSummary = attendanceData.summary;
               }
           } else {
-              console.error('Failed to fetch attendance:', attendanceResponse.status);
+              console.error('Failed to fetch attendance:', attendanceSummaryResponse.status);
           }
 
           // Calculate overall statistics
-          const today = new Date().toISOString().split('T')[0];
           let totalSoldiers = soldiers.length;
           let present = 0;
           let onLeave = activeLeaveServiceNumbers.size;

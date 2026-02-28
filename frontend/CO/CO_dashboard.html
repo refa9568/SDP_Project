@@ -287,6 +287,7 @@
           <p>Battalion-Wide Command & Control Center</p>
         </div>
         <div class="top-actions">
+          <button class="btn light" onclick="fetchTotalUsers()">Refresh Data</button>
           <button class="btn light" onclick="changePassword()">Change Password</button>
           <button class="btn dark" onclick="logout()">Logout</button>
         </div>
@@ -341,35 +342,8 @@
               <th>Readiness</th>
             </tr>
           </thead>
-          <tbody id="company-strength-table">
-            <tr>
-              <td><span class="pill">Radio Company</span></td>
-              <td id="radio-total">0</td>
-              <td id="radio-present">0</td>
-              <td id="radio-leave">0</td>
-              <td><span class="tag green" id="radio-readiness">0%</span></td>
-            </tr>
-            <tr>
-              <td><span class="pill">RR Company</span></td>
-              <td id="rr-total">0</td>
-              <td id="rr-present">0</td>
-              <td id="rr-leave">0</td>
-              <td><span class="tag green" id="rr-readiness">0%</span></td>
-            </tr>
-            <tr>
-              <td><span class="pill">Radio Company</span></td>
-              <td id="bhq-total">0</td>
-              <td id="bhq-present">0</td>
-              <td id="bhq-leave">0</td>
-              <td><span class="tag amber" id="bhq-readiness">0%</span></td>
-            </tr>
-            <tr>
-              <td><span class="pill">HQ Company</span></td>
-              <td id="hq-total">0</td>
-              <td id="hq-present">0</td>
-              <td id="hq-leave">0</td>
-              <td><span class="tag amber" id="hq-readiness">0%</span></td>
-            </tr>
+          <tbody id="company-strength-tbody">
+            <!-- Dynamically populated rows will go here -->
           </tbody>
         </table>
       </div>
@@ -481,6 +455,22 @@
             console.error('Failed to fetch attendance:', attendanceResponse.status);
         }
 
+        // Fetch today's attendance records to check for leaves marked by BSM
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceDetailsResponse = await fetch(`${API_BASE}/api/attendance?date=${today}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        let attendanceRecords = [];
+        if (attendanceDetailsResponse.ok) {
+            const attendanceDetailsData = await attendanceDetailsResponse.json();
+            if (attendanceDetailsData.success) {
+                attendanceRecords = attendanceDetailsData.records;
+            }
+        }
+
         // Determine active leaves (current date between start and end)
         const now = new Date();
         const activeLeaveServiceNumbers = new Set();
@@ -492,8 +482,14 @@
             }
           });
 
+        // Add attendance-marked leaves to the set
+        attendanceRecords.forEach(rec => {
+            if (rec.leave === 'yes') {
+                activeLeaveServiceNumbers.add(rec.service_number);
+            }
+        });
+
           // Calculate overall statistics
-          const today = new Date().toISOString().split('T')[0];
           let totalSoldiers = soldiers.length;
           let present = 0;
           let onLeave = activeLeaveServiceNumbers.size;
@@ -559,31 +555,23 @@
             }
           });
 
-          // Update company table
-          Object.keys(companyStats).forEach(companyName => {
+          // Update company table with dynamic rows
+          const tbody = document.getElementById('company-strength-tbody');
+          tbody.innerHTML = '';
+
+          Object.keys(companyStats).sort().forEach(companyName => {
             const stats = companyStats[companyName];
             const readiness = stats.total > 0 ? ((stats.present / stats.total) * 100).toFixed(2) : 0;
             
-            // Map company names to element IDs
-            const idMap = {
-              'Radio Company': 'radio',
-              'RR Company': 'rr',
-              'BHQ Company': 'bhq',
-              'HQ Company': 'hq'
-            };
-            
-            const prefix = idMap[companyName];
-            if (prefix) {
-              document.getElementById(`${prefix}-total`).textContent = stats.total;
-              document.getElementById(`${prefix}-present`).textContent = stats.present;
-              document.getElementById(`${prefix}-leave`).textContent = stats.leave;
-              
-              const readinessElement = document.getElementById(`${prefix}-readiness`);
-              readinessElement.textContent = `${readiness}%`;
-              
-              // Update color based on readiness
-              readinessElement.className = readiness >= 80 ? 'tag green' : 'tag amber';
-            }
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><span class="pill">${companyName}</span></td>
+              <td>${stats.total}</td>
+              <td>${stats.present}</td>
+              <td>${stats.leave}</td>
+              <td><span class="tag ${readiness >= 80 ? 'green' : 'amber'}">${readiness}%</span></td>
+            `;
+            tbody.appendChild(row);
           });
 
           // Update statistics display
